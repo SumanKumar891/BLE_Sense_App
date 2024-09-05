@@ -120,29 +120,29 @@ class PlotActivityAcc : AppCompatActivity(), ScanResultListener {
     override fun onScanResultUpdated(result: ScanResult){
         if (result.device.address == deviceAddress) {
             GlobalScope.launch(Dispatchers.Default) {
-            // Access the byte array from the scan record
-            val bytes = result.scanRecord?.bytes ?: byteArrayOf()
+                // Access the byte array from the scan record
+                val bytes = result.scanRecord?.bytes ?: byteArrayOf()
 
-            // Convert bytes to signed integers and log them
-            val signedBytes = bytes.map { it.toInt() }
+                // Convert bytes to signed integers and log them
+                val signedBytes = bytes.map { it.toInt() }
 
-            // Extract bytes if the array has the required length
-            val xd = signedBytes.getOrNull(5)
-            val xf = signedBytes.getOrNull(6)?.toUByte()?.toInt()
-            val yd = signedBytes.getOrNull(7)
-            val yf = signedBytes.getOrNull(8)?.toUByte()?.toInt()
-            val zd = signedBytes.getOrNull(9)
-            val zf = signedBytes.getOrNull(10)?.toUByte()?.toInt()
+                // Extract bytes if the array has the required length
+                val xd = signedBytes.getOrNull(5)
+                val xf = signedBytes.getOrNull(6)?.toUByte()?.toInt()
+                val yd = signedBytes.getOrNull(7)
+                val yf = signedBytes.getOrNull(8)?.toUByte()?.toInt()
+                val zd = signedBytes.getOrNull(9)
+                val zf = signedBytes.getOrNull(10)?.toUByte()?.toInt()
 
-            if (xd != null && xf != null && yd != null && yf != null && zd != null && zf != null) {
-                val X: Double = xd.toDouble() + (xf.toDouble() / 100.0)
-                val Y: Double = yd.toDouble() + (yf.toDouble() / 100.0)
-                val Z: Double = zd.toDouble() + (zf.toDouble() / 100.0)
-                withContext(Dispatchers.Main) {
-                    addNewData(X.toFloat(), Y.toFloat(), Z.toFloat())
+                if (xd != null && xf != null && yd != null && yf != null && zd != null && zf != null) {
+                    val X: Double = xd.toDouble() + (xf.toDouble() / 100.0)
+                    val Y: Double = yd.toDouble() + (yf.toDouble() / 100.0)
+                    val Z: Double = zd.toDouble() + (zf.toDouble() / 100.0)
+                    withContext(Dispatchers.Main) {
+                        addNewData(X.toFloat(), Y.toFloat(), Z.toFloat())
+                    }
                 }
             }
-                }
         }
     }
 
@@ -204,13 +204,11 @@ class PlotActivityAcc : AppCompatActivity(), ScanResultListener {
             chart.axisRight.textColor = Color.WHITE
             chart.xAxis.textColor = Color.WHITE
             chart.legend.textColor = Color.WHITE
-            chart.setBackgroundColor(Color.BLACK) // Set background to black
         } else {
             chart.axisLeft.textColor = Color.BLACK
             chart.axisRight.textColor = Color.BLACK
             chart.xAxis.textColor = Color.BLACK
             chart.legend.textColor = Color.BLACK
-            chart.setBackgroundColor(Color.WHITE) // Set background to white
         }
         dataSet.valueTextSize = 0f // Hide value text
 

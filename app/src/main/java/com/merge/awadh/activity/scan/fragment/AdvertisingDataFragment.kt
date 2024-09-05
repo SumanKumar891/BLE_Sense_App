@@ -120,7 +120,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                 }
                 (binding as FragmentAdvertisingDataShtBinding).root
             }
-            "LIS3DH" -> {
+            "LIS2DH" -> {
                 binding = DataBindingUtil.inflate<FragmentAdvertisingDataAccBinding>(
                     inflater,
                     R.layout.fragment_advertising_data_acc,
@@ -282,7 +282,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
             intent.putExtra("HUMID_DATA", humidData.toFloatArray())
             intent.putExtra("DEVICE_ADDRESS", deviceAddress)
             startActivity(intent)
-        } else if (dropdownitem == "LIS3DH") {
+        } else if (dropdownitem == "LIS2DH") {
             val intent = Intent(requireContext(), PlotActivityAcc::class.java)
             intent.putExtra("X_DATA", xData.toFloatArray())
             intent.putExtra("Z_DATA", zData.toFloatArray())
@@ -306,7 +306,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
             lastUpdateTime = currentTime
             when (dropdownitem) {
                 "SHT40" -> updateUISHT40(result, timeDifference)
-                "LIS3DH" -> updateUILIS3DH(result, timeDifference)
+                "LIS2DH" -> updateUILIS2DH(result, timeDifference)
                 "WindSpeed" -> updateUISpeed(result, timeDifference)
                 "StepCount" -> updateUIStepCount(result, timeDifference)
                 "Speed Distance" -> updateSDT(result, timeDifference)
@@ -500,7 +500,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
             }
     }
 
-    private  fun updateUILIS3DH(result: ScanResult, timeDifference: Long) {
+    private  fun updateUILIS2DH(result: ScanResult, timeDifference: Long) {
             if (result.device.address == deviceAddress) {
                 val bytes = result.scanRecord?.bytes ?: byteArrayOf()
                 val signedBytes = bytes.map { it.toInt() }
@@ -568,7 +568,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
         val workbook = XSSFWorkbook()
         val sheet = when (dropdownitem) {
             "SHT40" -> workbook.createSheet("Temp Humid Data")
-            "LIS3DH" -> workbook.createSheet("Acc Data")
+            "LIS2DH" -> workbook.createSheet("Acc Data")
             "WindSpeed" -> workbook.createSheet("Speed Data")
             "StepCount" -> workbook.createSheet("Steps Data")
             "Speed Distance" -> workbook.createSheet("Speed Data")
@@ -593,7 +593,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                     cell2.setCellValue(humid_Data[i].toDouble())
                 }
             }
-            "LIS3DH" -> {
+            "LIS2DH" -> {
                 headerCell1.setCellValue("X (g)")
                 headerCell2.setCellValue("Y (g)")
                 val headerCell3 = headerRow.createCell(2)
