@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/game2_bg"
+            tools:context=".FragmentGame1OpeningPage">
+
+
+            <ImageView
+                android:id="@+id/animatedImage"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/star_animation" />
+
+            <Button
+                android:id="@+id/playButton2"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:layout_below="@id/animatedImage"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="-41dp"
+                android:background="@android:color/transparent" />
+        </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

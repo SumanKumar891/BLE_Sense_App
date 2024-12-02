@@ -20,4 +20,6 @@
     <color name="x_fill">#FF0000</color>
     <color name="y_fill">#FFF000</color>
     <color name="z_fill">#0000FF</color>
+    <color name="gold">#333333</color>
+    <color name="shape_bg1">#80FF0000</color>
 </resources>

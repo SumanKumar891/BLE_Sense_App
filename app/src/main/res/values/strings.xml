@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BLE</string>
+    <string name="app_name">BLE SENSE</string>
     <string name="app_icon">logo</string>
 
     <string name="dark_theme">Dark Theme</string>
@@ -41,4 +41,7 @@
     <string name="long_range_coded_phy_supported">Long Range (Coded PHY) Supported:</string>
     <string name="extended_advertising_supported">Extended Advertising Supported:</string>
     <string name="periodic_advertising_supported">Periodic Advertising Supported:</string>
+    <string name="menu" />
+    <string name="all_devices">All Devices</string>
+    <string name="gaming_options">Games</string>
 </resources>

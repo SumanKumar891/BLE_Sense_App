@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".test7">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:background="@drawable/game_bg2"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/selectedDevicesButton">
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Game 2"
+                android:layout_gravity="center"
+                android:textSize="28sp"
+                android:layout_marginTop="20dp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white" />
+
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/searchBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:queryHint="Search devices"
+                android:iconifiedByDefault="false"
+                style="@style/SearchViewTheme"
+                android:layout_marginBottom="30dp"
+                android:background="?attr/colorOnBackground" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/scanResultsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                tools:listitem="@layout/row_scan_result" />
+
+            <TextView
+                android:id="@+id/deviceNotFound"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Device not found"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/selectedDevicesButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/st_pink"
+            android:text="Start Game"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

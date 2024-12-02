@@ -7,15 +7,13 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-
-    <!-- Hides app on Play Store from users without BLE devices -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" /> <!-- Hides app on Play Store from users without BLE devices -->
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
     <application
-        android:name="com.merge.awadh.BLEApplication"
+        android:name=".BLEApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -23,19 +21,45 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BLEDemo">
         <activity
-            android:name="com.merge.awadh.activity.scan.ScanActivity"
-            android:exported="true"
-            >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:name=".MainActivity"
+            android:exported="true" >
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
         </activity>
+        <activity
+            android:name=".test8"
+            android:exported="false" />
+        <activity
+            android:name=".test7"
+            android:exported="false" />
+        <activity
+            android:name=".test6"
+            android:exported="false" />
+        <activity
+            android:name=".test5"
+            android:exported="false" />
+        <activity
+            android:name=".adapter1"
+            android:exported="false" />
+        <activity
+            android:name=".test4"
+            android:exported="false" />
+        <activity
+            android:name=".test3"
+            android:exported="false" />
+        <activity
+            android:name=".test2"
+            android:exported="false" />
+        <activity
+            android:name=".activity.scan.ScanActivity"
+            android:exported="false">
 
-        <activity android:name="com.merge.awadh.activity.plot.PlotActivitySHT"/>
-        <activity android:name="com.merge.awadh.activity.plot.PlotActivityAcc"/>
-        <!-- Service for BLE scanning -->
+        </activity>
+        <activity android:name=".activity.plot.PlotActivitySHT" />
+        <activity android:name=".activity.plot.PlotActivityAcc" /> <!-- Service for BLE scanning -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

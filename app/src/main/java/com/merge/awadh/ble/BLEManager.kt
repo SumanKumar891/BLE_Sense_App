@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.merge.awadh.BLEApplication
 import com.merge.awadh.activity.scan.ScanInterface
 import com.merge.awadh.activity.scan.ScanAdapter
+import com.merge.awadh.activity.scan.adapter1
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import timber.log.Timber
@@ -32,6 +33,7 @@ interface ScanResultListener {
 @SuppressLint("NotifyDataSetChanged", "MissingPermission")
 object BLEManager {
 
+    var adapter1: adapter1? =null
     var scanInterface: ScanInterface? = null
     var scanListener: ScanResultListener? = null
 
@@ -49,7 +51,8 @@ object BLEManager {
     var deviceRSSIFilter = ""
 
     // List of BLE Scan Results
-    val scanResults = mutableListOf<ScanResult>()
+    var scanResults = mutableListOf<ScanResult>()
+    var delegate: ScanAdapter.Delegate? = null
 
     val bAdapter: BluetoothAdapter by lazy {
         val bluetoothManager =

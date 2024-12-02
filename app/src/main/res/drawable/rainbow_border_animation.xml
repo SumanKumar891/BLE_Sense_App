@@ -1,0 +1,18 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="10dp"
+                android:color="@android:color/transparent" />
+        </shape>
+    </item>
+    <item>
+        <rotate
+            android:fromDegrees="0"
+            android:toDegrees="360"
+            android:drawable="@drawable/rainbow_gradient"
+            android:duration="2000"
+            android:repeatMode="restart"
+            android:repeatCount="infinite" />
+    </item>
+</layer-list>

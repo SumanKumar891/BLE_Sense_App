@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/advertisingDataFragment">
+
+
+    <fragment
+        android:id="@+id/advertisingDataFragment"
+        android:name="com.merge.awadh.activity.scan.fragment.AdvertisingDataFragment"
+        android:label="AdvertisingDataFragment"
+        tools:layout="@layout/fragment_advertising_data_object_finding">
+        <action
+            android:id="@+id/action_advertisingDataFragment_to_game1OpeningPageFragment"
+            app:destination="@id/game1OpeningPageFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/game1OpeningPageFragment"
+        android:name="com.merge.awadh.activity.scan.fragment.Game1OpeningPageFragment"
+        android:label="Game1OpeningPageFragment"
+        tools:layout="@layout/fragment_game1_opening_page">
+        <action
+            android:id="@+id/action_game1OpeningPageFragment_to_deviceSelectionFragment"
+            app:destination="@id/deviceSelectionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/deviceSelectionFragment"
+        android:name="com.merge.awadh.activity.scan.fragment.DeviceSelectionFragment"
+        android:label="DeviceSelectionFragment" />
+    <activity
+        android:id="@+id/scanActivity2"
+        android:name="com.merge.awadh.activity.scan.ScanActivity"
+        android:label="ScanActivity" />
+</navigation>

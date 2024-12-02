@@ -1,0 +1,39 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:weightSum="1">
+
+    <!-- Device Name -->
+    <TextView
+        android:id="@+id/deviceName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.8"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <!-- RSSI Value -->
+<!--    <TextView-->
+<!--        android:id="@+id/rssiValue"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_weight="0.8"-->
+<!--        android:textColor="@android:color/darker_gray"-->
+<!--        android:textSize="14sp" />-->
+
+    <!-- Tick Symbol -->
+    <TextView
+        android:id="@+id/tickSymbol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="✔"
+        android:textColor="@android:color/holo_green_dark"
+        android:textSize="18sp"
+        android:visibility="gone"
+        android:layout_weight="0.2"
+        android:gravity="end" />
+</LinearLayout>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="second_act_btn" type="id" />
+    <item name="allDevicesItem" type="id" />
+    <item name="gamingOptionsItem" type="id" />
+    <item name="switchThemeItem" type="id" />
+    <item name="allDevicesItem1" type="id" />
+    <item name="gamingOptionsItem1" type="id" />
+    <item name="switchThemeItem1" type="id" />
+
+</resources>
