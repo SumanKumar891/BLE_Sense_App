@@ -1,24 +1,25 @@
 package com.merge.awadh.activity.scan.fragment
 
+import android.Manifest
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.content.Intent
+import android.graphics.Color
 import java.util.LinkedList
+
 import android.view.*
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.merge.awadh.R
 import com.merge.awadh.activity.plot.PlotActivityAcc
 import com.merge.awadh.activity.plot.PlotActivitySHT
 import com.merge.awadh.activity.scan.DropdownSelectionListener
-import com.merge.awadh.activity.scan.ScanActivity
+//import com.merge.awadh.activity.scan.ScanActivity
 import com.merge.awadh.ble.BLEManager.registerScanResultListener
 import com.merge.awadh.ble.BLEManager.unregisterScanResultListener
 import com.merge.awadh.ble.ScanResultListener
@@ -33,20 +34,36 @@ import android.view.View
 import androidx.core.content.ContextCompat
 
 import com.google.android.filament.utils.*
+import com.merge.awadh.databinding.FragmentAdvertisingDataObjectFindingBinding
 
-import timber.log.Timber
 import java.io.File
+import android.animation.ObjectAnimator
+import android.content.pm.PackageManager
+import android.media.MediaPlayer
+import android.util.Log
+import android.view.animation.LinearInterpolator
+import android.widget.FrameLayout
+import android.widget.TextView
+import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
+import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController
+
+import com.merge.awadh.ble.BLEManager
 
 
 class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSelectionListener {
 
     private var deviceAddress: String? = "not find"
+    private lateinit var mediaPlayer: MediaPlayer
     private var lastUpdateTime: Long = 0  // Variable to store the timestamp of the last update
-
+    private lateinit var emojiContainer: FrameLayout
+    private lateinit var navController: NavController
 
     companion object {
         private const val ARG_DEVICE_ADDRESS = "device_address"
         private const val MAX_QUEUE_SIZE = 30
+        private const val PERMISSION_REQUEST_BLUETOOTH_CONNECT = 1
         private const val BATCH_SIZE = 1000  // For batch processing
         init {
             Utils.init()
@@ -63,7 +80,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         deviceAddress = arguments?.getString(ARG_DEVICE_ADDRESS)
-        (requireActivity() as? ScanActivity)?.registerDropdownListener(this)
+        (requireActivity() as? RSSIFilterFragment)?.registerDropdownListener(this)
         dropdownitem = getCurrentDropdownSelection()
     }
 
@@ -96,6 +113,8 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
     private var speedxData = LinkedList<Float>()
 
     private var disxData = LinkedList<Float>()
+    private val deviceSequence = listOf("Unnamed", "mickey mouse", "DeviceD") // Define device sequence
+    private val foundDevices = mutableSetOf<String>()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -103,6 +122,8 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+
+
 
 
         return when (dropdownitem) {
@@ -186,7 +207,42 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                 }
                 (binding as FragmentAdvertisingDataSdtBinding).root
             }
+            "Object Finding" -> {
+                binding = DataBindingUtil.inflate<FragmentAdvertisingDataObjectFindingBinding>(
+                    inflater,
+                    R.layout.fragment_advertising_data_object_finding,
+                    container,
+                    false
+                )
+
+                (binding as FragmentAdvertisingDataObjectFindingBinding).apply {
+                    // Handle "OK" button click
+//                    okButton.setOnClickListener {
+//                        dismiss()
+//                    }
+                    game1Button.setOnClickListener {
+                        findNavController().navigate(R.id.action_advertisingDataFragment_to_game1OpeningPageFragment)
+                    }
+                }
+
+                mediaPlayer = MediaPlayer.create(requireContext(), R.raw.found_sound)
+                (binding as FragmentAdvertisingDataObjectFindingBinding).root
+            }
             else -> throw IllegalArgumentException("Unsupported dropdown item: $dropdownitem")
+        }
+    }
+    private fun filterDevicesForObjectFinding(): List<ScanResult> {
+        // List of target device names
+        val targetNames = listOf("Unnamed","tom"," jerry", "mickey mouse")
+
+        // Filter scan results
+        return BLEManager.scanResults.filter { result ->
+            ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == PackageManager.PERMISSION_GRANTED && result.device.name?.let { deviceName ->
+                targetNames.any { it.equals(deviceName, ignoreCase = true) }
+            } ?: false
         }
     }
 
@@ -194,7 +250,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
         activity?.findViewById<View>(android.R.id.content)?.setBackgroundColor(color)
     }
     private fun getCurrentDropdownSelection(): String {
-        return (activity as? ScanActivity)?.getCurrentDropdownSelection() ?: "SHT40" // Default to SHT40 if null
+        return RSSIFilterFragment.lastSelectedOption // Default to SHT40 if null
     }
     private fun resetStepCount(){
         stepCount_reset = lastStep
@@ -207,7 +263,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         registerScanResultListener(this)
-        (activity as? ScanActivity)?.registerDropdownListener(this)
+        (activity as? RSSIFilterFragment)?.registerDropdownListener(this)
     }
 
     override fun onDropdownItemSelected(item: String) {
@@ -272,7 +328,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
         setScanActivityBackgroundColor(ContextCompat.getColor(requireContext(), R.color.transparent))
 
         unregisterScanResultListener(this)
-        (activity as? ScanActivity)?.unregisterDropdownListener(this)
+        (activity as? RSSIFilterFragment)?.unregisterDropdownListener(this)
     }
 
     private fun openPlotActivity() {
@@ -310,6 +366,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                 "WindSpeed" -> updateUISpeed(result, timeDifference)
                 "StepCount" -> updateUIStepCount(result, timeDifference)
                 "Speed Distance" -> updateSDT(result, timeDifference)
+                "Object Finding" -> updateUIFInd(result)
             }
     }
     private fun updateSDT(result: ScanResult, timeDifference: Long){
@@ -499,6 +556,150 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                 }
             }
     }
+    private fun updateUIFInd(result: ScanResult) {
+//        if (result.device.address == deviceAddress) {
+//            // Check for BLUETOOTH_CONNECT permission
+//            if (ContextCompat.checkSelfPermission(
+//                    requireContext(),
+//                    Manifest.permission.BLUETOOTH_CONNECT
+//                ) == PackageManager.PERMISSION_GRANTED
+//            ) {
+//                val bytes = result.scanRecord?.bytes ?: byteArrayOf()
+//                val signedBytes = bytes.map { it.toInt() }
+//                val rssi = result.rssi
+//                val deviceName = result.device.name ?: "Unnamed"
+//                val currentIndex = deviceSequence.indexOf(deviceName)
+//
+//                val objectStatus = when {
+//                    currentIndex > 0 && !foundDevices.contains(deviceSequence[currentIndex - 1]) -> {
+//                        "\n\n\n\n\n\nPlease find ${deviceSequence[currentIndex - 1]} first\n\n\n\n\n\n\n"
+//                    }
+//                    rssi > -40 ->{
+//                        foundDevices.add(deviceName)
+//                        "\uD83C\uDF89      ✨\n\uD83C\uDF8A       ✨     \uD83E\uDD73\n\uD83E\uDD73           \uD83C\uDF89\n\n\uD83C\uDF88Object is found\uD83C\uDF88\n✨               \uD83E\uDD73\n\uD83E\uDD73         \uD83C\uDF89        \uD83C\uDF8A\n \uD83E\uDD73     ✨   \n\uD83C\uDF89"
+//                }
+//                    rssi in -70..-40 -> "\n\n\n\n\n\nObject is near\n\n\n\n\n\n\n"
+//                    else -> "\n\n\n\n\n\nObject is far\n\n\n\n\n\n\n"
+//                }
+//
+//                requireActivity().runOnUiThread {
+//                    (binding as FragmentAdvertisingDataObjectFindingBinding).apply {
+//                        Byte0Text.text = result.device.name ?: "unnamed"
+////                        Byte4Text.text = result.device.name ?: "unnamed"
+//                        Byte2Text.text = objectStatus
+//                        Byte2Text.setTextColor(
+//                            when (objectStatus) {
+//                                    "\uD83C\uDF89      ✨\n\uD83C\uDF8A       ✨     \uD83E\uDD73\n\uD83E\uDD73           \uD83C\uDF89\n\n\uD83C\uDF88Object is found\uD83C\uDF88\n✨               \uD83E\uDD73\n\uD83E\uDD73         \uD83C\uDF89        \uD83C\uDF8A\n \uD83E\uDD73     ✨   \n\uD83C\uDF89" -> Color.GREEN
+//                                "\n\n\n\n\n\nObject is near\n\n\n\n\n\n\n" -> Color.BLUE
+//                                else -> Color.RED
+//                            }
+//                        )
+//                        val backgroundResource = when (objectStatus) {
+//                            "\uD83C\uDF89      ✨\n\uD83C\uDF8A       ✨     \uD83E\uDD73\n\uD83E\uDD73           \uD83C\uDF89\n\n\uD83C\uDF88Object is found\uD83C\uDF88\n✨               \uD83E\uDD73\n\uD83E\uDD73         \uD83C\uDF89        \uD83C\uDF8A\n \uD83E\uDD73     ✨   \n\uD83C\uDF89" -> R.drawable.boy
+//                            "\n\n\n\n\n\nObject is near\n\n\n\n\n\n\n" -> R.drawable.boy2
+//                            else -> R.drawable.boy3
+//                        }
+//                        mainLayout.background = ContextCompat.getDrawable(requireContext(), backgroundResource)
+//
+//
+//                        if (objectStatus == "\uD83C\uDF89      ✨\n\uD83C\uDF8A       ✨     \uD83E\uDD73\n\uD83E\uDD73           \uD83C\uDF89\n\n\uD83C\uDF88Object is found\uD83C\uDF88\n✨               \uD83E\uDD73\n\uD83E\uDD73         \uD83C\uDF89        \uD83C\uDF8A\n \uD83E\uDD73     ✨   \n\uD83C\uDF89") {
+//                            if (!mediaPlayer.isPlaying) { // Prevent multiple sound plays
+//                                mediaPlayer.start()
+//                            }
+//                        }
+//                        startBlinkingAnimation(Byte2Text)
+//                    }
+//                }
+//            } else {
+//                // Request permission if not granted
+//                ActivityCompat.requestPermissions(
+//                    requireActivity(),
+//                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+//                    PERMISSION_REQUEST_BLUETOOTH_CONNECT
+//                )
+//            }
+//        }
+    }
+
+    // Function to trigger emoji celebration effect
+//    private fun showCelebrationEmojis() {
+//        val emojiContainer = binding.emojiContainer // Ensure emojiContainer is visible
+//        emojiContainer.removeAllViews()
+//
+//        repeat(10) { // Show 10 random emojis for the effect
+//            val emojiView = TextView(requireContext()).apply {
+//                text = getRandomCelebrationEmoji()
+//                textSize = 24f // Starting size
+//                gravity = Gravity.CENTER
+//                setTextColor(Color.parseColor("#FFCC00")) // Golden color for celebration
+//            }
+//
+//            // Random position within the container
+//            val layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+//            emojiView.layoutParams = layoutParams
+//
+//            // Start Scale Animation
+//            val scaleAnimation = ScaleAnimation(
+//                0.1f, 2.0f, // From 0.1 to 2.0 size
+//                0.1f, 2.0f,
+//                Animation.RELATIVE_TO_SELF, 0.5f,
+//                Animation.RELATIVE_TO_SELF, 0.5f
+//            ).apply {
+//                duration = 500
+//                fillAfter = true
+//            }
+//
+//            // Alpha Animation to fade out
+//            val alphaAnimation = AlphaAnimation(1.0f, 0.0f).apply {
+//                duration = 500
+//                startOffset = 250 // Start fading out halfway
+//                fillAfter = true
+//            }
+//
+//            // Combine Scale and Alpha Animation
+//            val animationSet = Animation.AnimationSet(true).apply {
+//                addAnimation(scaleAnimation)
+//                addAnimation(alphaAnimation)
+//            }
+//
+//            // Set a random position for the emoji within the container
+//            emojiView.translationX = Random.nextInt(emojiContainer.width).toFloat()
+//            emojiView.translationY = Random.nextInt(emojiContainer.height).toFloat()
+//
+//            // Start the animation
+//            emojiView.startAnimation(animationSet)
+//
+//            // Remove the emoji after animation ends
+//            animationSet.setAnimationListener(object : Animation.AnimationListener {
+//                override fun onAnimationStart(animation: Animation) {}
+//                override fun onAnimationEnd(animation: Animation) {
+//                    emojiContainer.removeView(emojiView)
+//                }
+//                override fun onAnimationRepeat(animation: Animation) {}
+//            })
+//
+//            // Add the emoji to the container and animate
+//            emojiContainer.addView(emojiView)
+//        }
+//
+//        // Make the emoji container visible if hidden
+//        emojiContainer.visibility = View.VISIBLE
+//    }
+//
+//
+//
+//    private fun getRandomCelebrationEmoji(): String {
+//        val emojis = listOf("🎉", "🎈", "🎊", "✨", "🥳")
+//        return emojis.random()
+//    }
+    private fun startBlinkingAnimation(view: TextView) {
+        val animator = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f)
+        animator.duration = 500  // Duration for fade in and fade out
+        animator.interpolator = LinearInterpolator()
+        animator.repeatCount = ObjectAnimator.INFINITE
+        animator.repeatMode = ObjectAnimator.REVERSE
+        animator.start()
+    }
 
     private  fun updateUILIS2DH(result: ScanResult, timeDifference: Long) {
             if (result.device.address == deviceAddress) {
@@ -664,4 +865,27 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
         dialog?.window?.setLayout(width, height)
 
     }
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == PERMISSION_REQUEST_BLUETOOTH_CONNECT) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, you can re-call updateUIFInd or continue
+            } else {
+                // Permission denied, handle the case accordingly (e.g., show a message)
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        // Release MediaPlayer resources when the Fragment is destroyed
+        if (::mediaPlayer.isInitialized) {
+            mediaPlayer.release()
+        }
+    }
+
 }

@@ -1,0 +1,33 @@
+<TableLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    android:stretchColumns="1">
+
+    <!-- Row for Device Name and RSSI -->
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Device Name Column -->
+        <TextView
+            android:id="@+id/deviceName1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+
+        <!-- RSSI Value Column -->
+        <TextView
+            android:id="@+id/rssiValue1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp" />
+
+    </TableRow>
+</TableLayout>

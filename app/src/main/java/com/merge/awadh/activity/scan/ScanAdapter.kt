@@ -2,11 +2,13 @@ package com.merge.awadh.activity.scan
 
 import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
+import android.content.Intent
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
@@ -14,31 +16,32 @@ import com.merge.awadh.R
 import com.merge.awadh.activity.scan.fragment.AdvertisingDataFragment
 import com.merge.awadh.ble.BLEManager
 import com.merge.awadh.databinding.RowScanResultBinding
+import com.merge.awadh.test4
+import com.merge.awadh.test5
 import kotlin.collections.ArrayList
 
 @SuppressLint("NotifyDataSetChanged", "MissingPermission")
-class ScanAdapter (
+class ScanAdapter(
     private val items: List<ScanResult>,
-    private val delegate: Delegate
+    private val delegate: ScanAdapter.Delegate?
 ) : RecyclerView.Adapter<ScanAdapter.ViewHolder>() {
 
     private val itemsCopy: ArrayList<ScanResult> = arrayListOf()
+    private val selectedDevices = mutableSetOf<ScanResult>()
+    private var currentFilterType: String = "SHT40"
 
     interface Delegate {
-        fun onConnectButtonClick(result: ScanResult)
         fun onItemClick(dialog: DialogFragment)
     }
 
+
+
     inner class ViewHolder(val binding: RowScanResultBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
-            binding.connectButton.setOnClickListener {
-                val result = items[bindingAdapterPosition]
-                delegate.onConnectButtonClick(result)
-            }
             itemView.setOnClickListener {
                 val result = items[bindingAdapterPosition]
                 val dialog = AdvertisingDataFragment.newInstance(result.device.address)
-                delegate.onItemClick(dialog)
+                delegate?.onItemClick(dialog)
             }
         }
     }
@@ -62,13 +65,13 @@ class ScanAdapter (
         with(holder.binding) {
             deviceName.text = result.device.name ?: "Unnamed"
             macAddress.text = result.device.address
-            signalStrength.text = "${result.rssi} dBm"
+            signalStrength.text = "RSSI value: ${result.rssi} dBm"
 
-            connectButton.visibility = if (!result.isConnectable) View.GONE else View.VISIBLE
         }
     }
 
     override fun getItemCount() = items.size
+
 
     // Filter Recycler View by given text
     fun filter(value: String, type:String) {
@@ -102,4 +105,29 @@ class ScanAdapter (
             item.rssi >= value.toInt()
         }
     }
+
+    fun updateResults(filteredList: List<ScanResult>) {
+        // Replace the current dataset with the filtered results
+        itemsCopy.clear() // Clear the existing itemsCopy
+        itemsCopy.addAll(filteredList)
+        (items as ArrayList).clear()
+        (items as ArrayList).addAll(filteredList)
+        notifyDataSetChanged() // Notify the adapter of changes
+    }
+    fun updateFilter(type: String) {
+        currentFilterType = type
+        notifyDataSetChanged()
+    }
+
+
+
 }
+
+
+//val context = itemView.context
+//val intent = Intent(context, test5::class.java)
+// Pass the device's RSSI value and other details if needed
+//intent.putExtra("device_name", result.device.name)
+//intent.putExtra("rssi", result.rssi)
+//context.startActivity(intent)
+
