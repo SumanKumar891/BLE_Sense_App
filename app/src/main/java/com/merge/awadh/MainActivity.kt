@@ -84,9 +84,9 @@ class MainActivity : AppCompatActivity() {
         val popupMenu = PopupMenu(this, findViewById<android.widget.Toolbar>(R.id.toolbar))
 
         // Add only the two menu items dynamically
-        popupMenu.menu.add(0, R.id.allDevicesItem, 0, "All Devices")
-        popupMenu.menu.add(0, R.id.gamingOptionsItem, 1, "Gaming Options")
-        popupMenu.menu.add(0, R.id.switchThemeItem, 2, "Switch Theme")
+        popupMenu.menu.add(0, R.id.allDevicesItem1, 0, "All Devices")
+        popupMenu.menu.add(0, R.id.gamingOptionsItem1, 1, "Gaming Options")
+        popupMenu.menu.add(0, R.id.switchThemeItem1, 2, "Switch Theme")
 
         // Handle item selection
         popupMenu.setOnMenuItemClickListener { item ->

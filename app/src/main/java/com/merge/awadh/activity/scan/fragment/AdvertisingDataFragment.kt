@@ -50,6 +50,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 
 import com.merge.awadh.ble.BLEManager
+import com.merge.awadh.databinding.FragmentAdvertisingDataMetalFindingBinding
 
 
 class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSelectionListener {
@@ -228,6 +229,19 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                 mediaPlayer = MediaPlayer.create(requireContext(), R.raw.found_sound)
                 (binding as FragmentAdvertisingDataObjectFindingBinding).root
             }
+            "Metal Detector" ->{
+                binding = DataBindingUtil.inflate<FragmentAdvertisingDataMetalFindingBinding>(
+                    inflater,
+                    R.layout.fragment_advertising_data_metal_finding,
+                    container,
+                    false
+                )
+                (binding as FragmentAdvertisingDataMetalFindingBinding).apply {
+                    okButton.setOnClickListener {
+                        dismiss()
+                    }
+                }
+                (binding as FragmentAdvertisingDataMetalFindingBinding).root}
             else -> throw IllegalArgumentException("Unsupported dropdown item: $dropdownitem")
         }
     }
@@ -367,6 +381,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                 "StepCount" -> updateUIStepCount(result, timeDifference)
                 "Speed Distance" -> updateSDT(result, timeDifference)
                 "Object Finding" -> updateUIFInd(result)
+                "Metal Detector" ->updateMetal(result,timeDifference)
             }
     }
     private fun updateSDT(result: ScanResult, timeDifference: Long){
@@ -506,6 +521,20 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
             }
         }
     }
+    private  fun updateMetal(result: ScanResult, timeDifference: Long) {
+        if (result.device.address == deviceAddress) {
+            val bytes = result.scanRecord?.bytes ?: byteArrayOf()
+            val unsignedBytes = bytes.map { it.toUByte().toInt() }
+
+            val deviceID = unsignedBytes.getOrNull(2)
+            val metal = unsignedBytes.getOrNull(3)
+            requireActivity().runOnUiThread {
+                (binding as FragmentAdvertisingDataMetalFindingBinding).apply {
+                    Byte0Text.text =deviceID?.toString() ?: ""
+                    Byte1Text.text = metal?.toString() ?: ""
+
+                }}
+            }}
     private  fun updateUISHT40(result: ScanResult, timeDifference: Long) {
             if (result.device.address == deviceAddress) {
                 val bytes = result.scanRecord?.bytes ?: byteArrayOf()
@@ -552,6 +581,7 @@ class AdvertisingDataFragment: DialogFragment(), ScanResultListener, DropdownSel
                         Byte3Text.text = humid
                         Byte1Text.text = deviceID?.toString() ?: ""
                         Byte5Text.text = "$timeDifference ms"
+
                     }
                 }
             }

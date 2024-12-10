@@ -16,6 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/game_bg1"
+            android:orientation="horizontal"
             tools:context=".FragmentGame1OpeningPage">
 
 
@@ -35,5 +36,31 @@
                 android:layout_marginTop="-4dp"
                 android:background="@android:color/transparent" />
         </RelativeLayout>
+<!--        previous code by yash-->
+
+
+<!--        <RelativeLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:background="@drawable/game_bg1"-->
+<!--            tools:context=".FragmentGame1OpeningPage">-->
+
+<!--            <ImageView-->
+<!--                android:id="@+id/animatedImage"-->
+<!--                android:layout_width="150dp"-->
+<!--                android:layout_height="150dp"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:layout_marginTop="20dp" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/playButton"-->
+<!--                android:layout_width="109dp"-->
+<!--                android:layout_height="85dp"-->
+<!--                android:layout_below="@id/animatedImage"-->
+<!--                android:layout_marginTop="16dp"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:background="@android:color/transparent" />-->
+<!--        </RelativeLayout>-->
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
