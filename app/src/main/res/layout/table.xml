@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:background="?attr/colorOnBackground">
+        <View
+                    android:id="@+id/centerDivider"
+                    android:layout_width="1dp"
+                    android:layout_height="0dp"
+                    android:background="@color/humid_fill"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/deviceName"
+                    android:layout_marginHorizontal="4dp" />
+
+        <!-- Guideline to divide left and right -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/centerLine"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintGuide_percent="0.5"
+            android:orientation="vertical" />
+
+        <!-- Bluetooth Icon -->
+        <ImageView
+            android:id="@+id/bluetoothIcon"
+            android:layout_width="50dp"
+            android:layout_height="63dp"
+            android:contentDescription="@string/bluetooth_icon"
+            android:src="@drawable/touch"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Device Name (Left Side) -->
+
+        <!-- Signal Strength (Right Side) -->
+        <TextView
+            android:id="@+id/deviceName"
+            android:layout_width="140dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="8dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/bluetoothIcon"
+            app:layout_constraintEnd_toStartOf="@id/centerLine"
+            app:layout_constraintHorizontal_bias="0.84"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/bluetoothIcon"
+            app:layout_constraintVertical_bias="0.487"
+            tools:text="Device Name" />
+
+        <TextView
+            android:id="@+id/signal_strength"
+            android:layout_width="123dp"
+            android:layout_height="23dp"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@id/centerLine"
+            app:layout_constraintTop_toTopOf="@id/deviceName"
+            tools:text="-100 dBm" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
+
+
+
+

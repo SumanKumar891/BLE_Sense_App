@@ -94,7 +94,7 @@ class RSSIFilterFragment: DialogFragment() {
             throw IllegalStateException("Binding is not initialized yet")
         }
 
-        val options = listOf("SHT40", "LIS2DH", "WindSpeed","StepCount", "Speed Distance", "Object Finding")
+        val options = listOf("SHT40", "LIS2DH", "WindSpeed","StepCount", "Speed Distance", "Object Finding","Metal Detector")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, options)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.byteSpinner.adapter = adapter
@@ -141,6 +141,9 @@ class RSSIFilterFragment: DialogFragment() {
             }
             "Object Finding" ->{
 //                filterDevicesForObjectFinding()
+
+            }
+            "Metal Detector" ->{
 
             }
         }

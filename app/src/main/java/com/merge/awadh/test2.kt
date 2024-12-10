@@ -13,12 +13,12 @@ class test2 : AppCompatActivity() {
         setContentView(R.layout.activity_test2)
         val button=findViewById<Button>(R.id.button2)
         button.setOnClickListener{
-            val Intent= Intent(this, test3::class.java)
+            val Intent= Intent(this, test4::class.java)
             startActivity(Intent)
         }
         val button2=findViewById<Button>(R.id.multiUserPlay)
         button2.setOnClickListener{
-            val Intent= Intent(this, test6::class.java)
+            val Intent= Intent(this, test7::class.java)
             startActivity(Intent)
         }
     }
