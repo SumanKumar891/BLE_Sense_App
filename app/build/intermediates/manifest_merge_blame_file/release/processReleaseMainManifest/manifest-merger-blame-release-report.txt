@@ -1,0 +1,264 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.blegame"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="34"
+9        android:targetSdkVersion="35" />
+10
+11    <!-- Permissions -->
+12    <uses-permission android:name="android.permission.BLUETOOTH" />
+12-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:5:5-67
+12-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:5:22-65
+13    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+13-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:6:5-73
+13-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:6:22-71
+14    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+14-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:7:5-72
+14-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:7:22-70
+15    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+15-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:8:5-75
+15-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:8:22-73
+16    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+16-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:9:5-78
+16-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:9:22-76
+17    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+17-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:10:5-80
+17-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:10:22-78
+18    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+18-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:11:5-77
+18-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:11:22-75
+19
+20    <!-- Feature -->
+21    <uses-feature
+21-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:14:5-89
+22        android:name="android.hardware.bluetooth_le"
+22-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:14:19-63
+23        android:required="true" />
+23-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:14:64-87
+24
+25    <permission
+25-->[androidx.core:core:1.15.0] C:\Users\DELL\.gradle\caches\8.9\transforms\4e479c85feaa95267f9ba1e0df50fc1f\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
+26        android:name="com.example.blegame.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+26-->[androidx.core:core:1.15.0] C:\Users\DELL\.gradle\caches\8.9\transforms\4e479c85feaa95267f9ba1e0df50fc1f\transformed\core-1.15.0\AndroidManifest.xml:23:9-81
+27        android:protectionLevel="signature" />
+27-->[androidx.core:core:1.15.0] C:\Users\DELL\.gradle\caches\8.9\transforms\4e479c85feaa95267f9ba1e0df50fc1f\transformed\core-1.15.0\AndroidManifest.xml:24:9-44
+28
+29    <uses-permission android:name="com.example.blegame.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+29-->[androidx.core:core:1.15.0] C:\Users\DELL\.gradle\caches\8.9\transforms\4e479c85feaa95267f9ba1e0df50fc1f\transformed\core-1.15.0\AndroidManifest.xml:26:5-97
+29-->[androidx.core:core:1.15.0] C:\Users\DELL\.gradle\caches\8.9\transforms\4e479c85feaa95267f9ba1e0df50fc1f\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
+30
+31    <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION" />
+31-->[com.polidea.rxandroidble2:rxandroidble:1.11.1] C:\Users\DELL\.gradle\caches\8.9\transforms\c7a9280b4beff2c5a566378581caee88\transformed\rxandroidble-1.11.1\AndroidManifest.xml:14:5-88
+31-->[com.polidea.rxandroidble2:rxandroidble:1.11.1] C:\Users\DELL\.gradle\caches\8.9\transforms\c7a9280b4beff2c5a566378581caee88\transformed\rxandroidble-1.11.1\AndroidManifest.xml:14:29-85
+32    <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION" />
+32-->[com.polidea.rxandroidble2:rxandroidble:1.11.1] C:\Users\DELL\.gradle\caches\8.9\transforms\c7a9280b4beff2c5a566378581caee88\transformed\rxandroidble-1.11.1\AndroidManifest.xml:15:5-86
+32-->[com.polidea.rxandroidble2:rxandroidble:1.11.1] C:\Users\DELL\.gradle\caches\8.9\transforms\c7a9280b4beff2c5a566378581caee88\transformed\rxandroidble-1.11.1\AndroidManifest.xml:15:29-83
+33
+34    <application
+34-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:16:5-59:19
+35        android:allowBackup="true"
+35-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:17:9-35
+36        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+36-->[androidx.core:core:1.15.0] C:\Users\DELL\.gradle\caches\8.9\transforms\4e479c85feaa95267f9ba1e0df50fc1f\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
+37        android:dataExtractionRules="@xml/data_extraction_rules"
+37-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:18:9-65
+38        android:extractNativeLibs="false"
+39        android:fullBackupContent="@xml/backup_rules"
+39-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:19:9-54
+40        android:icon="@mipmap/ic_launcher"
+40-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:20:9-43
+41        android:label="@string/app_name"
+41-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:21:9-41
+42        android:requestLegacyExternalStorage="true"
+42-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:26:9-52
+43        android:roundIcon="@mipmap/ic_launcher_round"
+43-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:22:9-54
+44        android:supportsRtl="true"
+44-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:23:9-35
+45        android:theme="@style/Theme.BLEGame"
+45-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:24:9-45
+46        android:usesCleartextTraffic="true" >
+46-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:25:9-44
+47        <activity
+47-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:30:9-36:20
+48            android:name="com.example.blegame.SplashActivity"
+48-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:30:19-49
+49            android:exported="true" >
+49-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:30:50-73
+50            <intent-filter>
+50-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:31:13-34:29
+51                <action android:name="android.intent.action.MAIN" />
+51-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:32:17-68
+51-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:32:25-66
+52
+53                <category android:name="android.intent.category.LAUNCHER" />
+53-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:33:17-76
+53-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:33:27-74
+54            </intent-filter>
+55        </activity>
+56
+57        <!-- Define MainActivity as the launcher activity -->
+58        <activity
+58-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:39:9-41:20
+59            android:name="com.example.blegame.MainActivity"
+59-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:39:19-47
+60            android:exported="true" >
+60-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:39:48-71
+61        </activity>
+62        <activity
+62-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:43:9-86
+63            android:name="com.example.blegame.BLEAppActivity"
+63-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:43:19-49
+64            android:exported="true" >
+64-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:43:50-73
+65        </activity>
+66        <!-- <activity android:name=".SplashActivity" android:exported="true">  </activity> -->
+67        <activity
+67-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:45:9-95
+68            android:name="com.example.blegame.AdvertisingDataActivity"
+68-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:45:19-58
+69            android:exported="true" >
+69-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:45:59-82
+70        </activity>
+71        <activity
+71-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:46:9-91
+72            android:name="com.example.blegame.ServiceListActivity"
+72-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:46:19-54
+73            android:exported="true" >
+73-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:46:55-78
+74        </activity>
+75        <!-- GameplayActivity without the MAIN action -->
+76        <activity
+76-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:48:9-89
+77            android:name="com.example.blegame.StartGameActivity"
+77-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:48:19-52
+78            android:exported="true" >
+78-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:48:53-76
+79        </activity>
+80        <activity
+80-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:49:9-88
+81            android:name="com.example.blegame.GameplayActivity"
+81-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:49:19-51
+82            android:exported="true" >
+82-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:49:52-75
+83        </activity>
+84        <!-- Other activities -->
+85        <activity
+85-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:51:9-76
+86            android:name="com.example.blegame.WelcomeActivity"
+86-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:51:19-50
+87            android:exported="true" />
+87-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:51:51-74
+88        <activity
+88-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:52:9-83
+89            android:name="com.example.blegame.GameDeviceListActivity"
+89-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:52:19-57
+90            android:exported="true" />
+90-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:52:58-81
+91        <activity
+91-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:53:9-80
+92            android:name="com.example.blegame.MultiplayerActivity"
+92-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:53:19-54
+93            android:exported="true" />
+93-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:53:55-78
+94        <activity
+94-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:54:9-80
+95            android:name="com.example.blegame.SpeedometerActivity"
+95-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:54:19-54
+96            android:exported="true" />
+96-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:54:55-78
+97
+98        <meta-data
+98-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:56:9-58:57
+99            android:name="preloaded_fonts"
+99-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:57:13-43
+100            android:resource="@array/preloaded_fonts" />
+100-->C:\Users\DELL\Downloads\BLEGame\BLEGame\app\src\main\AndroidManifest.xml:58:13-54
+101
+102        <provider
+102-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+103            android:name="androidx.startup.InitializationProvider"
+103-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+104            android:authorities="com.example.blegame.androidx-startup"
+104-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+105            android:exported="false" >
+105-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+106            <meta-data
+106-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+107                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+107-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+108                android:value="androidx.startup" />
+108-->[androidx.emoji2:emoji2:1.3.0] C:\Users\DELL\.gradle\caches\8.9\transforms\a86605a1236bfdca92d858819ebeec6f\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+109            <meta-data
+109-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\DELL\.gradle\caches\8.9\transforms\56d89b4275d26f9e91e1a54a59cdee73\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
+110                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+110-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\DELL\.gradle\caches\8.9\transforms\56d89b4275d26f9e91e1a54a59cdee73\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
+111                android:value="androidx.startup" />
+111-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\DELL\.gradle\caches\8.9\transforms\56d89b4275d26f9e91e1a54a59cdee73\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
+112            <meta-data
+112-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+113                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+113-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+114                android:value="androidx.startup" />
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+115        </provider>
+116
+117        <activity
+117-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\DELL\.gradle\caches\8.9\transforms\b1a8285fff56a22385a109e936953764\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+118            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+118-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\DELL\.gradle\caches\8.9\transforms\b1a8285fff56a22385a109e936953764\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+119            android:exported="false"
+119-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\DELL\.gradle\caches\8.9\transforms\b1a8285fff56a22385a109e936953764\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+120            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+120-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\DELL\.gradle\caches\8.9\transforms\b1a8285fff56a22385a109e936953764\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+121
+122        <meta-data
+122-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\DELL\.gradle\caches\8.9\transforms\7a3331ef308ddf815211cee125a0e717\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+123            android:name="com.google.android.gms.version"
+123-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\DELL\.gradle\caches\8.9\transforms\7a3331ef308ddf815211cee125a0e717\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+124            android:value="@integer/google_play_services_version" />
+124-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\DELL\.gradle\caches\8.9\transforms\7a3331ef308ddf815211cee125a0e717\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+125
+126        <receiver
+126-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+127            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+127-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+128            android:directBootAware="false"
+128-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+129            android:enabled="true"
+129-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+130            android:exported="true"
+130-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+131            android:permission="android.permission.DUMP" >
+131-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+132            <intent-filter>
+132-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+133                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+133-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+133-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+134            </intent-filter>
+135            <intent-filter>
+135-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+136                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+136-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+136-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+137            </intent-filter>
+138            <intent-filter>
+138-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+139                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+139-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+139-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+140            </intent-filter>
+141            <intent-filter>
+141-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+142                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+142-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+142-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DELL\.gradle\caches\8.9\transforms\4135660895dd4bb705c50945afef8f77\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+143            </intent-filter>
+144        </receiver>
+145    </application>
+146
+147</manifest>
