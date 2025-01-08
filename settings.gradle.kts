@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BLE Game"
+rootProject.name = "BLE Sense"
 include(":app")
  
