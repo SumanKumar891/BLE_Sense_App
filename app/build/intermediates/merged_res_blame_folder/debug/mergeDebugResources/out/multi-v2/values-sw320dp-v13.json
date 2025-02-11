@@ -1,0 +1,46 @@
+{
+    "logs": [
+        {
+            "outputFile": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-mergeDebugResources-48:\\values-sw320dp-v13\\values-sw320dp-v13.xml",
+            "map": [
+                {
+                    "source": "D:\\BLEGame (2)\\BLEGame (1)\\BLEGame\\BLEGame\\app\\src\\main\\res\\values-sw320dp\\dimens.xml",
+                    "from": {
+                        "startLines": "4,6,5,2,3",
+                        "startColumns": "4,4,4,4,4",
+                        "startOffsets": "154,261,204,57,105",
+                        "endColumns": "48,57,55,46,47",
+                        "endOffsets": "198,314,255,99,148"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6",
+                        "startColumns": "4,4,4,4,4",
+                        "startOffsets": "55,104,162,218,265",
+                        "endColumns": "48,57,55,46,47",
+                        "endOffsets": "99,157,213,260,308"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.example.blegame.app-mergeDebugResources-48:/values-sw320dp-v13/values-sw320dp-v13.xml",
+            "map": [
+                {
+                    "source": "D:\\BLEGame (2)\\BLEGame (1)\\BLEGame\\BLEGame\\app\\src\\main\\res\\values-sw320dp\\dimens.xml",
+                    "from": {
+                        "startLines": "-1,-1,-1",
+                        "startColumns": "-1,-1,-1",
+                        "startOffsets": "-1,-1,-1"
+                    },
+                    "to": {
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,113,169",
+                        "endColumns": "57,55,46",
+                        "endOffsets": "108,164,211"
+                    }
+                }
+            ]
+        }
+    ]
+}
