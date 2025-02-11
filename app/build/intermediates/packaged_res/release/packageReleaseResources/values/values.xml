@@ -28,12 +28,29 @@
     <color name="purple_200">#BB86FC</color>
     <color name="purple_500">#6200EE</color>
     <color name="purple_700">#3700B3</color>
+    <color name="spinner_background">#FFFFFF</color>
+    <color name="spinner_background_dark">#424242</color>
+    <color name="spinner_background_light">#FFFFFF</color>
+    <color name="spinner_stroke">#E0E0E0</color>
+    <color name="spinner_stroke_dark">#666666</color>
+    <color name="spinner_stroke_light">#E0E0E0</color>
+    <color name="spinner_text">#000000</color>
     <color name="teal_200">#03DAC5</color>
     <color name="teal_700">#018786</color>
     <color name="white">#FFFFFF</color>
+    <dimen name="content_margin">16dp</dimen>
+    <dimen name="icon_padding">12dp</dimen>
+    <dimen name="icon_size">48dp</dimen>
+    <dimen name="recycler_padding">8dp</dimen>
+    <dimen name="screen_margin">20dp</dimen>
+    <dimen name="spinner_padding_horizontal">16dp</dimen>
+    <dimen name="spinner_padding_vertical">12dp</dimen>
+    <dimen name="title_text_size">24sp</dimen>
     <string name="advertising_data">Advertising Data:</string>
+    <string name="advertising_data_text"><u>Advertising Data</u></string>
     <string name="app_name">BLE Sense</string>
     <string name="back">Back</string>
+    <string name="ble_sense_text"><u>BLE Sense</u></string>
     <string name="bluetooth_permission_required">Bluetooth permission required</string>
     <string name="bluetooth_status">Bluetooth Status:</string>
     <string name="character_image">char_image</string>
@@ -42,6 +59,7 @@
     <string name="device_state">Device State</string>
     <string name="footer_text">Footer:</string>
     <string name="game_title">Game Section:</string>
+    <string name="game_zone">GAME ZONE</string>
     <string name="keep_moving_to_find_the_device">Keep moving to find the device</string>
     <string name="multiplayer">Multi Player</string>
     <string name="nearby_ble_devices">Nearby BLE Devices</string>
@@ -50,6 +68,17 @@
     <string name="single_player">Single Player</string>
     <string name="start_game">Start Game</string>
     <string name="welcome_to_ble_game">Welcome to Games Section</string>
+    <style name="SpinnerDarkTheme">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:backgroundTint">@color/spinner_background_dark</item>
+        <item name="android:popupBackground">@color/spinner_background_dark</item>
+        <item name="android:dropDownSelector">@color/spinner_background_dark</item>
+    </style>
+    <style name="SpinnerTheme">
+            <item name="android:textColor">@color/spinner_text</item>
+            <item name="android:backgroundTint">@null</item>
+            <item name="android:popupBackground">@color/spinner_background</item>
+        </style>
     <style name="Theme.BLEGame" parent="Theme.Material3.DayNight.NoActionBar">
         
         <item name="colorPrimary">#D32F2F</item> 

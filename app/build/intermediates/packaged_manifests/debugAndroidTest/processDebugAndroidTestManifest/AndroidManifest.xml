@@ -3,7 +3,7 @@
     package="com.example.blegame.test" >
 
     <uses-sdk
-        android:minSdkVersion="34"
+        android:minSdkVersion="29"
         android:targetSdkVersion="35" />
 
     <instrumentation

@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package com.example.blegame
 
 import android.annotation.SuppressLint
@@ -9,6 +7,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -30,17 +29,21 @@ class StartGameActivity : AppCompatActivity() {
         bleAdapter = BluetoothAdapterWrapper(this)
 
         val startGameButton: ImageView = findViewById(R.id.startGameButton)
-
+        val backButton: ImageButton = findViewById(R.id.backButton)
         // Load the GIF from the assets folder
         Glide.with(this)
             .asGif()
-            .load("file:///android_asset/START GAME.gif")
+            .load("file:///android_asset/START_GAME_COMPRESS.gif")
             .into(startGameButton)
 
         // Set an onClickListener for the ImageView
         startGameButton.setOnClickListener {
             val intent = Intent(this, WelcomeActivity::class.java)
             startActivity(intent)
+        }
+
+        backButton.setOnClickListener {
+            finish() // Go back to the previous activity
         }
 
         requestPermissions()
@@ -57,7 +60,11 @@ class StartGameActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         if (ungrantedPermissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, ungrantedPermissions.toTypedArray(), PERMISSION_REQUEST_CODE)
+            ActivityCompat.requestPermissions(
+                this,
+                ungrantedPermissions.toTypedArray(),
+                PERMISSION_REQUEST_CODE
+            )
         }
     }
 
@@ -77,7 +84,11 @@ class StartGameActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
-                Toast.makeText(this, "Location is required for Bluetooth scanning", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Location is required for Bluetooth scanning",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             .create()
             .show()

@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 class MultiplayerActivity : AppCompatActivity() {
 
     private lateinit var bleAdapter: BluetoothAdapterWrapper
-    private lateinit var deviceAdapter: BLEDeviceAdapter
+    private lateinit var deviceAdapter: GameDeviceAdapter
     private val deviceList = mutableListOf<BLEDevice>()
     private val deviceRSSI = mutableMapOf<String, Int>()
     private val filteredDeviceList = mutableListOf<BLEDevice>() //
@@ -35,10 +35,10 @@ class MultiplayerActivity : AppCompatActivity() {
         "Hulk", "Thor", "Iron_Man", "Spider Man", "Captain America"
     )
 
-    private val targetMacAddresses = setOf(
-        "EA:17:DF:DF:4B:82", // Replace with your sensor's MAC addresses
-        "EB:17:DF:DF:4B:81"
-    )
+//    private val targetMacAddresses = setOf(
+//        "EA:17:DF:DF:4B:82", // Replace with your sensor's MAC addresses
+//        "EB:17:DF:DF:4B:81"
+//    )
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +48,7 @@ class MultiplayerActivity : AppCompatActivity() {
         bleAdapter = BluetoothAdapterWrapper(this)
 
         val deviceRecyclerView: RecyclerView = findViewById(R.id.deviceRecyclerView)
-        deviceAdapter = BLEDeviceAdapter(deviceList) { selectedDevice ->
+        deviceAdapter = GameDeviceAdapter(deviceList) { selectedDevice ->
         }
         deviceRecyclerView.layoutManager = LinearLayoutManager(this)
         deviceRecyclerView.adapter = deviceAdapter
@@ -78,7 +78,6 @@ class MultiplayerActivity : AppCompatActivity() {
         intent.putExtra("DEVICE_ADDRESS", device.address)
         startActivityForResult(intent, GAMEPLAY_ACTIVITY_REQUEST_CODE)
     }
-
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -197,7 +196,6 @@ class MultiplayerActivity : AppCompatActivity() {
             showToast("Scan failed with error code: $errorCode")
         }
     }
-
 
 
     private fun hasPermissions(): Boolean {

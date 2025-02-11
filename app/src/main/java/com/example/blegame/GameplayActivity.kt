@@ -185,10 +185,12 @@ class GameplayActivity : AppCompatActivity() {
                         }
                         "Found"
                     }
+
                     rssi < -75 -> {
                         checkBoxDeviceFound.isChecked = false // Mark CheckBox as unchecked
                         "Far"
                     }
+
                     else -> null
                 }
 

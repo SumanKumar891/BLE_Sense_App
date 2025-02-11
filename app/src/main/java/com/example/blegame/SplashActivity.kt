@@ -19,4 +19,5 @@ class SplashActivity : AppCompatActivity() {
             finish() // Close the splash screen so the user cannot return to it
         }, 2000) // 3000 milliseconds = 3 seconds
     }
+
 }

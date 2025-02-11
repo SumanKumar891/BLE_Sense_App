@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="content_margin">24dp</dimen>
+    <dimen name="icon_padding">16dp</dimen>
+    <dimen name="icon_size">56dp</dimen>
+    <dimen name="recycler_padding">12dp</dimen>
+    <dimen name="screen_margin">32dp</dimen>
+    <dimen name="spinner_padding_horizontal">24dp</dimen>
+    <dimen name="spinner_padding_vertical">16dp</dimen>
+    <dimen name="title_text_size">32sp</dimen>
+</resources>

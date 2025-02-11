@@ -13,7 +13,7 @@
         android:layout_height="0dp"
         app:layout_constraintWidth_percent="0.6"
         app:layout_constraintDimensionRatio="1:1"
-        app:srcCompat="@drawable/logoble"
+        app:srcCompat="@drawable/bg_remove_ble"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/textView2"
         app:layout_constraintStart_toStartOf="parent"

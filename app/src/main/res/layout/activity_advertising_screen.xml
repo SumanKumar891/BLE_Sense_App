@@ -1,0 +1,43 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Existing TextViews and Controls -->
+    <TextView
+        android:id="@+id/deviceInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:paddingBottom="8dp" />
+
+    <TextView
+        android:id="@+id/advertisingDataDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:paddingBottom="8dp" />
+
+    <!-- New Controls for Advertising -->
+    <Button
+        android:id="@+id/startAdvertisingButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Advertising" />
+
+    <Button
+        android:id="@+id/stopAdvertisingButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Stop Advertising"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btn_advertise_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Advertise Data" />
+
+</LinearLayout>

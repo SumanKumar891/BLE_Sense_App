@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.blegame.app-mergeDebugResources-42:/values-xlarge-v4/values-xlarge-v4.xml",
+            "outputFile": "com.example.blegame.app-mergeDebugResources-48:/values-xlarge-v4/values-xlarge-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\DELL\\.gradle\\caches\\8.9\\transforms\\5822fe037cb37882babe136ed9f1e002\\transformed\\appcompat-1.7.0\\res\\values-xlarge-v4\\values-xlarge-v4.xml",
+                    "source": "C:\\Users\\DELL\\.gradle\\caches\\8.9\\transforms\\bc9568448c9556cfde401e688db91bbb\\transformed\\appcompat-1.7.0\\res\\values-xlarge-v4\\values-xlarge-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7",
                         "startColumns": "4,4,4,4,4,4",

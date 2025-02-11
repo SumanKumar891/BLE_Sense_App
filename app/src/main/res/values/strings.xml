@@ -22,6 +22,7 @@
     <string name="bluetooth_status">Bluetooth Status:</string>
     <string name="game_title">Game Section:</string>
     <string name="footer_text">Footer:</string>
+    <string name="game_zone">GAME ZONE</string>
     <string-array name="device_types">
         <item>SHT40</item>
         <item>LIS2DH</item>

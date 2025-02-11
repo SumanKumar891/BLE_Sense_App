@@ -20,7 +20,7 @@
   "baselineProfiles": [
     {
       "minApi": 28,
-      "maxApi": 30,
+      "maxApi": 35,
       "baselineProfiles": [
         "baselineProfiles/1/app-release.dm"
       ]

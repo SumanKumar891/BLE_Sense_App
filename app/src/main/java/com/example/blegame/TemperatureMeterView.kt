@@ -11,18 +11,60 @@ import android.util.AttributeSet
 import android.view.View
 import kotlin.math.cos
 import kotlin.math.sin
-
 class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
+    enum class SensorType {
+        SHT40,
+        SPEED_DISTANCE
+    }
+
+    // Remove the manual sensor type initialization
+    private lateinit var sensorType: SensorType
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val needlePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val markPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val thermometerPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val thermometerFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var currentTemperature = 0.0 // Temperature value (e.g., 0°C to 50°C)
+    private val progressPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val progressFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var currentValue = 0.0f
 
-    // Colors for dark and light modes
+    // Sensor configurations
+    private val sensorConfig = mapOf(
+        SensorType.SHT40 to SensorConfig(
+            maxValue = 50.0f,
+            stepSize = 5f,
+            minValue = 0f,
+            unit = "°C"
+        ),
+        SensorType.SPEED_DISTANCE to SensorConfig(
+            maxValue = 10.0f,
+            stepSize = 1f,
+            minValue = 0f,
+            unit = "m/s"
+        )
+    )
+
+    init {
+        // Initialize with a default sensor type
+        updateSensorTypeByDevice("SHT40")
+        updateColors()
+    }
+
+    // Add back the getCurrentConfig function
+    private fun getCurrentConfig(): SensorConfig {
+        return sensorConfig[sensorType] ?: sensorConfig[SensorType.SHT40]!!
+    }
+
+    fun updateSensorTypeByDevice(deviceType: String) {
+        sensorType = when (deviceType.uppercase()) {
+            "SHT40" -> SensorType.SHT40
+            "SPEED_DISTANCE" -> SensorType.SPEED_DISTANCE
+            else -> SensorType.SHT40 // Default to SHT40 if the device type is unknown
+        }
+        currentValue = getCurrentConfig().minValue // Reset the value for the new sensor
+        invalidate() // Redraw the view with the new sensor configuration
+    }
+
     private val darkModeColors = ColorScheme(
         backgroundStart = Color.DKGRAY,
         backgroundEnd = Color.BLACK,
@@ -30,8 +72,8 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
         labels = Color.WHITE,
         needle = Color.RED,
         centerCircle = Color.WHITE,
-        thermometerBorder = Color.LTGRAY,
-        thermometerFill = Color.RED
+        progressBorder = Color.LTGRAY,
+        progressFill = Color.RED
     )
 
     private val lightModeColors = ColorScheme(
@@ -41,18 +83,13 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
         labels = Color.BLACK,
         needle = Color.RED,
         centerCircle = Color.BLACK,
-        thermometerBorder = Color.DKGRAY,
-        thermometerFill = Color.RED
+        progressBorder = Color.DKGRAY,
+        progressFill = Color.RED
     )
 
-    private var currentColors = lightModeColors // Default to light mode
-
-    init {
-        updateColors()
-    }
+    private var currentColors = lightModeColors
 
     private fun updateColors() {
-        // Detect current UI mode
         val uiMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         currentColors = when (uiMode) {
             Configuration.UI_MODE_NIGHT_YES -> darkModeColors
@@ -60,21 +97,29 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
         }
     }
 
-    fun setTemperature(temperature: Float) {
-        currentTemperature =
-            temperature.coerceIn(0.0F, 50.0F).toDouble() // Coerce within a range of 0°C to 50°C
+    fun setTemperature(value: Float) {
+        val config = getCurrentConfig()
+        currentValue = value.coerceIn(config.minValue, config.maxValue)
         invalidate()
     }
 
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        val config = getCurrentConfig()
 
         val centerX = width / 2f
         val centerY = height / 3f
         val radius = (width / 4f) * 1.1f
 
-        // Draw gradient background
+        drawBackground(canvas, centerX, centerY, radius)
+        drawScale(canvas, centerX, centerY, radius, config)
+        drawNeedle(canvas, centerX, centerY, radius,
+            (currentValue - config.minValue) / (config.maxValue - config.minValue))
+        drawProgressBar(canvas, centerX, centerY, radius, config)
+    }
+
+    private fun drawBackground(canvas: Canvas, centerX: Float, centerY: Float, radius: Float) {
         val gradient = android.graphics.RadialGradient(
             centerX, centerY, radius,
             intArrayOf(currentColors.backgroundStart, currentColors.backgroundEnd),
@@ -82,43 +127,53 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
         )
         backgroundPaint.shader = gradient
         canvas.drawCircle(centerX, centerY, radius, backgroundPaint)
+    }
 
-        // Draw temperature marks and labels
+    private fun drawScale(canvas: Canvas, centerX: Float, centerY: Float, radius: Float, config: SensorConfig) {
         markPaint.color = currentColors.marks
         markPaint.strokeWidth = 5f
         labelPaint.color = currentColors.labels
         labelPaint.textSize = radius / 5f
 
-        for (i in 0..50 step 5) { // Marks for every 5°C
-            if (i == 50) continue // Skip drawing for 50°C
+        val steps = ((config.maxValue - config.minValue) / config.stepSize).toInt()
 
-            val angle = 360.0 * (i / 50.0) - 90.0 // Map temperature to angle and offset to start at the top
+        for (i in 0..steps) {
+            val value = config.minValue + (i * config.stepSize)
+            val progress = (value - config.minValue) / (config.maxValue - config.minValue)
+            val angle = 270.0 * progress - 45.0
             val angleRad = Math.toRadians(angle)
 
+            // Draw mark
             val startX = centerX + radius * 0.9f * cos(angleRad).toFloat()
             val startY = centerY + radius * 0.9f * sin(angleRad).toFloat()
             val endX = centerX + radius * cos(angleRad).toFloat()
             val endY = centerY + radius * sin(angleRad).toFloat()
-
-            // Draw mark
             canvas.drawLine(startX, startY, endX, endY, markPaint)
 
-            // Draw label (without "°C")
-            val text = "$i" // Just the number
-            val textX = centerX + radius * 1.1f * cos(angleRad).toFloat() - labelPaint.measureText(text) / 2f
-            val textY = centerY + radius * 1.1f * sin(angleRad).toFloat() + labelPaint.textSize / 2f
+            // Draw label
+            val labelRadius = radius * 1.2f
+            val text = value.toInt().toString()
+            val textX = centerX + labelRadius * cos(angleRad).toFloat() - labelPaint.measureText(text) / 2f
+            val textY = centerY + labelRadius * sin(angleRad).toFloat() + labelPaint.textSize / 2f
             canvas.drawText(text, textX, textY, labelPaint)
         }
 
+        // Draw unit label
+        labelPaint.textSize = radius / 6f
+        val unitText = config.unit
+        val unitX = centerX - labelPaint.measureText(unitText) / 2f
+        val unitY = centerY + radius * 0.5f
+        canvas.drawText(unitText, unitX, unitY, labelPaint)
+    }
 
-        // Draw needle
+    private fun drawNeedle(canvas: Canvas, centerX: Float, centerY: Float, radius: Float, progress: Float) {
         needlePaint.color = currentColors.needle
         needlePaint.style = Paint.Style.FILL
 
         val needleLength = radius * 0.7f
         val needleWidth = radius * 0.05f
-        val temperatureAngle = 360.0 * (currentTemperature / 50.0) - 90.0 // Convert temperature to angle
-        val angleRad = Math.toRadians(temperatureAngle)
+        val valueAngle = 270.0 * progress - 45.0
+        val angleRad = Math.toRadians(valueAngle)
 
         val needleEndX = centerX + needleLength * cos(angleRad).toFloat()
         val needleEndY = centerY + needleLength * sin(angleRad).toFloat()
@@ -134,72 +189,63 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
             close()
         }
 
-        // Add glow effect to needle
         needlePaint.setShadowLayer(10f, 0f, 0f, currentColors.needle)
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
         canvas.drawPath(needlePath, needlePaint)
 
-        // Draw center circle
         needlePaint.color = currentColors.centerCircle
         canvas.drawCircle(centerX, centerY, radius * 0.08f, needlePaint)
-
-        // Draw thermometer below the gauge (horizontal)
-        val thermometerWidth = width * 0.7f
-        val thermometerHeight = height / 20f
-        val thermometerLeft = (width - thermometerWidth) / 2f
-        val thermometerTop = centerY + radius + 120f
-        val thermometerRight = thermometerLeft + thermometerWidth
-        val thermometerBottom = thermometerTop + thermometerHeight
-        val thermometerRect = RectF(thermometerLeft, thermometerTop, thermometerRight, thermometerBottom)
-
-        thermometerPaint.color = Color.BLACK // Set to black
-
-        thermometerPaint.style = Paint.Style.STROKE
-        thermometerPaint.strokeWidth = 8f
-        canvas.drawRoundRect(thermometerRect, thermometerHeight / 2f, thermometerHeight / 2f, thermometerPaint)
-
-        // Draw thermometer fill
-        val fillWidth = thermometerWidth * (currentTemperature / 50.0).toFloat()
-        val fillRect = RectF(
-            thermometerLeft,
-            thermometerTop + thermometerHeight / 4f,
-            thermometerLeft + fillWidth,
-            thermometerBottom - thermometerHeight / 4f
-        )
-        // Change color based on temperature
-        thermometerFillPaint.color = if (currentTemperature <= 25) {
-            Color.rgb(0, 100, 0)
-        } else {
-            currentColors.thermometerFill // This will be red
-        }
-        thermometerFillPaint.style = Paint.Style.FILL
-        canvas.drawRoundRect(fillRect, thermometerHeight / 4f, thermometerHeight / 4f, thermometerFillPaint)
-
-        // Draw thermometer labels and marks (horizontal)
-        // Draw thermometer labels and marks (horizontal)
-        labelPaint.color = currentColors.labels
-        labelPaint.textSize = thermometerHeight / 1.5f
-
-        val boundaryToLabelGap = 50f // Adjust this value to increase the gap between the thermometer boundary and the labels
-
-        for (i in 0..50 step 5) {
-            val labelX = thermometerLeft + (i / 50.0).toFloat() * thermometerWidth
-            val labelY = thermometerBottom + boundaryToLabelGap // Increased gap from the thermometer boundary
-
-            val text = "$i°"
-
-            // Draw marks above the labels
-            val markYStart = thermometerBottom + 10f // Start slightly below the thermometer
-            val markYEnd = markYStart + 10f // Adjust the length of the hyphen mark
-            canvas.drawLine(labelX, markYStart, labelX, markYEnd, markPaint)
-
-
-            canvas.drawText(text, labelX - labelPaint.measureText(text) / 2f, labelY, labelPaint)
-        }
-
     }
 
-    // Helper class for storing color schemes
+    private fun drawProgressBar(canvas: Canvas, centerX: Float, centerY: Float, radius: Float, config: SensorConfig) {
+        val barWidth = width * 0.7f
+        val barHeight = height / 20f
+        val barLeft = (width - barWidth) / 2f
+        val barTop = centerY + radius + 120f
+        val barRight = barLeft + barWidth
+        val barBottom = barTop + barHeight
+        val barRect = RectF(barLeft, barTop, barRight, barBottom)
+
+        progressPaint.color = currentColors.progressBorder
+        progressPaint.style = Paint.Style.STROKE
+        progressPaint.strokeWidth = 8f
+        canvas.drawRoundRect(barRect, barHeight / 2f, barHeight / 2f, progressPaint)
+
+        val progress = (currentValue - config.minValue) / (config.maxValue - config.minValue)
+        val fillWidth = barWidth * progress
+        val fillRect = RectF(
+            barLeft,
+            barTop + barHeight / 4f,
+            barLeft + fillWidth,
+            barBottom - barHeight / 4f
+        )
+
+        progressFillPaint.color = when (sensorType) {
+            SensorType.SHT40 -> when {
+                currentValue <= 25f -> Color.GREEN
+                currentValue <= 35f -> Color.YELLOW
+                else -> Color.RED
+            }
+            SensorType.SPEED_DISTANCE -> Color.BLUE
+        }
+
+        progressFillPaint.style = Paint.Style.FILL
+        canvas.drawRoundRect(fillRect, barHeight / 4f, barHeight / 4f, progressFillPaint)
+
+        drawProgressLabels(canvas, barLeft, barRight, barBottom, config)
+    }
+
+    private fun drawProgressLabels(canvas: Canvas, barLeft: Float, barRight: Float, barBottom: Float, config: SensorConfig) {
+        labelPaint.textSize = height / 40f
+        val steps = ((config.maxValue - config.minValue) / config.stepSize).toInt()
+
+        for (i in 0..steps) {
+            val value = config.minValue + (i * config.stepSize)
+            val x = barLeft + (barRight - barLeft) * ((value - config.minValue) / (config.maxValue - config.minValue))
+            val text = value.toInt().toString()
+            canvas.drawText(text, x - labelPaint.measureText(text) / 2f, barBottom + 40f, labelPaint)
+        }
+    }
+
     private data class ColorScheme(
         val backgroundStart: Int,
         val backgroundEnd: Int,
@@ -207,7 +253,14 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
         val labels: Int,
         val needle: Int,
         val centerCircle: Int,
-        val thermometerBorder: Int,
-        val thermometerFill: Int
+        val progressBorder: Int,
+        val progressFill: Int
+    )
+
+    private data class SensorConfig(
+        val maxValue: Float,
+        val stepSize: Float,
+        val minValue: Float,
+        val unit: String
     )
 }

@@ -22,10 +22,11 @@ import androidx.recyclerview.widget.RecyclerView
 class GameDeviceListActivity : AppCompatActivity() {
 
     private lateinit var bleAdapter: BluetoothAdapterWrapper
-    private lateinit var deviceAdapter: BLEDeviceAdapter
+    private lateinit var deviceAdapter: GameDeviceAdapter
     private val deviceList = mutableListOf<BLEDevice>()
     private val deviceRSSI = mutableMapOf<String, Int>() // To store the device and its RSSI value
-    private val deviceAddresses = mutableSetOf<String>() // To track the MAC addresses of the devices
+    private val deviceAddresses =
+        mutableSetOf<String>() // To track the MAC addresses of the devices
     private var selectedDevice: String? = null // Store the selected device
     private var isScanning = false
 
@@ -35,6 +36,7 @@ class GameDeviceListActivity : AppCompatActivity() {
     ) // List of target device names
 
     @RequiresApi(Build.VERSION_CODES.O)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.game_device_list)
@@ -42,7 +44,7 @@ class GameDeviceListActivity : AppCompatActivity() {
         bleAdapter = BluetoothAdapterWrapper(this)
 
         val deviceRecyclerView: RecyclerView = findViewById(R.id.deviceRecyclerView)
-        deviceAdapter = BLEDeviceAdapter(deviceList) { selectedDevice ->
+        deviceAdapter = GameDeviceAdapter(deviceList) { selectedDevice ->
             // On item click, handle the selected device
             handleDeviceClick(selectedDevice)
         }
@@ -67,16 +69,21 @@ class GameDeviceListActivity : AppCompatActivity() {
         selectedDevice = intent.getStringExtra("SELECTED_DEVICE")
     }
 
+
+
+
     private fun handleDeviceClick(device: BLEDevice) {
-        // Store the selected device
         selectedDevice = "${device.name} (${device.address})"
 
-        // Create an Intent to start GameplayActivity
         val intent = Intent(this, GameplayActivity::class.java)
         intent.putExtra("DEVICE_NAME", device.name)
         intent.putExtra("DEVICE_ADDRESS", device.address)
-        startActivityForResult(intent, GAMEPLAY_ACTIVITY_REQUEST_CODE) // Start for result
+        intent.putExtra("IS_FOUND", device.isFound) // Add this line to track found status
+        startActivityForResult(intent, GAMEPLAY_ACTIVITY_REQUEST_CODE)
     }
+
+
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -85,28 +92,36 @@ class GameDeviceListActivity : AppCompatActivity() {
             val foundDeviceAddress = data?.getStringExtra("FOUND_DEVICE_ADDRESS")
 
             if (foundDeviceName != null && foundDeviceAddress != null) {
-                val foundDeviceEntry = BLEDevice(foundDeviceName, foundDeviceAddress, "[Found]")
+                // Create a found device entry with isFound flag set to true
+                val foundDeviceEntry = BLEDevice(
+                    name = foundDeviceName,
+                    address = foundDeviceAddress,
+                    rssi = "[Found]",
+                    isFound = true // Set found flag
+                )
 
                 // Update the device list
                 val existingIndex = deviceList.indexOfFirst { it.address == foundDeviceAddress }
                 if (existingIndex != -1) {
-                    deviceList.removeAt(existingIndex)
+                    deviceList[existingIndex] = foundDeviceEntry // Replace existing device
+                } else {
+                    deviceList.add(0, foundDeviceEntry) // Add at the top
                 }
-
-                deviceList.add(0, foundDeviceEntry)
                 deviceAdapter.notifyDataSetChanged()
             }
         }
     }
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun refreshBLEScan() {
-        stopBLEScan() // Stop the current scan if ongoing
-        deviceList.clear() // Clear the existing list
+        stopBLEScan()
+        // Instead of clearing everything, only clear non-found devices
+        deviceList.removeAll { !it.isFound }
         deviceRSSI.clear()
         deviceAddresses.clear()
-        deviceAdapter.notifyDataSetChanged() // Notify adapter about changes
-        startBLEScan() // Start a new scan
+        deviceAdapter.notifyDataSetChanged()
+        startBLEScan()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -133,6 +148,8 @@ class GameDeviceListActivity : AppCompatActivity() {
             .build()
 
         val scanFilter = ScanFilter.Builder().build()
+
+
 
         if (!isScanning) {
             isScanning = true
@@ -177,29 +194,40 @@ class GameDeviceListActivity : AppCompatActivity() {
         }
     }
 
+
     private val bleScanCallback = object : ScanCallback() {
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val deviceName = result.device.name // Get the device name
+            val deviceName = result.device.name
             val deviceAddress = result.device.address
             val rssi = result.rssi
 
-            // Check if the device is in the target list
             if (deviceName.isNullOrEmpty() || deviceName !in targetDevices) {
                 return
             }
 
-            // Check if the device already exists in the list
-            val existingIndex = deviceList.indexOfFirst { it.address == deviceAddress }
+            // Check if this device was previously found
+            val existingDevice = deviceList.find { it.address == deviceAddress }
+            val isDeviceFound = existingDevice?.isFound ?: false
 
-            if (existingIndex != -1) {
-                deviceList[existingIndex].rssi = rssi.toString()
-                deviceAdapter.notifyItemChanged(existingIndex, rssi.toString())
-            } else {
-                val newDevice = BLEDevice(deviceName, deviceAddress, rssi.toString())
-                deviceList.add(newDevice)
-                deviceAddresses.add(deviceAddress)
-                deviceAdapter.notifyItemInserted(deviceList.size - 1)
+            runOnUiThread {
+                val existingIndex = deviceList.indexOfFirst { it.address == deviceAddress }
+                if (existingIndex != -1) {
+                    // Update only RSSI while preserving other properties
+                    deviceList[existingIndex].rssi = rssi.toString()
+                    // Use payload to update only RSSI
+                    deviceAdapter.notifyItemChanged(existingIndex, rssi.toString())
+                } else {
+                    // Add new device
+                    val newDevice = BLEDevice(
+                        name = deviceName,
+                        address = deviceAddress,
+                        rssi = rssi.toString(),
+                        isFound = isDeviceFound
+                    )
+                    deviceList.add(newDevice)
+                    deviceAdapter.notifyItemInserted(deviceList.size - 1)
+                }
             }
         }
 

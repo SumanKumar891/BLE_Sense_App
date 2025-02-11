@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.blegame.app-mergeReleaseResources-42:/values-hdpi-v4/values-hdpi-v4.xml",
+            "outputFile": "com.example.blegame.app-mergeReleaseResources-48:/values-hdpi-v4/values-hdpi-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\DELL\\.gradle\\caches\\8.9\\transforms\\5822fe037cb37882babe136ed9f1e002\\transformed\\appcompat-1.7.0\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "source": "C:\\Users\\DELL\\.gradle\\caches\\8.9\\transforms\\bc9568448c9556cfde401e688db91bbb\\transformed\\appcompat-1.7.0\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

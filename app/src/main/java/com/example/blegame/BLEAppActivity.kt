@@ -28,7 +28,8 @@ class BLEAppActivity : AppCompatActivity() {
     private val deviceList = mutableListOf<BLEDevice>()
     private val filteredDeviceList = mutableListOf<BLEDevice>() // Filtered list
     private val deviceRSSI = mutableMapOf<String, Int>() // To store the device and its RSSI value
-    private val deviceAddresses = mutableSetOf<String>() // To track the MAC addresses of the devices
+    private val deviceAddresses =
+        mutableSetOf<String>() // To track the MAC addresses of the devices
     private var selectedDeviceType: String = "SHT40" // Default BLE Device Type
     private var isScanning = false
 
@@ -49,7 +50,8 @@ class BLEAppActivity : AppCompatActivity() {
         val backButton: ImageButton = findViewById(R.id.backButton)
         val autoRenewButton: ImageButton = findViewById(R.id.autorenew)
         val filterSpinner: Spinner = findViewById(R.id.filterSpinner)
-        val deviceTypeSpinner: Spinner = findViewById(R.id.deviceTypeSpinner) // Add spinner for device types
+        val deviceTypeSpinner: Spinner =
+            findViewById(R.id.deviceTypeSpinner) // Add spinner for device types
 
         backButton.setOnClickListener {
             finish() // Go back to the previous activity
@@ -72,7 +74,12 @@ class BLEAppActivity : AppCompatActivity() {
         filterSpinner.adapter = adapter
 
         filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
                 when (position) {
                     0 -> filterDevicesBy { true } // All devices
                     1 -> filterDevicesBy { it.rssi.toInt() > -70 } // Strong Signal (RSSI > -70)
@@ -87,13 +94,18 @@ class BLEAppActivity : AppCompatActivity() {
     }
 
     private fun setupDeviceTypeSpinner(deviceTypeSpinner: Spinner) {
-        val deviceTypes = listOf("SHT40", "LIS2DH")
+        val deviceTypes = listOf("SHT40", "LIS2DH", "Soil Sensor", "Weather", "Lux Sensor", "SPEED_DISTANCE", "Metal Detector")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, deviceTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         deviceTypeSpinner.adapter = adapter
 
         deviceTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
                 selectedDeviceType = deviceTypes[position]
             }
 
@@ -136,6 +148,7 @@ class BLEAppActivity : AppCompatActivity() {
                 bleAdapter.getRequiredPermissions(),
                 REQUEST_CODE_PERMISSIONS
             )
+
             return
         }
 
@@ -148,6 +161,7 @@ class BLEAppActivity : AppCompatActivity() {
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .setLegacy(false)
+
             .setPhy(ScanSettings.PHY_LE_ALL_SUPPORTED)
             .build()
 

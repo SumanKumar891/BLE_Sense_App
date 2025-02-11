@@ -16,14 +16,14 @@ class WelcomeActivity : AppCompatActivity() {
         // Load the GIF from the assets folder
         Glide.with(this)
             .asGif()
-            .load("file:///android_asset/Single_Player.gif")
+            .load("file:///android_asset/Single_Player_Compress.gif")
             .into(singlePlayerButton)
 
         val multiPlayerButton: ImageView = findViewById(R.id.multiPlayerButton)
         // Load the GIF from the assets folder
         Glide.with(this)
             .asGif()
-            .load("file:///android_asset/Multi_Player.gif")
+            .load("file:///android_asset/Multi_Player_Compress.gif")
             .into(multiPlayerButton)
 
         val backButton: ImageButton = findViewById(R.id.backButton)

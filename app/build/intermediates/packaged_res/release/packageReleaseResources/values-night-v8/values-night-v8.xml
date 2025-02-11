@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="spinner_background">#424242</color>
+    <color name="spinner_stroke">#666666</color>
+    <color name="spinner_text">#FFFFFF</color>
     <style name="Theme.BLEGame" parent="Theme.Material3.DayNight.NoActionBar">
         
         <item name="colorPrimary">#EF9A9A</item> 
