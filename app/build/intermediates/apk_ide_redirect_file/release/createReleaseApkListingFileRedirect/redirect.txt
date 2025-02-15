@@ -1,2 +1,0 @@
-#- File Locator -
-listingFile=C:/Users/DELL/Downloads/BLEGame/BLEGame/app/release/output-metadata.json
