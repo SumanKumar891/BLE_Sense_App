@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <style name="SpinnerTheme">
+            <item name="android:textColor">@color/spinner_text</item>
+            <item name="android:backgroundTint">@null</item>
+            <item name="android:popupBackground">@color/spinner_background</item>
+        </style>
+
+
+    <style name="SpinnerDarkTheme">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:backgroundTint">@color/spinner_background_dark</item>
+        <item name="android:popupBackground">@color/spinner_background_dark</item>
+        <item name="android:dropDownSelector">@color/spinner_background_dark</item>
+    </style>
+
+
+</resources>
