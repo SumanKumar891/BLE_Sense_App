@@ -2688,6 +2688,9 @@ androidx.cardview.R$styleable:
 androidx.cardview.R
 androidx.cardview.widget.CardView:
     public void <init>(android.content.Context)
+    public void setContentPadding(int,int,int,int)
+androidx.cardview.widget.CardViewImpl:
+    public abstract void updatePadding(androidx.cardview.widget.CardViewDelegate)
 androidx.cardview.widget.RoundRectDrawableWithShadow:
     private static final float SHADOW_MULTIPLIER
 androidx.collection.ArrayMapKt
@@ -4550,7 +4553,6 @@ androidx.constraintlayout.widget.ConstraintsChangedListener:
     public void preLayoutChange(int,int)
 androidx.constraintlayout.widget.Group
 androidx.constraintlayout.widget.Guideline:
-    public void <init>(android.content.Context,android.util.AttributeSet)
     public void <init>(android.content.Context,android.util.AttributeSet,int)
     public void <init>(android.content.Context,android.util.AttributeSet,int,int)
 androidx.constraintlayout.widget.Placeholder:
@@ -13995,9 +13997,6 @@ com.bumptech.glide.util.pool.StateVerifier:
     private static final boolean DEBUG
 com.example.blegame.AdvertisingDataActivity:
     private static final int REQUEST_CODE_PERMISSIONS
-    private static final java.lang.String TAG
-    private android.widget.Button downloadButton
-    private final void exportDailyDataToCSV()
 com.example.blegame.BLEAppActivity:
     private static final int REQUEST_CODE_PERMISSIONS
 com.example.blegame.BLEDevice:
@@ -14012,18 +14011,6 @@ com.example.blegame.BLEDevice:
     public final void setAddress(java.lang.String)
     public final void setFound(boolean)
     public final void setLastSeen(long)
-com.example.blegame.BLEDeviceAdapter$BLEDeviceViewHolder:
-    public final android.widget.TextView getAddressTextView()
-    public final android.widget.ImageView getCharacterImageView()
-    public final android.widget.TextView getNameTextView()
-com.example.blegame.BLEDeviceAdapter:
-    private final int TYPE_HEADER
-com.example.blegame.GameDeviceAdapter$BLEDeviceViewHolder:
-    public final android.widget.TextView getAddressTextView()
-    public final android.widget.ImageView getCharacterImageView()
-    public final android.widget.TextView getNameTextView()
-com.example.blegame.GameDeviceAdapter:
-    private final int TYPE_HEADER
 com.example.blegame.GameDeviceListActivity:
     private static final int GAMEPLAY_ACTIVITY_REQUEST_CODE
     private static final int REQUEST_CODE_PERMISSIONS
@@ -14047,9 +14034,7 @@ com.example.blegame.LuxViewBulb
 com.example.blegame.MainActivity:
     private static final int REQUEST_CODE_BLUETOOTH_PERMISSIONS
 com.example.blegame.MultiplayerActivity:
-    private static final int GAMEPLAY_ACTIVITY_REQUEST_CODE
     private static final int REQUEST_CODE_PERMISSIONS
-    private final void handleDeviceClick(com.example.blegame.BLEDevice)
 com.example.blegame.R$anim
 com.example.blegame.R$array
 com.example.blegame.R$attr
@@ -14113,10 +14098,6 @@ com.example.blegame.R$drawable:
 com.example.blegame.R$font
 com.example.blegame.R$id:
     public static int activityTitle
-    public static int advertiseIntervalEdit
-    public static int advertiseNameEdit
-    public static int btn_advertise_data
-    public static int connectable
     public static int downloadButton
     public static int gamezone
     public static int imageView
@@ -14125,31 +14106,19 @@ com.example.blegame.R$id:
     public static int popupText
     public static int scanningIndicator
     public static int singlePlayerText
-    public static int speedometerView
-    public static int startAdvertiseButton
-    public static int startAdvertisingButton
-    public static int stopAdvertiseButton
-    public static int stopAdvertisingButton
+    public static int startGuideline
     public static int textView
     public static int textView2
     public static int textView3
-    public static int titleText
     public static int topBarContainer
     public static int tvBLEDescription
     public static int tvBLETitle
     public static int tvBLETitle1
     public static int tvGamesDescription
-    public static int unitText
-    public static int valueText
     public static int welcomeText
     private void <init>()
 com.example.blegame.R$layout:
-    public static int activity_advertising_screen
-    public static int advertising_data_dialog_box
-    public static int ble_device_night
     public static int item_card_ble
-    public static int item_soil_sensor
-    public static int speedometer
     private void <init>()
 com.example.blegame.R$mipmap
 com.example.blegame.R$string
@@ -14163,9 +14132,6 @@ com.example.blegame.SHT40Reading:
     public final java.lang.String component4()
     public final com.example.blegame.SHT40Reading copy(long,java.lang.String,java.lang.String,java.lang.String)
     public static synthetic com.example.blegame.SHT40Reading copy$default(com.example.blegame.SHT40Reading,long,java.lang.String,java.lang.String,java.lang.String,int,java.lang.Object)
-com.example.blegame.SoilSensorAdapter$ViewHolder
-com.example.blegame.SoilSensorAdapter
-com.example.blegame.SoilSensorDataItem
 com.example.blegame.SoilSensorReading:
     public final long component1()
     public final java.lang.String component2()
@@ -14201,8 +14167,6 @@ com.example.blegame.TemperatureViewMeter$SensorType:
     public static kotlin.enums.EnumEntries getEntries()
 com.example.blegame.TemperatureViewMeter:
     public synthetic void <init>(android.content.Context,android.util.AttributeSet,int,kotlin.jvm.internal.DefaultConstructorMarker)
-com.example.blegame.WeatherDataParser$parseWeatherData$1
-com.example.blegame.WeatherDataParser
 com.example.blegame.WeatherReading:
     public final long component1()
     public final java.lang.String component10()
@@ -16805,6 +16769,7 @@ com.google.android.material.R$attr:
     public static int materialCardViewElevatedStyle
     public static int materialCardViewFilledStyle
     public static int materialCardViewOutlinedStyle
+    public static int materialCardViewStyle
     public static int materialCircleRadius
     public static int materialDisplayDividerStyle
     public static int materialDividerHeavyStyle
@@ -16857,6 +16822,7 @@ com.google.android.material.R$attr:
     public static int motionDurationLong4
     public static int motionDurationMedium1
     public static int motionDurationMedium3
+    public static int motionDurationShort1
     public static int motionEasingAccelerated
     public static int motionEasingDecelerated
     public static int motionEasingEmphasized
@@ -17018,6 +16984,7 @@ com.google.android.material.R$attr:
     public static int state_above_anchor
     public static int state_collapsed
     public static int state_collapsible
+    public static int state_dragged
     public static int state_liftable
     public static int state_lifted
     public static int state_with_icon
@@ -19131,6 +19098,7 @@ com.google.android.material.R$id:
     public static int mtrl_anchor_parent
     public static int mtrl_calendar_selection_frame
     public static int mtrl_calendar_text_input_frame
+    public static int mtrl_card_checked_layer_id
     public static int mtrl_motion_snapshot_view
     public static int mtrl_picker_fullscreen
     public static int mtrl_picker_header
@@ -19885,6 +19853,7 @@ com.google.android.material.R$style:
     public static int Base_Widget_MaterialComponents_TextInputEditText
     public static int Base_Widget_MaterialComponents_TextInputLayout
     public static int Base_Widget_MaterialComponents_TextView
+    public static int CardView
     public static int CardView_Dark
     public static int CardView_Light
     public static int MaterialAlertDialog_Material3
@@ -20621,6 +20590,7 @@ com.google.android.material.R$style:
     public static int Widget_MaterialComponents_Button_TextButton_Snackbar
     public static int Widget_MaterialComponents_Button_UnelevatedButton
     public static int Widget_MaterialComponents_Button_UnelevatedButton_Icon
+    public static int Widget_MaterialComponents_CardView
     public static int Widget_MaterialComponents_CheckedTextView
     public static int Widget_MaterialComponents_ChipGroup
     public static int Widget_MaterialComponents_Chip_Choice
@@ -21013,6 +20983,7 @@ com.google.android.material.R$styleable:
     public static int CardView_android_minHeight
     public static int CardView_android_minWidth
     public static int CardView_cardBackgroundColor
+    public static int CardView_cardCornerRadius
     public static int CardView_cardElevation
     public static int CardView_cardMaxElevation
     public static int CardView_cardPreventCornerOverlap
@@ -21755,9 +21726,19 @@ com.google.android.material.R$styleable:
     public static int MaterialButton_shapeAppearanceOverlay
     public static int MaterialCalendar_android_windowFullscreen
     public static int MaterialCalendar_nestedScrollable
+    public static int MaterialCardView_android_checkable
+    public static int MaterialCardView_cardForegroundColor
+    public static int MaterialCardView_checkedIcon
+    public static int MaterialCardView_checkedIconGravity
+    public static int MaterialCardView_checkedIconMargin
+    public static int MaterialCardView_checkedIconSize
+    public static int MaterialCardView_checkedIconTint
+    public static int MaterialCardView_rippleColor
     public static int MaterialCardView_shapeAppearance
     public static int MaterialCardView_shapeAppearanceOverlay
     public static int MaterialCardView_state_dragged
+    public static int MaterialCardView_strokeColor
+    public static int MaterialCardView_strokeWidth
     public static int MaterialCheckBoxStates_state_error
     public static int MaterialCheckBoxStates_state_indeterminate
     public static int MaterialCheckBox_buttonTint
@@ -22699,20 +22680,93 @@ com.google.android.material.canvas.CanvasCompat:
     private void <init>()
     public static int saveLayerAlpha(android.graphics.Canvas,android.graphics.RectF,int)
 com.google.android.material.card.MaterialCardView$CheckedIconGravity
+com.google.android.material.card.MaterialCardView$OnCheckedChangeListener
 com.google.android.material.card.MaterialCardView:
     private static final java.lang.String ACCESSIBILITY_CLASS_NAME
+    private static final int[] CHECKABLE_STATE_SET
     public static final int CHECKED_ICON_GRAVITY_BOTTOM_END
     public static final int CHECKED_ICON_GRAVITY_BOTTOM_START
     public static final int CHECKED_ICON_GRAVITY_TOP_END
     public static final int CHECKED_ICON_GRAVITY_TOP_START
+    private static final int[] CHECKED_STATE_SET
+    private static final int DEF_STYLE_RES
+    private static final int[] DRAGGED_STATE_SET
     private static final java.lang.String LOG_TAG
+    private final com.google.android.material.card.MaterialCardViewHelper cardViewHelper
+    private boolean checked
+    private boolean dragged
+    private boolean isParentCardViewDoneInitializing
+    private com.google.android.material.card.MaterialCardView$OnCheckedChangeListener onCheckedChangeListener
+    static void <clinit>()
     public void <init>(android.content.Context)
+    public void <init>(android.content.Context,android.util.AttributeSet)
+    public void <init>(android.content.Context,android.util.AttributeSet,int)
+    static synthetic float access$001(com.google.android.material.card.MaterialCardView)
+    private void forceRippleRedrawIfNeeded()
+    private android.graphics.RectF getBoundsAsRectF()
+    public android.content.res.ColorStateList getCardBackgroundColor()
+    public android.content.res.ColorStateList getCardForegroundColor()
+    float getCardViewRadius()
+    public android.graphics.drawable.Drawable getCheckedIcon()
+    public int getCheckedIconGravity()
+    public int getCheckedIconMargin()
+    public int getCheckedIconSize()
+    public android.content.res.ColorStateList getCheckedIconTint()
+    public int getContentPaddingBottom()
+    public int getContentPaddingLeft()
+    public int getContentPaddingRight()
+    public int getContentPaddingTop()
+    public float getProgress()
+    public float getRadius()
+    public android.content.res.ColorStateList getRippleColor()
+    public com.google.android.material.shape.ShapeAppearanceModel getShapeAppearanceModel()
+    public int getStrokeColor()
+    public android.content.res.ColorStateList getStrokeColorStateList()
+    public int getStrokeWidth()
+    public boolean isCheckable()
+    public boolean isChecked()
+    public boolean isDragged()
+    protected void onAttachedToWindow()
+    protected int[] onCreateDrawableState(int)
+    public void onInitializeAccessibilityEvent(android.view.accessibility.AccessibilityEvent)
+    public void onInitializeAccessibilityNodeInfo(android.view.accessibility.AccessibilityNodeInfo)
+    protected void onMeasure(int,int)
+    void setAncestorContentPadding(int,int,int,int)
+    public void setBackground(android.graphics.drawable.Drawable)
+    public void setBackgroundDrawable(android.graphics.drawable.Drawable)
+    void setBackgroundInternal(android.graphics.drawable.Drawable)
+    public void setCardBackgroundColor(int)
+    public void setCardBackgroundColor(android.content.res.ColorStateList)
+    public void setCardElevation(float)
+    public void setCardForegroundColor(android.content.res.ColorStateList)
+    public void setCheckable(boolean)
+    public void setChecked(boolean)
+    public void setCheckedIcon(android.graphics.drawable.Drawable)
+    public void setCheckedIconGravity(int)
+    public void setCheckedIconMargin(int)
+    public void setCheckedIconMarginResource(int)
+    public void setCheckedIconResource(int)
+    public void setCheckedIconSize(int)
+    public void setCheckedIconSizeResource(int)
+    public void setCheckedIconTint(android.content.res.ColorStateList)
+    public void setClickable(boolean)
     public void setContentPadding(int,int,int,int)
-com.google.android.material.card.MaterialCardViewHelper:
-    private static final float CARD_VIEW_SHADOW_MULTIPLIER
-    private static final int CHECKED_ICON_LAYER_INDEX
-    public static final int DEFAULT_FADE_ANIM_DURATION
-    private static final int DEFAULT_STROKE_VALUE
+    public void setDragged(boolean)
+    public void setMaxCardElevation(float)
+    public void setOnCheckedChangeListener(com.google.android.material.card.MaterialCardView$OnCheckedChangeListener)
+    public void setPreventCornerOverlap(boolean)
+    public void setProgress(float)
+    public void setRadius(float)
+    public void setRippleColor(android.content.res.ColorStateList)
+    public void setRippleColorResource(int)
+    public void setShapeAppearanceModel(com.google.android.material.shape.ShapeAppearanceModel)
+    public void setStrokeColor(int)
+    public void setStrokeColor(android.content.res.ColorStateList)
+    public void setStrokeWidth(int)
+    public void setUseCompatPadding(boolean)
+    public void toggle()
+com.google.android.material.card.MaterialCardViewHelper$1
+com.google.android.material.card.MaterialCardViewHelper
 com.google.android.material.carousel.Arrangement:
     private static final float MEDIUM_ITEM_FLEX_PERCENTAGE
 com.google.android.material.carousel.CarouselLayoutManager$LayoutDirection
@@ -24136,6 +24190,8 @@ com.google.android.material.shape.MaterialShapeDrawable:
     public void <init>(com.google.android.material.shape.ShapePathModel)
     public static com.google.android.material.shape.MaterialShapeDrawable createWithElevationOverlay(android.content.Context)
     public static com.google.android.material.shape.MaterialShapeDrawable createWithElevationOverlay(android.content.Context,float)
+    public float getBottomLeftCornerResolvedSize()
+    public float getBottomRightCornerResolvedSize()
     public android.graphics.Paint$Style getPaintStyle()
     public void getPathForSize(int,int,android.graphics.Path)
     public int getResolvedTintColor()
@@ -24157,6 +24213,8 @@ com.google.android.material.shape.MaterialShapeDrawable:
     public void setEdgeIntersectionCheckEnable(boolean)
     public void setPaintStyle(android.graphics.Paint$Style)
     public void setScale(float)
+    public void setShadowBitmapDrawingEnable(boolean)
+    public void setShadowColor(int)
     public void setShadowCompatRotation(int)
     public void setShadowCompatibilityMode(int)
     public void setShadowElevation(int)
@@ -34961,7 +35019,6 @@ androidx.cardview.widget.CardView:
     public int mUserSetMinWidth
     public static synthetic void access$101(androidx.cardview.widget.CardView,int)
     public static synthetic void access$201(androidx.cardview.widget.CardView,int)
-    public static void setContentPadding()
 androidx.cardview.widget.CardViewApi17Impl$1
 androidx.cardview.widget.CardViewApi17Impl
 androidx.cardview.widget.CardViewApi21Impl:
@@ -34979,7 +35036,7 @@ androidx.cardview.widget.CardViewApi21Impl:
     public final void setBackgroundColor(androidx.cardview.widget.CardView$1,android.content.res.ColorStateList)
     public final void setElevation()
     public final void setRadius()
-    public final void updatePadding(androidx.cardview.widget.CardView$1)
+    public final void updatePadding()
 androidx.cardview.widget.CardViewBaseImpl$1
 androidx.cardview.widget.CardViewBaseImpl
 androidx.cardview.widget.CardViewDelegate
@@ -41648,9 +41705,8 @@ com.example.blegame.AdvertisingDataActivity$parseWeatherData$1:
     public final java.lang.CharSequence invoke()
 com.example.blegame.AdvertisingDataActivity:
     public static final com.example.blegame.AdvertisingDataActivity$Companion Companion
-    public float currentTemperature
     static void <clinit>()
-    public static boolean checkPermissions()
+    public final boolean checkPermissions()
     public static void exportDataToCSV()
     public static void exportLIS2DHData()
     public static void exportLuxData()
@@ -41666,7 +41722,7 @@ com.example.blegame.AdvertisingDataActivity:
     public static java.lang.String parseSDTData()
     public static java.lang.String parseSoilSensorData()
     public static java.lang.String parseWeatherData()
-    public static void requestPermissions()
+    public final void requestPermissions()
     public static void shareFile()
     public static boolean shouldStoreReading()
     public static void updateUIWithScanData()
@@ -41700,7 +41756,6 @@ com.example.blegame.BLEDeviceAdapter$BLEDeviceViewHolder:
     public final void bind()
     public final android.widget.TextView getRssiTextView()
 com.example.blegame.BLEDeviceAdapter:
-    public final int TYPE_DEVICE
     public static void onBindViewHolder()
     public static void onBindViewHolder$1()
     public static com.example.blegame.BLEDeviceAdapter$BLEDeviceViewHolder onCreateViewHolder()
@@ -41716,7 +41771,6 @@ com.example.blegame.GameDeviceAdapter$BLEDeviceViewHolder:
     public static android.widget.TextView getFoundLabel()
     public final android.widget.TextView getRssiTextView()
 com.example.blegame.GameDeviceAdapter:
-    public final int TYPE_DEVICE
     public static void onBindViewHolder$2()
     public static void onBindViewHolder$3()
     public static com.example.blegame.GameDeviceAdapter$BLEDeviceViewHolder onCreateViewHolder()
@@ -41759,7 +41813,6 @@ com.example.blegame.MultiplayerActivity$onCreate$1:
     public final void invoke$2()
 com.example.blegame.MultiplayerActivity:
     public static final com.example.blegame.MultiplayerActivity$Companion Companion
-    public final java.util.List filteredDeviceList
     public java.lang.String selectedDevice
     static void <clinit>()
     public static boolean hasPermissions$3()
@@ -41800,6 +41853,7 @@ com.example.blegame.TemperatureViewMeter$ColorScheme:
     public static int getProgressBorder()
 com.example.blegame.TemperatureViewMeter$SensorConfig:
     public final float minValue
+    public final java.lang.String unit
     public static float getMaxValue()
     public static float getMinValue()
     public static float getStepSize()
@@ -42503,7 +42557,7 @@ com.google.android.material.R$styleable:
     public static int BottomSheetBehavior_Layout_shouldRemoveExpandedCorners
     public static int[] ButtonBarLayout
     public static int[] Capability
-    public static int CardView_cardCornerRadius
+    public static int[] CardView
     public static int Carousel_carousel_alignment
     public static int[] CheckedTextView
     public static int[] ChipGroup
@@ -42646,16 +42700,7 @@ com.google.android.material.R$styleable:
     public static int MaterialCalendar_yearSelectedStyle
     public static int MaterialCalendar_yearStyle
     public static int MaterialCalendar_yearTodayStyle
-    public static int MaterialCardView_android_checkable
-    public static int MaterialCardView_cardForegroundColor
-    public static int MaterialCardView_checkedIcon
-    public static int MaterialCardView_checkedIconGravity
-    public static int MaterialCardView_checkedIconMargin
-    public static int MaterialCardView_checkedIconSize
-    public static int MaterialCardView_checkedIconTint
-    public static int MaterialCardView_rippleColor
-    public static int MaterialCardView_strokeColor
-    public static int MaterialCardView_strokeWidth
+    public static int[] MaterialCardView
     public static int[] MaterialCheckBoxStates
     public static int MaterialCheckBox_android_button
     public static int MaterialCheckBox_buttonCompat
@@ -43176,70 +43221,7 @@ com.google.android.material.button.MaterialButtonToggleGroup:
     public static void updateChildOrder()
     public static void updateChildrenA11yClassName()
 com.google.android.material.canvas.CanvasCompat
-com.google.android.material.card.MaterialCardView$OnCheckedChangeListener:
-    public abstract void onCheckedChanged()
-com.google.android.material.card.MaterialCardView:
-    public static final int DEF_STYLE_RES
-    public com.google.android.material.card.MaterialCardView$OnCheckedChangeListener onCheckedChangeListener
-    public final boolean isCheckable()
-    public static boolean isDragged()
-    public static void setAncestorContentPadding()
-com.google.android.material.card.MaterialCardViewHelper$1:
-    public final synthetic com.google.android.material.card.MaterialCardViewHelper this$0
-com.google.android.material.card.MaterialCardViewHelper:
-    public static final android.graphics.drawable.Drawable CHECKED_ICON_NONE
-    public com.google.android.material.shape.MaterialShapeDrawable compatRippleDrawable
-    public static void animateCheckedIcon()
-    public final float calculateHorizontalBackgroundPadding()
-    public final float calculateVerticalBackgroundPadding()
-    public static boolean canClipToOutline()
-    public static android.graphics.drawable.Drawable createCompatRippleDrawable()
-    public static android.graphics.drawable.Drawable createForegroundRippleDrawable()
-    public final com.google.android.material.shape.MaterialShapeDrawable createForegroundShapeDrawable()
-    public static void forceRippleRedraw()
-    public static com.google.android.material.shape.MaterialShapeDrawable getBackground()
-    public static android.content.res.ColorStateList getCardBackgroundColor()
-    public static android.content.res.ColorStateList getCardForegroundColor()
-    public static android.graphics.drawable.Drawable getCheckedIcon()
-    public static int getCheckedIconGravity()
-    public static int getCheckedIconMargin()
-    public static int getCheckedIconSize()
-    public static android.content.res.ColorStateList getCheckedIconTint()
-    public static float getCornerRadius()
-    public static float getParentCardViewCalculatedCornerPadding()
-    public static float getProgress()
-    public static android.content.res.ColorStateList getRippleColor()
-    public static com.google.android.material.shape.ShapeAppearanceModel getShapeAppearanceModel()
-    public static int getStrokeColor()
-    public static android.content.res.ColorStateList getStrokeColorStateList()
-    public static int getStrokeWidth()
-    public static android.graphics.Rect getUserContentPadding()
-    public static boolean isBackgroundOverwritten()
-    public static boolean isCheckable()
-    public final boolean isCheckedIconBottom()
-    public final boolean isCheckedIconEnd()
-    public static synthetic void lambda$animateCheckedIcon$0()
-    public static void loadFromAttributes()
-    public static void setBackgroundOverwritten()
-    public final void setCardBackgroundColor(android.content.res.ColorStateList)
-    public final void setCardForegroundColor(android.content.res.ColorStateList)
-    public static void setCheckable()
-    public static void setChecked()
-    public static void setCheckedIconGravity()
-    public static void setCheckedIconMargin()
-    public static void setCheckedIconSize()
-    public static void setCheckedIconTint()
-    public static void setCornerRadius()
-    public static void setProgress()
-    public final void setRippleColor(android.content.res.ColorStateList)
-    public static void setStrokeColor()
-    public static void setStrokeWidth()
-    public static void setUserContentPadding()
-    public final boolean shouldAddCornerPaddingInsideCardBackground()
-    public final void updateElevation()
-    public static void updateInsetForeground()
-    public final void updateRippleColor()
-    public final void updateStroke()
+com.google.android.material.card.MaterialCardView
 com.google.android.material.carousel.Arrangement
 com.google.android.material.carousel.Carousel
 com.google.android.material.carousel.CarouselLayoutManager$$InternalSyntheticThrowCCEIfNotNull$27$e13385d72fd0c09cee7670519cf67ff185cf99a38e3df6db04af5c1d8058112b$0
@@ -44003,10 +43985,12 @@ com.google.android.material.shadow.ShadowRenderer:
     public final android.graphics.Path scratch
     public int shadowEndColor
     public int shadowMiddleColor
+    public final android.graphics.Paint shadowPaint
     public final android.graphics.Paint transparentPaint
     public static void drawCornerShadow()
     public static void drawEdgeShadow()
     public static android.graphics.Paint getShadowPaint()
+    public final void setShadowColor(int)
 com.google.android.material.shape.CornerTreatment:
     public abstract void getCornerPath()
 com.google.android.material.shape.CutCornerTreatment:
@@ -44030,6 +44014,7 @@ com.google.android.material.shape.MaterialShapeDrawable:
     public static final android.graphics.Paint clearPaint
     public int resolvedTintColor
     public boolean shadowBitmapDrawingEnable
+    public final com.google.android.material.shadow.ShadowRenderer shadowRenderer
     public static android.graphics.PorterDuffColorFilter calculatePaintColorTintFilter()
     public final void calculatePathForSize(android.graphics.RectF,android.graphics.Path)
     public static void calculateStrokePath()
@@ -44037,8 +44022,6 @@ com.google.android.material.shape.MaterialShapeDrawable:
     public final void drawCompatShadow(android.graphics.Canvas)
     public static void drawFillShape()
     public static void drawShape()
-    public static float getBottomLeftCornerResolvedSize()
-    public static float getBottomRightCornerResolvedSize()
     public final android.graphics.RectF getBoundsInsetByStroke()
     public static float getElevation$1()
     public static android.content.res.ColorStateList getFillColor()
@@ -44048,21 +44031,23 @@ com.google.android.material.shape.MaterialShapeDrawable:
     public final int getShadowOffsetY()
     public final com.google.android.material.shape.ShapeAppearanceModel getShapeAppearanceModel()
     public final float getStrokeInsetLength()
-    public final float getTopRightCornerResolvedSize()
+    public final float getTopLeftCornerResolvedSize()
+    public static float getTopRightCornerResolvedSize()
     public static float getTranslationZ$1()
     public final float getZ()
     public static boolean hasCompatShadow()
     public static boolean hasFill()
     public static void invalidateSelfIgnoreShape()
     public static boolean isElevationOverlayEnabled()
+    public final boolean isRoundRect()
     public static void maybeDrawCompatShadow()
     public static int modulateAlpha(int,int)
     public static void prepareCanvasForShadow()
     public static boolean requiresCompatShadow()
     public static void setCornerSize()
+    public final void setInterpolation(float)
     public final void setPadding(int,int,int,int)
     public static void setParentAbsoluteElevation()
-    public static void setShadowBitmapDrawingEnable()
     public final void setStroke(float,int)
     public final void setStroke(float,android.content.res.ColorStateList)
     public final void setStrokeColor(android.content.res.ColorStateList)
@@ -44981,7 +44966,6 @@ kotlin.text.Charsets:
 kotlin.text.StringsKt
 kotlin.text.StringsKt__StringsJVMKt:
     public static boolean endsWith$default(java.lang.String,java.lang.String)
-    public static boolean startsWith$default(java.lang.String,java.lang.String)
 kotlin.text.StringsKt__StringsKt:
     public static final int getLastIndex(java.lang.String)
     public static int indexOf$StringsKt__StringsKt$default(java.lang.String,java.lang.String,int,int,boolean)

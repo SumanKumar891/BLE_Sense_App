@@ -20,10 +20,6 @@
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\activitymain.xml"
     },
     {
-        "merged": "com.example.blegame.app-debug-50:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.example.blegame.app-main-52:/mipmap-anydpi-v26/ic_launcher_round.xml"
-    },
-    {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_imagebg.jpg.flat",
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\imagebg.jpg"
     },
@@ -66,10 +62,6 @@
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_ble_logo_new.png.flat",
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\ble_logo_new.png"
-    },
-    {
-        "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\layout_ble_device_night.xml.flat",
-        "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\ble_device_night.xml"
     },
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_gradient_bg.xml.flat",
@@ -188,12 +180,12 @@
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\ic_launcher_background.xml"
     },
     {
-        "merged": "com.example.blegame.app-debug-50:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.example.blegame.app-main-52:/mipmap-anydpi-v26/ic_launcher.xml"
-    },
-    {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_ble_modified_logo.png.flat",
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\ble_modified_logo.png"
+    },
+    {
+        "merged": "com.example.blegame.app-debug-50:/layout_activity_gameplay.xml.flat",
+        "source": "com.example.blegame.app-main-52:/layout/activity_gameplay.xml"
     },
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\layout_popup_device_found.xml.flat",
@@ -236,12 +228,8 @@
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\ble_device_list.xml"
     },
     {
-        "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\layout_item_soil_sensor.xml.flat",
-        "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\item_soil_sensor.xml"
-    },
-    {
-        "merged": "com.example.blegame.app-debug-50:/drawable_logoblelastfinal.png.flat",
-        "source": "com.example.blegame.app-main-52:/drawable/logoblelastfinal.png"
+        "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_logoblelastfinal.png.flat",
+        "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\logoblelastfinal.png"
     },
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\mipmap-xxhdpi_ic_launcher_round.webp.flat",
@@ -256,10 +244,6 @@
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\item_card_ble.xml"
     },
     {
-        "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\layout_speedometer.xml.flat",
-        "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\speedometer.xml"
-    },
-    {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_game_bg1.jpg.flat",
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\game_bg1.jpg"
     },
@@ -270,10 +254,6 @@
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_game_bg.png.flat",
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\game_bg.png"
-    },
-    {
-        "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\layout_advertising_data_dialog_box.xml.flat",
-        "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\advertising_data_dialog_box.xml"
     },
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_bg_new.avif.flat",
@@ -394,10 +374,6 @@
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_blelogo_modified.png.flat",
         "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\drawable\\blelogo_modified.png"
-    },
-    {
-        "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\layout_activity_advertising_screen.xml.flat",
-        "source": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-main-52:\\layout\\activity_advertising_screen.xml"
     },
     {
         "merged": "C:\\Users\\DELL\\.gradle\\daemon\\8.9\\com.example.blegame.app-debug-50:\\drawable_scarlet_witch.jpeg.flat",

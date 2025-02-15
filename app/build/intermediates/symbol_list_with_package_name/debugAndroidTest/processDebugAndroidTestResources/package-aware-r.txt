@@ -1,3 +1,0 @@
-com.example.blegame.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme

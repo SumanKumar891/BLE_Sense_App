@@ -28,12 +28,10 @@ class BLEAppActivity : AppCompatActivity() {
     private val deviceList = mutableListOf<BLEDevice>()
     private val filteredDeviceList = mutableListOf<BLEDevice>() // Filtered list
     private val deviceRSSI = mutableMapOf<String, Int>() // To store the device and its RSSI value
-    private val deviceAddresses =
-        mutableSetOf<String>() // To track the MAC addresses of the devices
+    private val deviceAddresses = mutableSetOf<String>() // To track the MAC addresses of the devices
     private var selectedDeviceType: String = "SHT40" // Default BLE Device Type
     private var isScanning = false
 
-    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.ble_device_list)

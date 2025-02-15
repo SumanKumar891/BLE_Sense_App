@@ -8,11 +8,9 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -34,8 +32,6 @@ class GameDeviceListActivity : AppCompatActivity() {
         "Scarlet Witch", "Black Widow", "Captain Marvel", "Wasp", "Hela",
         "Hulk", "Thor", "Iron_Man", "Spider Man", "Captain America"
     ) // List of target device names
-
-    @RequiresApi(Build.VERSION_CODES.O)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +81,7 @@ class GameDeviceListActivity : AppCompatActivity() {
 
 
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == GAMEPLAY_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -113,7 +110,6 @@ class GameDeviceListActivity : AppCompatActivity() {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun refreshBLEScan() {
         stopBLEScan()
         // Instead of clearing everything, only clear non-found devices
@@ -124,7 +120,6 @@ class GameDeviceListActivity : AppCompatActivity() {
         startBLEScan()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun startBLEScan() {
         if (!hasPermissions()) {
             ActivityCompat.requestPermissions(
@@ -247,7 +242,6 @@ class GameDeviceListActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,

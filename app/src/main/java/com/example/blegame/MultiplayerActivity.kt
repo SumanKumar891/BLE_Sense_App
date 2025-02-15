@@ -6,13 +6,10 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -25,7 +22,6 @@ class MultiplayerActivity : AppCompatActivity() {
     private lateinit var deviceAdapter: GameDeviceAdapter
     private val deviceList = mutableListOf<BLEDevice>()
     private val deviceRSSI = mutableMapOf<String, Int>()
-    private val filteredDeviceList = mutableListOf<BLEDevice>() //
     private val deviceAddresses = mutableSetOf<String>()
     private var selectedDevice: String? = null
     private var isScanning = false
@@ -40,7 +36,6 @@ class MultiplayerActivity : AppCompatActivity() {
 //        "EB:17:DF:DF:4B:81"
 //    )
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.game_device_list)
@@ -48,7 +43,7 @@ class MultiplayerActivity : AppCompatActivity() {
         bleAdapter = BluetoothAdapterWrapper(this)
 
         val deviceRecyclerView: RecyclerView = findViewById(R.id.deviceRecyclerView)
-        deviceAdapter = GameDeviceAdapter(deviceList) { selectedDevice ->
+        deviceAdapter = GameDeviceAdapter(deviceList) {
         }
         deviceRecyclerView.layoutManager = LinearLayoutManager(this)
         deviceRecyclerView.adapter = deviceAdapter
@@ -70,17 +65,7 @@ class MultiplayerActivity : AppCompatActivity() {
         selectedDevice = intent.getStringExtra("SELECTED_DEVICE")
     }
 
-    private fun handleDeviceClick(device: BLEDevice) {
-        selectedDevice = "${device.name} (${device.address})"
 
-        val intent = Intent(this, GameplayActivity::class.java)
-        intent.putExtra("DEVICE_NAME", device.name)
-        intent.putExtra("DEVICE_ADDRESS", device.address)
-        startActivityForResult(intent, GAMEPLAY_ACTIVITY_REQUEST_CODE)
-    }
-
-
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun refreshBLEScan() {
         stopBLEScan()
         deviceList.clear()
@@ -90,7 +75,6 @@ class MultiplayerActivity : AppCompatActivity() {
         startBLEScan()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun startBLEScan() {
         if (!hasPermissions()) {
             ActivityCompat.requestPermissions(
@@ -209,7 +193,6 @@ class MultiplayerActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -227,7 +210,6 @@ class MultiplayerActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val GAMEPLAY_ACTIVITY_REQUEST_CODE = 1001
         private const val REQUEST_CODE_PERMISSIONS = 1002
     }
 }

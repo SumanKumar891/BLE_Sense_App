@@ -34,13 +34,13 @@ class TemperatureViewMeter(context: Context, attrs: AttributeSet? = null) : View
             maxValue = 50.0f,
             stepSize = 5f,
             minValue = 0f,
-            unit = "°C"
+            unit = ""
         ),
         SensorType.SPEED_DISTANCE to SensorConfig(
             maxValue = 10.0f,
             stepSize = 1f,
             minValue = 0f,
-            unit = "m/s"
+            unit = ""
         )
     )
 

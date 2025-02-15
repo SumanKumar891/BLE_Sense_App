@@ -8,7 +8,6 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.CheckBox
@@ -18,7 +17,6 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -38,7 +36,6 @@ class GameplayActivity : AppCompatActivity() {
 
     private lateinit var checkBoxDeviceFound: CheckBox
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_gameplay)
@@ -73,7 +70,6 @@ class GameplayActivity : AppCompatActivity() {
         startBLEScan()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun startBLEScan() {
         if (!hasPermissions()) {
             ActivityCompat.requestPermissions(
@@ -217,7 +213,6 @@ class GameplayActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,

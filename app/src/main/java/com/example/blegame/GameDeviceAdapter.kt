@@ -14,9 +14,6 @@ class GameDeviceAdapter(
     private val onClick: (BLEDevice) -> Unit
 ) : RecyclerView.Adapter<GameDeviceAdapter.BLEDeviceViewHolder>() {
 
-    private val TYPE_HEADER = 0
-    private val TYPE_DEVICE = 1
-
     private val characterImages = mapOf(
         "Scarlet Witch" to R.drawable.scarlet_witch,
         "Black Widow" to R.drawable.black_widow,
@@ -31,10 +28,10 @@ class GameDeviceAdapter(
     )
 
     inner class BLEDeviceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val nameTextView: TextView = itemView.findViewById(R.id.deviceNameTextView)
-        val addressTextView: TextView = itemView.findViewById(R.id.deviceMacAddressTextView)
+        private val nameTextView: TextView = itemView.findViewById(R.id.deviceNameTextView)
+        private val addressTextView: TextView = itemView.findViewById(R.id.deviceMacAddressTextView)
         val rssiTextView: TextView = itemView.findViewById(R.id.deviceRssi)
-        val characterImageView: ImageView = itemView.findViewById(R.id.characterImageView)
+        private val characterImageView: ImageView = itemView.findViewById(R.id.characterImageView)
         val foundLabel: TextView = itemView.findViewById(R.id.foundLabelTextView) // Add this line
 
         fun bind(device: BLEDevice) {

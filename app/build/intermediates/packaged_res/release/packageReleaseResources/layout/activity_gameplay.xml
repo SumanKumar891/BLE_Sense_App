@@ -8,90 +8,117 @@
     android:background="@drawable/plain_blue"
     tools:context=".GameplayActivity">
 
-    <!-- Back Button -->
+    <!-- Back Button - Using guideline for consistent margin -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/startGuideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/screen_margin" />
+
     <ImageButton
         android:id="@+id/backButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="@dimen/screen_margin"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Back"
+        android:padding="12dp"
         android:src="@drawable/ic_back_arrow"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/startGuideline"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Device Name TextView -->
+    <!-- Device Name TextView - Using scalable text size -->
     <TextView
         android:id="@+id/deviceNameTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/screen_margin"
         android:layout_marginTop="40dp"
         android:fontFamily="@font/archivo_semibold"
         android:text="Device Name"
         android:textAlignment="center"
         android:textColor="@color/white"
-        android:textSize="24sp"
+        android:textSize="@dimen/title_text_size"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="16sp"
+        app:autoSizeMaxTextSize="24sp"
+        app:autoSizeStepGranularity="2sp" />
 
     <!-- MAC Address TextView -->
     <TextView
         android:id="@+id/deviceMacAddressTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="@dimen/screen_margin"
+        android:layout_marginTop="@dimen/vertical_spacing"
         android:fontFamily="@font/archivo_semibold"
         android:text="MAC Address: "
         android:textAlignment="center"
         android:textColor="@color/white"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/deviceNameTextView" />
+        app:layout_constraintTop_toBottomOf="@id/deviceNameTextView"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="14sp"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeStepGranularity="2sp" />
 
     <!-- RSSI Value TextView -->
     <TextView
         android:id="@+id/rssiTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginHorizontal="@dimen/screen_margin"
+        android:layout_marginTop="@dimen/vertical_spacing"
         android:fontFamily="@font/archivo_semibold"
         android:text="RSSI: dBm"
         android:textAlignment="center"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textSize="@dimen/body_text_size"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/deviceMacAddressTextView" />
+        app:layout_constraintTop_toBottomOf="@id/deviceMacAddressTextView"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="14sp"
+        app:autoSizeMaxTextSize="20sp"
+        app:autoSizeStepGranularity="2sp" />
 
     <!-- State TextView -->
     <TextView
         android:id="@+id/stateTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="60dp"
-        android:layout_marginBottom="80dp"
+        android:layout_marginHorizontal="@dimen/screen_margin"
+        android:layout_marginBottom="@dimen/bottom_margin"
         android:fontFamily="@font/archivo_semibold"
         android:text="@string/device_state"
         android:textAlignment="center"
         android:textColor="@color/white"
-        android:textSize="22sp"
+        android:textSize="@dimen/body_text_size"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="16sp"
+        app:autoSizeMaxTextSize="22sp"
+        app:autoSizeStepGranularity="2sp" />
 
     <!-- CheckBox for Device Found -->
     <CheckBox
         android:id="@+id/checkBoxDeviceFound"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/vertical_spacing"
         android:text="Device Found"
         android:textColor="@color/white"
+        android:padding="@dimen/checkbox_padding"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rssiTextView" />

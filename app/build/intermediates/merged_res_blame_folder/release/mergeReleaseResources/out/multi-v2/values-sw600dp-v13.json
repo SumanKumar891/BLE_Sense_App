@@ -35,11 +35,11 @@
                 {
                     "source": "D:\\BLEGame (2)\\BLEGame (1)\\BLEGame\\BLEGame\\app\\src\\main\\res\\values-sw600dp\\dimens.xml",
                     "from": {
-                        "startLines": "4,9,8,5,3,13,12,16",
+                        "startLines": "4,9,8,5,3,13,12,18",
                         "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "147,326,284,194,101,479,422,578",
+                        "startOffsets": "147,326,284,194,101,479,422,635",
                         "endColumns": "45,43,40,47,44,57,55,46",
-                        "endOffsets": "188,365,320,237,141,532,473,620"
+                        "endOffsets": "188,365,320,237,141,532,473,677"
                     },
                     "to": {
                         "startLines": "10,20,21,24,25,26,27,28",

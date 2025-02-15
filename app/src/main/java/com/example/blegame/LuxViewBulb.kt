@@ -23,12 +23,6 @@ class LuxViewBulb(context: Context, attrs: AttributeSet? = null) : View(context,
         glowPaint.style = Paint.Style.FILL
     }
 
-    fun setLuxValue(lux: Float) {
-        currentLux = lux.coerceIn(0.0f, 10000.0f) // Assuming a lux range of 0 to 10,000
-        glowPaint.alpha = (min(255, (lux / 10000.0f * 255).toInt())) // Map lux to alpha for glow
-        invalidate()
-    }
-
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 

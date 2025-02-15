@@ -2265,9 +2265,12 @@ dimen abc_text_size_subtitle_material_toolbar
 dimen abc_text_size_title_material
 dimen abc_text_size_title_material_toolbar
 dimen appcompat_dialog_background_inset
+dimen body_text_size
+dimen bottom_margin
 dimen cardview_compat_inset_shadow
 dimen cardview_default_elevation
 dimen cardview_default_radius
+dimen checkbox_padding
 dimen clock_face_margin_start
 dimen compat_button_inset_horizontal_material
 dimen compat_button_inset_vertical_material
@@ -2731,6 +2734,8 @@ dimen m3_sys_state_pressed_state_layer_opacity
 dimen m3_timepicker_display_stroke_width
 dimen m3_timepicker_window_elevation
 dimen m3_toolbar_text_size_title
+dimen margin_large
+dimen margin_normal
 dimen material_bottom_sheet_max_width
 dimen material_clock_display_height
 dimen material_clock_display_padding
@@ -2981,10 +2986,12 @@ dimen notification_small_icon_size_as_large
 dimen notification_subtext_size
 dimen notification_top_pad
 dimen notification_top_pad_large_text
+dimen padding_normal
 dimen recycler_padding
 dimen screen_margin
 dimen spinner_padding_horizontal
 dimen spinner_padding_vertical
+dimen text_size_large
 dimen title_text_size
 dimen tooltip_corner_radius
 dimen tooltip_horizontal_padding
@@ -2994,6 +3001,7 @@ dimen tooltip_precise_anchor_threshold
 dimen tooltip_vertical_padding
 dimen tooltip_y_offset_non_touch
 dimen tooltip_y_offset_touch
+dimen vertical_spacing
 drawable a
 drawable abc_ab_share_pack_mtrl_alpha
 drawable abc_action_bar_item_background_material
@@ -3352,8 +3360,6 @@ id activity_chooser_view_content
 id add
 id adjust_height
 id adjust_width
-id advertiseIntervalEdit
-id advertiseNameEdit
 id advertisingDataDetails
 id alertTitle
 id aligned
@@ -3389,7 +3395,6 @@ id bounceEnd
 id bounceStart
 id btnBLE
 id btnGames
-id btn_advertise_data
 id bulbImageView
 id buttonPanel
 id cache_measures
@@ -3420,7 +3425,6 @@ id closest
 id collapseActionView
 id compress
 id confirm_button
-id connectable
 id constraint
 id container
 id content
@@ -3740,7 +3744,6 @@ id software
 id south
 id spacer
 id special_effects_controller_view_tag
-id speedometerView
 id spline
 id split_action_bar
 id spread
@@ -3752,9 +3755,8 @@ id src_in
 id src_over
 id standard
 id start
-id startAdvertiseButton
-id startAdvertisingButton
 id startGameButton
+id startGuideline
 id startHorizontal
 id startToEnd
 id startVertical
@@ -3762,8 +3764,6 @@ id stateTextView
 id staticLayout
 id staticPostLayout
 id stop
-id stopAdvertiseButton
-id stopAdvertisingButton
 id stretch
 id submenuarrow
 id submit_area
@@ -3805,7 +3805,6 @@ id textinput_suffix_text
 id time
 id title
 id titleDividerNoCustom
-id titleText
 id title_template
 id toggle
 id top
@@ -3829,11 +3828,9 @@ id tvBLETitle1
 id tvGamesDescription
 id unchecked
 id uniform
-id unitText
 id unlabeled
 id up
 id useLogo
-id valueText
 id vertical
 id vertical_only
 id view_offset_helper
@@ -3971,15 +3968,12 @@ layout abc_search_view
 layout abc_select_dialog_material
 layout abc_tooltip
 layout activity_advertising_data
-layout activity_advertising_screen
 layout activity_gameplay
 layout activity_splashscreen
 layout activity_startgame
 layout activity_welcome
 layout activitymain
-layout advertising_data_dialog_box
 layout ble_device_list
-layout ble_device_night
 layout custom_dialog
 layout design_bottom_navigation_item
 layout design_bottom_sheet_dialog
@@ -4001,7 +3995,6 @@ layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
 layout item_card_ble
 layout item_device_card
-layout item_soil_sensor
 layout m3_alert_dialog
 layout m3_alert_dialog_actions
 layout m3_alert_dialog_title
@@ -4063,7 +4056,6 @@ layout popup_device_found
 layout select_dialog_item_material
 layout select_dialog_multichoice_material
 layout select_dialog_singlechoice_material
-layout speedometer
 layout support_simple_spinner_dropdown_item
 mipmap ic_launcher
 mipmap ic_launcher_round

@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.blegame.app-mergeReleaseResources-48:/values-sw360dp-v13/values-sw360dp-v13.xml",
+            "map": [
+                {
+                    "source": "D:\\BLEGame (2)\\BLEGame (1)\\BLEGame\\BLEGame\\app\\src\\main\\res\\values-sw360dp\\dimens.xml",
+                    "from": {
+                        "startLines": "3,2,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "103,57,148,195",
+                        "endColumns": "43,44,45,46",
+                        "endOffsets": "142,97,189,237"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,99,144,190",
+                        "endColumns": "43,44,45,46",
+                        "endOffsets": "94,139,185,232"
+                    }
+                }
+            ]
+        }
+    ]
+}

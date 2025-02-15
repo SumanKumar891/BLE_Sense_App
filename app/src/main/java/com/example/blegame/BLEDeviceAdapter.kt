@@ -13,10 +13,6 @@ class BLEDeviceAdapter(
     private val onClick: (BLEDevice) -> Unit // Callback function for item click events
 ) : RecyclerView.Adapter<BLEDeviceAdapter.BLEDeviceViewHolder>() {
 
-    // View type constants for different types of RecyclerView items (if needed)
-    private val TYPE_HEADER = 0
-    private val TYPE_DEVICE = 1
-
     // Mapping of device names to their corresponding character image resources
     private val characterImages = mapOf(
         "Scarlet Witch" to R.drawable.scarlet_witch,
@@ -33,12 +29,12 @@ class BLEDeviceAdapter(
 
     // ViewHolder class to represent each item in the RecyclerView
     inner class BLEDeviceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val nameTextView: TextView =
+        private val nameTextView: TextView =
             itemView.findViewById(R.id.deviceNameTextView) // Device name TextView
-        val addressTextView: TextView =
+        private val addressTextView: TextView =
             itemView.findViewById(R.id.deviceMacAddressTextView) // MAC address TextView
         val rssiTextView: TextView = itemView.findViewById(R.id.deviceRssi) // RSSI value TextView
-        val characterImageView: ImageView =
+        private val characterImageView: ImageView =
             itemView.findViewById(R.id.characterImageView) // Character image view
 
         // Bind device data to the UI components

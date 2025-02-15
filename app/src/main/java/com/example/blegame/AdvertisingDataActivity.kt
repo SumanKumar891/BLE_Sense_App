@@ -39,7 +39,6 @@ class AdvertisingDataActivity : AppCompatActivity() {
     private lateinit var temperatureMeterView: TemperatureViewMeter
     private lateinit var luxViewBulb: ImageView
     private val sht40Readings = mutableListOf<SHT40Reading>()
-    private lateinit var downloadButton: Button
     private val luxReadings = mutableListOf<LuxSensorReading>()
     private val lis2dhReadings = mutableListOf<LIS2DHReading>()
     private val soilReadings = mutableListOf<SoilSensorReading>()
@@ -55,10 +54,8 @@ class AdvertisingDataActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_CODE_PERMISSIONS = 1
-        private const val TAG = "AdvertisingDataActivity"
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_advertising_data)
@@ -68,6 +65,8 @@ class AdvertisingDataActivity : AppCompatActivity() {
         initializeViews()
 //        setupChart(luxChart)
 //        setupChart(sht40Chart)
+
+
 
 
         val selectedDeviceName = intent.getStringExtra("DEVICE_NAME")
@@ -99,6 +98,22 @@ class AdvertisingDataActivity : AppCompatActivity() {
 //        }
 //         Add the download button to your layout
 //        findViewById<LinearLayout>(R.id.root_layout).addView(downloadButton)
+
+        advertisingDataDetails.setOnClickListener {
+            if (checkPermissions()) {
+                // Restart scanning when clicked
+                startRealTimeScan(
+                    selectedDeviceAddress ?: return@setOnClickListener,
+                    selectedDeviceName ?: return@setOnClickListener,
+                    deviceType
+                )
+                showToast("Restarting scan...")
+            } else {
+                requestPermissions()
+            }
+        }
+
+
 
         // Show download button only for SHT40 device
         if (intent.getStringExtra("DEVICE_TYPE") == "SHT40") {
@@ -259,7 +274,7 @@ class AdvertisingDataActivity : AppCompatActivity() {
         }
         bluetoothLeScanner.startScan(null, scanSettings, scanCallback)
 
-        android.os.Handler(mainLooper).postDelayed({
+        Handler(mainLooper).postDelayed({
             bluetoothLeScanner.stopScan(scanCallback)
             showToast("Data Fetched.")
         }, 20000) // 10 seconds delay
@@ -668,12 +683,6 @@ class AdvertisingDataActivity : AppCompatActivity() {
     }
 
 
-    private fun exportDailyDataToCSV() {
-        val oneDayMillis = 24 * 60 * 60 * 1000
-        val startTime = System.currentTimeMillis() - oneDayMillis
-        exportDataToCSV()
-    }
-
     private fun shareFile(file: File) {
         val uri = FileProvider.getUriForFile(this, "${packageName}.provider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -696,17 +705,18 @@ class AdvertisingDataActivity : AppCompatActivity() {
         }
     }
 
-    private var currentTemperature: Float = 25.0f // Default to 25°C (room temperature)
     private fun parseLIS2DHData(data: ByteArray): String {
         val builder = StringBuilder()
         try {
             if (data.size >= 7) {
                 val deviceId = data[0].toUByte().toString()
-                val xBeforeDecimal = data[1].toUByte().toString()
+
+                // Convert before-decimal to signed, keep after-decimal unsigned
+                val xBeforeDecimal = data[1].toInt().toString()
                 val xAfterDecimal = data[2].toUByte().toString()
-                val yBeforeDecimal = data[3].toUByte().toString()
+                val yBeforeDecimal = data[3].toInt().toString()
                 val yAfterDecimal = data[4].toUByte().toString()
-                val zBeforeDecimal = data[5].toUByte().toString()
+                val zBeforeDecimal = data[5].toInt().toString()
                 val zAfterDecimal = data[6].toUByte().toString()
 
                 // Store reading at intervals
@@ -714,16 +724,16 @@ class AdvertisingDataActivity : AppCompatActivity() {
                     LIS2DHReading(
                         timestamp = System.currentTimeMillis(),
                         deviceId = deviceId,
-                        x = "$xBeforeDecimal.$xAfterDecimal",
-                        y = "$yBeforeDecimal.$yAfterDecimal",
-                        z = "$zBeforeDecimal.$zAfterDecimal"
+                        x = if (xBeforeDecimal.startsWith("-")) "$xBeforeDecimal.$xAfterDecimal" else "$xBeforeDecimal.$xAfterDecimal",
+                        y = if (yBeforeDecimal.startsWith("-")) "$yBeforeDecimal.$yAfterDecimal" else "$yBeforeDecimal.$yAfterDecimal",
+                        z = if (zBeforeDecimal.startsWith("-")) "$zBeforeDecimal.$zAfterDecimal" else "$zBeforeDecimal.$zAfterDecimal"
                     )
                 )
 
                 builder.append("Device ID: $deviceId\n")
-                builder.append("X: $xBeforeDecimal.$xAfterDecimal\n")
-                builder.append("Y: $yBeforeDecimal.$yAfterDecimal\n")
-                builder.append("Z: $zBeforeDecimal.$zAfterDecimal\n")
+                builder.append("X: ${if (xBeforeDecimal.startsWith("-")) "$xBeforeDecimal.$xAfterDecimal" else "$xBeforeDecimal.$xAfterDecimal"}\n")
+                builder.append("Y: ${if (yBeforeDecimal.startsWith("-")) "$yBeforeDecimal.$yAfterDecimal" else "$yBeforeDecimal.$yAfterDecimal"}\n")
+                builder.append("Z: ${if (zBeforeDecimal.startsWith("-")) "$zBeforeDecimal.$zAfterDecimal" else "$zBeforeDecimal.$zAfterDecimal"}\n")
             }
         } catch (e: Exception) {
             builder.append("Error parsing data: ${e.message}\n")
@@ -741,14 +751,13 @@ class AdvertisingDataActivity : AppCompatActivity() {
         builder.append(data.joinToString(" ") { byte -> String.format("%02X", byte) })
             .append("\n\n")
 
-        return if (data.size >= 5) { // Update the minimum size as per your needs
+        return if (data.size >= 6) { // Update the minimum size as per your needs
             val deviceId = data[0].toUByte().toString()
             val speedBeforeDecimal = data[1].toUByte().toString()
             val speedAfterDecimal = data[2].toUByte().toString()
             val distanceBeforeDecimal = data[3].toUByte().toString()
             val distanceAfterDecimal = data[4].toUByte().toString()
             val speed = "$speedBeforeDecimal.$speedAfterDecimal"
-            val distance = "$distanceBeforeDecimal.$distanceAfterDecimal"
 
 
             Handler(Looper.getMainLooper()).post {
@@ -951,7 +960,7 @@ class AdvertisingDataActivity : AppCompatActivity() {
             lis2dhReadings.clear()
             soilReadings.clear()
             weatherReadings.clear()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
     }
 

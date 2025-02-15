@@ -1,6 +1,5 @@
 package com.example.blegame
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -19,9 +18,8 @@ import com.bumptech.glide.Glide
 class StartGameActivity : AppCompatActivity() {
 
     private lateinit var bleAdapter: BluetoothAdapterWrapper
-    private val PERMISSION_REQUEST_CODE = 1001
+    private val permissionrequestcode = 1001
 
-    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_startgame)
@@ -63,7 +61,7 @@ class StartGameActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                 this,
                 ungrantedPermissions.toTypedArray(),
-                PERMISSION_REQUEST_CODE
+                permissionrequestcode
             )
         }
     }

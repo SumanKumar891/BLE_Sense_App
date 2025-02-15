@@ -14,5 +14,11 @@
     <dimen name="spinner_padding_horizontal">24dp</dimen>
 
     <!-- Larger text for tablets -->
-    <dimen name="title_text_size">32sp</dimen>
+<!--    <dimen name="title_text_size">32sp</dimen>-->
+
+    <dimen name="title_text_size">34sp</dimen>
+<!--    <dimen name="card_title_text_size">24sp</dimen>-->
+<!--    <dimen name="card_description_text_size">16sp</dimen>-->
+<!--    <dimen name="card_padding">24dp</dimen>-->
+<!--    <dimen name="button_min_width">200dp</dimen>-->
 </resources>

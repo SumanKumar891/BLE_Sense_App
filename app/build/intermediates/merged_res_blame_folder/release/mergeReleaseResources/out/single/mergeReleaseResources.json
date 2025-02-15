@@ -696,10 +696,6 @@
         "source": "com.example.blegame.app-core-1.15.0-41:/layout/ime_secondary_split_test_activity.xml"
     },
     {
-        "merged": "com.example.blegame.app-release-51:/layout_item_soil_sensor.xml.flat",
-        "source": "com.example.blegame.app-main-52:/layout/item_soil_sensor.xml"
-    },
-    {
         "merged": "com.example.blegame.app-release-51:/color_m3_dark_default_color_primary_text.xml.flat",
         "source": "com.example.blegame.app-material-1.12.0-44:/color/m3_dark_default_color_primary_text.xml"
     },
@@ -1892,10 +1888,6 @@
         "source": "com.example.blegame.app-core-1.15.0-41:/drawable-mdpi-v4/notification_bg_low_normal.9.png"
     },
     {
-        "merged": "com.example.blegame.app-release-51:/layout_ble_device_night.xml.flat",
-        "source": "com.example.blegame.app-main-52:/layout/ble_device_night.xml"
-    },
-    {
         "merged": "com.example.blegame.app-release-51:/anim_scale.xml.flat",
         "source": "com.example.blegame.app-main-52:/anim/scale.xml"
     },
@@ -1954,10 +1946,6 @@
     {
         "merged": "com.example.blegame.app-release-51:/layout_mtrl_alert_select_dialog_item.xml.flat",
         "source": "com.example.blegame.app-material-1.12.0-44:/layout/mtrl_alert_select_dialog_item.xml"
-    },
-    {
-        "merged": "com.example.blegame.app-release-51:/layout_advertising_data_dialog_box.xml.flat",
-        "source": "com.example.blegame.app-main-52:/layout/advertising_data_dialog_box.xml"
     },
     {
         "merged": "com.example.blegame.app-release-51:/color-v23_abc_tint_spinner.xml.flat",
@@ -2440,10 +2428,6 @@
         "source": "com.example.blegame.app-appcompat-1.7.0-30:/drawable-xhdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png"
     },
     {
-        "merged": "com.example.blegame.app-release-51:/layout_activity_advertising_screen.xml.flat",
-        "source": "com.example.blegame.app-main-52:/layout/activity_advertising_screen.xml"
-    },
-    {
         "merged": "com.example.blegame.app-release-51:/animator_mtrl_fab_transformation_sheet_expand_spec.xml.flat",
         "source": "com.example.blegame.app-material-1.12.0-44:/animator/mtrl_fab_transformation_sheet_expand_spec.xml"
     },
@@ -2538,10 +2522,6 @@
     {
         "merged": "com.example.blegame.app-release-51:/color_mtrl_navigation_bar_item_tint.xml.flat",
         "source": "com.example.blegame.app-material-1.12.0-44:/color/mtrl_navigation_bar_item_tint.xml"
-    },
-    {
-        "merged": "com.example.blegame.app-release-51:/layout_speedometer.xml.flat",
-        "source": "com.example.blegame.app-main-52:/layout/speedometer.xml"
     },
     {
         "merged": "com.example.blegame.app-release-51:/color-v31_m3_ref_palette_dynamic_neutral6.xml.flat",
