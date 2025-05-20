@@ -212,3 +212,29 @@ private fun checkAndRequestPermissions(
         launcher.launch(notGrantedPermissions.toTypedArray())
     }
 }
+@Composable
+fun rememberBluetoothPermissionsState(): Boolean {
+    val context = LocalContext.current
+    var hasPermissions by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        hasPermissions = checkPermissions(context)
+    }
+
+    return hasPermissions
+}
+
+private fun checkPermissions(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.BLUETOOTH_SCAN
+    ) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+}

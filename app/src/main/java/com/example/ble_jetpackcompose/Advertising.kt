@@ -1,45 +1,88 @@
 package com.example.ble_jetpackcompose
 
+import android.R.attr.radius
+import android.R.attr.text
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.fontscaling.MathUtils.lerp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.nio.file.Files.size
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
+import kotlin.io.path.Path
+import kotlin.io.path.moveTo
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
+import kotlin.random.Random
 
 // Update TranslatedAdvertisingText to include ammonia
 data class TranslatedAdvertisingText(
@@ -79,9 +122,10 @@ fun AdvertisingDataScreen(
     navController: NavController,
     deviceId: String,
 ) {
-    val context = LocalContext.current
+    val context: Context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf(MediaPlayer.create(context, R.raw.nuclear_alarm)) }
-    val viewModel: BluetoothScanViewModel<Any?> = viewModel(factory = BluetoothScanViewModelFactory(context))
+    val viewModel: BluetoothScanViewModel<Any?> =
+        viewModel(factory = BluetoothScanViewModelFactory(context))
     val activity = context as Activity
 
     // Theme and Language state
@@ -94,6 +138,8 @@ fun AdvertisingDataScreen(
         derivedStateOf { devices.find { it.address == deviceAddress } }
     }
 
+
+
     // Threshold and alarm state
     var thresholdValue by remember { mutableStateOf("") }
     var isAlarmActive by remember { mutableStateOf(false) }
@@ -101,6 +147,26 @@ fun AdvertisingDataScreen(
     var parameterType by remember { mutableStateOf("Temperature") }
     var isThresholdSet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+//    // MediaPlayer for alarm
+//    val context = LocalContext.current
+//    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    // Initialize MediaPlayer
+    LaunchedEffect(Unit) {
+        mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm).apply {
+            isLooping = true
+        }
+    }
+   // Clean up MediaPlayer
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+        }
+    }
+
+
+
 
     // Blinking animation state
     val isBlinking by remember(isAlarmActive) { derivedStateOf { isAlarmActive } }
@@ -113,7 +179,40 @@ fun AdvertisingDataScreen(
         label = "blinkAlpha"
     )
 
+    // Use derivedStateOf to minimize recompositions
+    val ammoniaValue by remember(currentDevice?.sensorData) {
+        derivedStateOf {
+            when (val sensorData = currentDevice?.sensorData) {
+                is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> {
+                    sensorData.ammonia.replace(" ppm", "").toFloatOrNull() ?: 0f
+                }
+
+                else -> 0f
+            }
+        }
+    }
+
+// Then use it in your UI
+    AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
+
+    var displayedAmmoniaValue by remember { mutableStateOf(0f) }
+    val debouncedAmmoniaValue by remember(ammoniaValue) {
+        derivedStateOf { ammoniaValue }
+    }
+
+    LaunchedEffect(debouncedAmmoniaValue) {
+        displayedAmmoniaValue = debouncedAmmoniaValue
+    }
+
+    AmmoniaRingAnimation(ammoniaValue = displayedAmmoniaValue)
+
+
+
+
     // Threshold check for SHT40Data and AmmoniaSensorData
+    // Inside AdvertisingDataScreen composable, modify the LaunchedEffect for threshold checks:
+
+    // Replace the current LaunchedEffect for threshold checks with this:
     LaunchedEffect(currentDevice, thresholdValue, parameterType, isThresholdSet) {
         delay(500L) // Debounce
         if (isThresholdSet) {
@@ -134,7 +233,7 @@ fun AdvertisingDataScreen(
                     }
                     is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> {
                         if (parameterType == "Ammonia") {
-                            val ammoniaValue = sensorData.ammonia.toFloatOrNull()
+                            val ammoniaValue = sensorData.ammonia.replace(" ppm", "").toFloatOrNull() ?: 0f
                             isAlarmActive = ammoniaValue != null && ammoniaValue > threshold
                         } else {
                             isAlarmActive = false
@@ -210,15 +309,20 @@ fun AdvertisingDataScreen(
         }
     }
 
+
     // Translated text state
     var translatedText by remember {
         mutableStateOf(
             TranslatedAdvertisingText(
-                advertisingDataTitle = TranslationCache.get("Advertising Data-$currentLanguage") ?: "Advertising Data",
-                deviceNameLabel = TranslationCache.get("Device Name-$currentLanguage") ?: "Device Name",
+                advertisingDataTitle = TranslationCache.get("Advertising Data-$currentLanguage")
+                    ?: "Advertising Data",
+                deviceNameLabel = TranslationCache.get("Device Name-$currentLanguage")
+                    ?: "Device Name",
                 nodeIdLabel = TranslationCache.get("Node ID-$currentLanguage") ?: "Node ID",
-                downloadData = TranslationCache.get("DOWNLOAD DATA-$currentLanguage") ?: "DOWNLOAD DATA",
-                exportingData = TranslationCache.get("EXPORTING DATA...-$currentLanguage") ?: "EXPORTING DATA...",
+                downloadData = TranslationCache.get("DOWNLOAD DATA-$currentLanguage")
+                    ?: "DOWNLOAD DATA",
+                exportingData = TranslationCache.get("EXPORTING DATA...-$currentLanguage")
+                    ?: "EXPORTING DATA...",
                 temperature = TranslationCache.get("Temperature-$currentLanguage") ?: "Temperature",
                 humidity = TranslationCache.get("Humidity-$currentLanguage") ?: "Humidity",
                 xAxis = TranslationCache.get("X-Axis-$currentLanguage") ?: "X-Axis",
@@ -228,17 +332,21 @@ fun AdvertisingDataScreen(
                 phosphorus = TranslationCache.get("Phosphorus-$currentLanguage") ?: "Phosphorus",
                 potassium = TranslationCache.get("Potassium-$currentLanguage") ?: "Potassium",
                 moisture = TranslationCache.get("Moisture-$currentLanguage") ?: "Moisture",
-                electricConductivity = TranslationCache.get("Electric Conductivity-$currentLanguage") ?: "Electric Conductivity",
+                electricConductivity = TranslationCache.get("Electric Conductivity-$currentLanguage")
+                    ?: "Electric Conductivity",
                 pH = TranslationCache.get("pH-$currentLanguage") ?: "pH",
-                lightIntensity = TranslationCache.get("Light Intensity-$currentLanguage") ?: "Light Intensity",
+                lightIntensity = TranslationCache.get("Light Intensity-$currentLanguage")
+                    ?: "Light Intensity",
                 speed = TranslationCache.get("Speed-$currentLanguage") ?: "Speed",
                 distance = TranslationCache.get("Distance-$currentLanguage") ?: "Distance",
-                objectDetected = TranslationCache.get("Object Detected-$currentLanguage") ?: "Object Detected",
+                objectDetected = TranslationCache.get("Object Detected-$currentLanguage")
+                    ?: "Object Detected",
                 steps = TranslationCache.get("Steps-$currentLanguage") ?: "Steps",
                 ammonia = TranslationCache.get("Ammonia-$currentLanguage") ?: "Ammonia",
                 resetSteps = TranslationCache.get("RESET STEPS-$currentLanguage") ?: "RESET STEPS",
                 warningTitle = TranslationCache.get("Warning-$currentLanguage") ?: "Warning",
-                warningMessage = TranslationCache.get("Threshold Exceeded-$currentLanguage") ?: "The %s has exceeded the threshold of %s!",
+                warningMessage = TranslationCache.get("Threshold Exceeded-$currentLanguage")
+                    ?: "The %s has exceeded the threshold of %s!",
                 dismissButton = TranslationCache.get("Dismiss-$currentLanguage") ?: "Dismiss"
             )
         )
@@ -248,11 +356,32 @@ fun AdvertisingDataScreen(
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
-            "Advertising Data", "Device Name", "Node ID", "DOWNLOAD DATA", "EXPORTING DATA...",
-            "Temperature", "Humidity", "X-Axis", "Y-Axis", "Z-Axis",
-            "Nitrogen", "Phosphorus", "Potassium", "Moisture", "Electric Conductivity",
-            "pH", "Light Intensity", "Speed", "Distance", "Object Detected", "Steps", "Ammonia", "RESET STEPS",
-            "Warning", "Threshold Exceeded", "Dismiss"
+            "Advertising Data",
+            "Device Name",
+            "Node ID",
+            "DOWNLOAD DATA",
+            "EXPORTING DATA...",
+            "Temperature",
+            "Humidity",
+            "X-Axis",
+            "Y-Axis",
+            "Z-Axis",
+            "Nitrogen",
+            "Phosphorus",
+            "Potassium",
+            "Moisture",
+            "Electric Conductivity",
+            "pH",
+            "Light Intensity",
+            "Speed",
+            "Distance",
+            "Object Detected",
+            "Steps",
+            "Ammonia",
+            "RESET STEPS",
+            "Warning",
+            "Threshold Exceeded",
+            "Dismiss"
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
         translatedText = TranslatedAdvertisingText(
@@ -293,14 +422,17 @@ fun AdvertisingDataScreen(
                     translatedText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
                     translatedText.humidity to "${sensorData.humidity.takeIf { it.isNotEmpty() } ?: "0"}%"
                 )
+
                 is BluetoothScanViewModel.SensorData.LuxData -> listOf(
                     translatedText.lightIntensity to "${sensorData.calculatedLux} LUX"
                 )
+
                 is BluetoothScanViewModel.SensorData.LIS2DHData -> listOf(
                     translatedText.xAxis to "${sensorData.x.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
                     translatedText.yAxis to "${sensorData.y.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
                     translatedText.zAxis to "${sensorData.z.takeIf { it.isNotEmpty() } ?: "0"} m/s²"
                 )
+
                 is BluetoothScanViewModel.SensorData.SoilSensorData -> listOf(
                     translatedText.nitrogen to "${sensorData.nitrogen.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
                     translatedText.phosphorus to "${sensorData.phosphorus.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
@@ -310,19 +442,28 @@ fun AdvertisingDataScreen(
                     translatedText.electricConductivity to "${sensorData.ec.takeIf { it.isNotEmpty() } ?: "0"} mS/cm",
                     translatedText.pH to "${sensorData.pH.takeIf { it.isNotEmpty() } ?: "0"}"
                 )
+
                 is BluetoothScanViewModel.SensorData.SDTData -> listOf(
                     translatedText.speed to "${sensorData.speed.takeIf { it.isNotEmpty() } ?: "0"} m/s",
                     translatedText.distance to "${sensorData.distance.takeIf { it.isNotEmpty() } ?: "0"} m"
                 )
+
                 is BluetoothScanViewModel.SensorData.ObjectDetectorData -> listOf(
                     translatedText.objectDetected to if (sensorData.detection) "Yes" else "No"
                 )
+
                 is BluetoothScanViewModel.SensorData.StepCounterData -> listOf(
                     translatedText.steps to "${sensorData.steps.takeIf { it.isNotEmpty() } ?: "0"}"
                 )
-                is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> listOf(
-                    translatedText.ammonia to "${sensorData.ammonia.takeIf { it.isNotEmpty() } ?: "0"} ppm"
-                )
+
+                is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> {
+                    val ammoniaValue = sensorData.ammonia.replace(" ppm", "").toFloatOrNull() ?: 0f
+                    listOf(
+                        translatedText.ammonia to "${sensorData.ammonia}",
+                        "Raw Data" to sensorData.rawData
+                    )
+                }
+
                 else -> emptyList()
             }
         }
@@ -373,7 +514,10 @@ fun AdvertisingDataScreen(
         }
 
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // <-- Add this for scrolling
+                .padding(WindowInsets.systemBars.asPaddingValues()),
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -408,7 +552,8 @@ fun AdvertisingDataScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Threshold input section for SHT40Data and AmmoniaSensorData
+
+            // In the AdvertisingDataScreen's main Column, update the ThresholdInputSection usage:
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data ||
                 currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData) {
                 ThresholdInputSection(
@@ -445,6 +590,7 @@ fun AdvertisingDataScreen(
                 translatedText = translatedText
             )
 
+            // Update the AlertDialog section
             // Alert Dialog for threshold
             if (showAlertDialog) {
                 AlertDialog(
@@ -495,6 +641,109 @@ fun AdvertisingDataScreen(
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun AmmoniaSensorDisplay(
+    ammoniaValue: Float,  // Directly use the incoming value
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Simplified value handling - no debounce needed
+        AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
+
+        // Current value display
+        Text(
+            text = "%.1f ppm".format(ammoniaValue),
+            style = MaterialTheme.typography.displayMedium,
+            color = when {
+                ammoniaValue > 50 -> Color.Red
+                ammoniaValue > 25 -> Color.Yellow
+                else -> Color.Green
+            }
+        )
+    }
+}
+
+@Composable
+fun AmmoniaRingAnimation(
+    ammoniaValue: Float,
+    modifier: Modifier = Modifier
+) {
+    // Animate the fill percentage
+    val animatedFill by animateFloatAsState(
+        targetValue = (ammoniaValue / 100f).coerceIn(0f, 1f),
+        animationSpec = spring(
+            dampingRatio = 0.5f,
+            stiffness = 100f
+        ),
+        label = "ammoniaFill"
+    )
+
+    // Color based on ammonia level
+    val liquidColor by animateColorAsState(
+        targetValue = when {
+            ammoniaValue <= 25 -> Color(0xFF4CAF50)  // Green - safe
+            ammoniaValue <= 50 -> Color(0xFFFFC107)  // Yellow - caution
+            else -> Color(0xFFF44336)               // Red - danger
+        },
+        animationSpec = tween(durationMillis = 300),
+        label = "liquidColor"
+    )
+
+    Box(
+        modifier = modifier
+            .size(220.dp)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val center = Offset(size.width / 2, size.height / 2)
+            val radius = size.minDimension * 0.4f
+            val ringWidth = size.minDimension * 0.1f
+
+            // Background ring
+            drawArc(
+                color = Color(0xFF333333).copy(alpha = 0.3f),
+                startAngle = 270f,
+                sweepAngle = 360f,
+                useCenter = false,
+                size = Size(radius * 2, radius * 2),
+                topLeft = Offset(center.x - radius, center.y - radius),
+                style = Stroke(width = ringWidth)
+            )
+
+            // Filled part
+            drawArc(
+                color = liquidColor.copy(alpha = 0.7f),
+                startAngle = 270f,
+                sweepAngle = -360f * animatedFill,  // Negative for counter-clockwise
+                useCenter = false,
+                size = Size(radius * 2, radius * 2),
+                topLeft = Offset(center.x - radius, center.y - radius),
+                style = Stroke(width = ringWidth, cap = StrokeCap.Round)
+            )
+        }
+
+        // Current value display
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "%.1f".format(ammoniaValue),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = "ppm",
+                fontSize = 16.sp,
+                color = Color.White.copy(alpha = 0.8f)
+            )
         }
     }
 }
@@ -736,7 +985,7 @@ private fun DownloadButton(
 
     Button(
         onClick = {
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(Date())
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val filename = "sensor_data_${deviceId}_$timestamp.csv"
             createDocumentLauncher.launch(filename)
         },
@@ -765,7 +1014,7 @@ private fun exportDataToCSV(
     deviceId: String,
     onComplete: () -> Unit
 ) {
-    kotlinx.coroutines.MainScope().launch {
+    MainScope().launch {
         withContext(Dispatchers.IO) {
             try {
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -800,7 +1049,7 @@ private fun exportDataToCSV(
                     headerBuilder.append("\n")
                     outputStream.write(headerBuilder.toString().toByteArray())
 
-                    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", java.util.Locale.getDefault())
+                    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
                     historicalData.forEach { entry ->
                         val dataBuilder = StringBuilder()
                         dataBuilder.append("${dateFormat.format(Date(entry.timestamp))},$deviceName,$deviceAddress,$deviceId,")
@@ -915,67 +1164,95 @@ private fun ResponsiveDataCards(
     cardGradient: Brush,
     textColor: Color
 ) {
-    when (data.size) {
-        0 -> {
-            Box(modifier = Modifier.height(100.dp))
-        }
-        1 -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center
+    // Check if we have ammonia data
+    val ammoniaData = data.find { it.first.contains("Ammonia", ignoreCase = true) }
+    val otherData = data.filterNot { it.first.contains("Ammonia", ignoreCase = true) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Show ammonia animation if available
+        ammoniaData?.let { (label, value) ->
+            val ammoniaValue = value.replace(" ppm", "").toFloatOrNull() ?: 0f
+            Column(
+                modifier = Modifier.padding(vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DataCard(
-                    label = data[0].first,
-                    value = data[0].second,
-                    cardBackground = cardBackground,
-                    cardGradient = cardGradient,
-                    textColor = textColor
+                Text(
+                    text = label,
+                    fontSize = 18.sp,
+                    color = textColor,
+                    fontWeight = FontWeight.Bold
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
             }
         }
-        2 -> {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                data.forEach { (label, value) ->
+
+        // Show other data in cards
+        when (otherData.size) {
+            0 -> {
+                Box(modifier = Modifier.height(100.dp))
+            }
+            1 -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     DataCard(
-                        label = label,
-                        value = value,
+                        label = otherData[0].first,
+                        value = otherData[0].second,
                         cardBackground = cardBackground,
                         cardGradient = cardGradient,
                         textColor = textColor
                     )
                 }
             }
-        }
-        else -> {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                data.chunked(2).forEach { rowItems ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        rowItems.forEach { (label, value) ->
-                            DataCard(
-                                label = label,
-                                value = value,
-                                cardBackground = cardBackground,
-                                cardGradient = cardGradient,
-                                textColor = textColor
-                            )
-                        }
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.width(141.dp))
+            2 -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    otherData.forEach { (label, value) ->
+                        DataCard(
+                            label = label,
+                            value = value,
+                            cardBackground = cardBackground,
+                            cardGradient = cardGradient,
+                            textColor = textColor
+                        )
+                    }
+                }
+            }
+            else -> {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    otherData.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            rowItems.forEach { (label, value) ->
+                                DataCard(
+                                    label = label,
+                                    value = value,
+                                    cardBackground = cardBackground,
+                                    cardGradient = cardGradient,
+                                    textColor = textColor
+                                )
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.width(141.dp))
+                            }
                         }
                     }
                 }
@@ -983,6 +1260,7 @@ private fun ResponsiveDataCards(
         }
     }
 }
+
 
 @Composable
 fun DataCard(
@@ -1023,4 +1301,5 @@ fun DataCard(
             }
         }
     }
+
 }

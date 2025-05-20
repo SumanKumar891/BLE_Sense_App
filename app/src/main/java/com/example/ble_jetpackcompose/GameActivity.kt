@@ -534,12 +534,12 @@ fun GameActivityScreen(
                                         "Hulk" -> R.drawable.hulk_
                                         "Captain Marvel" -> R.drawable.captain_marvel
                                         "Captain America" -> R.drawable.captain_america
-                                        "Scarlet Witch" -> R.drawable.scarlet_witch_
-                                        "Black Widow" -> R.drawable.black_widow_
-                                        "Wasp" -> R.drawable.wasp_
-                                        "Hela" -> R.drawable.hela_
-                                        "Thor" -> R.drawable.thor_
-                                        "Spider Man" -> R.drawable.spider_man_
+                                        "Scarlet Witch" -> R.drawable.scarlet_witch
+                                        "Black Widow" -> R.drawable.black_widow
+                                        "Wasp" -> R.drawable.wasp
+                                        "Hela" -> R.drawable.hela
+                                        "Thor" -> R.drawable.thor
+                                        "Spider Man" -> R.drawable.spider_man
                                         else -> R.drawable.search
                                     }
 
@@ -652,12 +652,12 @@ fun GameActivityScreen(
                                 "Hulk" -> R.drawable.hulk_
                                 "Captain Marvel" -> R.drawable.captain_marvel
                                 "Captain America" -> R.drawable.captain_america
-                                "Scarlet Witch" -> R.drawable.scarlet_witch_
-                                "Black Widow" -> R.drawable.black_widow_
-                                "Wasp" -> R.drawable.wasp_
-                                "Hela" -> R.drawable.hela_
-                                "Thor" -> R.drawable.thor_
-                                "Spider Man" -> R.drawable.spider_man_
+                                "Scarlet Witch" -> R.drawable.scarlet_witch
+                                "Black Widow" -> R.drawable.black_widow
+                                "Wasp" -> R.drawable.wasp
+                                "Hela" -> R.drawable.hela
+                                "Thor" -> R.drawable.thor
+                                "Spider Man" -> R.drawable.spider_man
                                 else -> R.drawable.search
                             }
                         ),
@@ -693,12 +693,12 @@ fun GameActivityScreen(
                     "Hulk" to R.drawable.hulk_,
                     "Captain Marvel" to R.drawable.captain_marvel,
                     "Captain America" to R.drawable.captain_america,
-                    "Scarlet Witch" to R.drawable.scarlet_witch_,
-                    "Black Widow" to R.drawable.black_widow_,
-                    "Wasp" to R.drawable.wasp_,
-                    "Hela" to R.drawable.hela_,
-                    "Thor" to R.drawable.thor_,
-                    "Spider Man" to R.drawable.spider_man_,
+                    "Scarlet Witch" to R.drawable.scarlet_witch,
+                    "Black Widow" to R.drawable.black_widow,
+                    "Wasp" to R.drawable.wasp,
+                    "Hela" to R.drawable.hela,
+                    "Thor" to R.drawable.thor,
+                    "Spider Man" to R.drawable.spider_man,
                     "Default" to R.drawable.search
                 )
             }.value
@@ -771,12 +771,12 @@ fun GameActivityScreen(
                     "Hulk" to R.drawable.hulk_,
                     "Captain Marvel" to R.drawable.captain_marvel,
                     "Captain America" to R.drawable.captain_america,
-                    "Scarlet Witch" to R.drawable.scarlet_witch_,
-                    "Black Widow" to R.drawable.black_widow_,
-                    "Wasp" to R.drawable.wasp_,
-                    "Hela" to R.drawable.hela_,
-                    "Thor" to R.drawable.thor_,
-                    "Spider Man" to R.drawable.spider_man_,
+                    "Scarlet Witch" to R.drawable.scarlet_witch,
+                    "Black Widow" to R.drawable.black_widow,
+                    "Wasp" to R.drawable.wasp,
+                    "Hela" to R.drawable.hela,
+                    "Thor" to R.drawable.thor,
+                    "Spider Man" to R.drawable.spider_man,
                     "Default" to R.drawable.search
                 )
             }.value
@@ -947,12 +947,12 @@ fun GameActivityScreen(
                                     "Hulk" -> R.drawable.hulk_
                                     "Captain Marvel" -> R.drawable.captain_marvel
                                     "Captain America" -> R.drawable.captain_america
-                                    "Scarlet Witch" -> R.drawable.scarlet_witch_
-                                    "Black Widow" -> R.drawable.black_widow_
-                                    "Wasp" -> R.drawable.wasp_
-                                    "Hela" -> R.drawable.hela_
-                                    "Thor" -> R.drawable.thor_
-                                    "Spider Man" -> R.drawable.spider_man_
+                                    "Scarlet Witch" -> R.drawable.scarlet_witch
+                                    "Black Widow" -> R.drawable.black_widow
+                                    "Wasp" -> R.drawable.wasp
+                                    "Hela" -> R.drawable.hela
+                                    "Thor" -> R.drawable.thor
+                                    "Spider Man" -> R.drawable.spider_man
                                     else -> R.drawable.search
                                 }
 

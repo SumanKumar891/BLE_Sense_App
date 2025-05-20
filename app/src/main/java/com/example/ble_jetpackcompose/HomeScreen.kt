@@ -3,9 +3,13 @@ package com.example.ble_jetpackcompose
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -39,6 +43,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -61,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
 
@@ -77,17 +84,24 @@ data class TranslatedMainScreenText(
     val showLess: String = "Show Less"
 )
 
+
+
+
 @Composable
-fun MainScreen(
-    navController: NavHostController,
-    bluetoothViewModel: BluetoothScanViewModel<Any?>
-) {
-    val bluetoothDevices by bluetoothViewModel.devices.collectAsState(initial = emptyList())
+fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothScanViewModel<Any?>) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var showRobotControls by remember { mutableStateOf(false) }
+
+    // Your existing state variables
+    val bluetoothDevices by bluetoothViewModel.devices.collectAsState()
     val isScanning by bluetoothViewModel.isScanning.collectAsState()
     val context = LocalContext.current
+
     val activity = context as ComponentActivity
 
     val isPermissionGranted = remember { mutableStateOf(checkBluetoothPermissions(context)) }
+
     var expanded by remember { mutableStateOf(false) }
     val sensorTypes = listOf("SHT40", "LIS2DH", "Soil Sensor", "Weather", "LUX", "Speed Distance", "Metal Detector", "Step Counter", "Ammonia Sensor")
     var selectedSensor by remember { mutableStateOf(sensorTypes[0]) }
@@ -212,6 +226,7 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
+
                 item {
                     Card(
                         modifier = Modifier
@@ -594,6 +609,13 @@ fun CustomBottomNavigation(
     val contentColor = if (isDarkMode) Color.White else Color.Black
     val selectedColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF2196F3)
 
+    // 🚀 Add this launcher
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { /* Handle result if needed */ }
+    )
+
     BottomNavigation(
         modifier = modifier,
         backgroundColor = backgroundColor,
@@ -626,6 +648,23 @@ fun CustomBottomNavigation(
                 navController.navigate("game_loading")
             }
         )
+        BottomNavigationItem(
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.robo_car_icon),
+                    contentDescription = "Robot Control",
+                    modifier = Modifier.size(32.dp),
+                    tint = contentColor
+                )
+            },
+            selected = false,
+            onClick = {
+                // ✅ Correct way to launch another Compose Activity
+                val intent = Intent(context, RobotControlCompose::class.java)
+                launcher.launch(intent)
+            }
+        )
+
         BottomNavigationItem(
             icon = {
                 Icon(

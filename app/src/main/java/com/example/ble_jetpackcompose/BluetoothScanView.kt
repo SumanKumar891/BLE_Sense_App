@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
@@ -117,7 +118,8 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         // New Ammonia Sensor data class
         data class AmmoniaSensorData(
             override val deviceId: String,
-            val ammonia: String // In ppm
+            val ammonia: String, // In ppm
+            val rawData: String
         ) : SensorData()
     }
 
@@ -128,6 +130,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         val deviceId: String,
         val sensorData: SensorData? = null
     )
+
 
     fun startPeriodicScan(activity: Activity) {
         if (_isScanning.value) return
@@ -362,19 +365,36 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
     }
 
     private fun parseAmmoniaSensorData(data: ByteArray?, deviceAddress: String): SensorData? {
-        if (data == null || data.size < 7) {
+        if (data == null) {
+            Log.w("AmmoniaParser", "Null data received")
+            return null
+        }
+
+        // Convert raw data to hex string
+        val rawDataString = data.joinToString(" ") { byte -> String.format("%02X", byte) }
+        Log.d("AmmoniaParser", "Raw BLE Data: $rawDataString")
+
+        if (data.size < 6) {
+            Log.w("AmmoniaParser", "Invalid Data: Data size (${data.size}) is too short")
             return null
         }
 
         val deviceId = data[0].toUByte().toString()
-        val ammoniaPpm = data[6].toUByte().toFloat()
+        val ammoniaPpm = try {
+            data[5].toUByte().toFloat()
+        } catch (e: Exception) {
+            Log.e("AmmoniaParser", "Error parsing ammonia value", e)
+            return null
+        }
+
+        val ammoniaValue = String.format(Locale.US, "%.1f", ammoniaPpm)
 
         return SensorData.AmmoniaSensorData(
             deviceId = deviceId,
-            ammonia = String.format("%.1f", ammoniaPpm)
+            ammonia = "$ammoniaValue ppm",
+            rawData = rawDataString // Include raw data
         )
     }
-
     fun resetStepCounter(deviceAddress: String) {
         viewModelScope.launch {
             val devices = _devices.value

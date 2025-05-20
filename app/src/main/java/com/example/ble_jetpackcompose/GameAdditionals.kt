@@ -186,12 +186,12 @@ fun RadarScreenWithAllCharacters(
         R.drawable.hulk_ to "Hulk",
         R.drawable.captain_marvel to "Captain Marvel",
         R.drawable.captain_america to "Captain America",
-        R.drawable.scarlet_witch_ to "Scarlet Witch",
-        R.drawable.black_widow_ to "Black Widow",
-        R.drawable.wasp_ to "Wasp",
-        R.drawable.hela_ to "Hela",
-        R.drawable.spider_man_ to "Spider Man",
-        R.drawable.thor_ to "Thor"
+        R.drawable.scarlet_witch to "Scarlet Witch",
+        R.drawable.black_widow to "Black Widow",
+        R.drawable.wasp to "Wasp",
+        R.drawable.hela to "Hela",
+        R.drawable.spider_man to "Spider Man",
+        R.drawable.thor to "Thor"
     )
 
     val positions = remember { generateSymmetricalPositions(characters.size, 330f) } // Increased from 300f
@@ -473,12 +473,12 @@ private fun getDeviceNameFromResId(resId: Int): String {
         R.drawable.hulk_ -> "Hulk"
         R.drawable.captain_marvel -> "Captain Marvel"
         R.drawable.captain_america -> "Captain America"
-        R.drawable.scarlet_witch_ -> "Scarlet Witch"
-        R.drawable.black_widow_ -> "Black Widow"
-        R.drawable.wasp_ -> "Wasp"
-        R.drawable.hela_ -> "Hela"
-        R.drawable.thor_ -> "Thor"
-        R.drawable.spider_man_ -> "Spider Man"
+        R.drawable.scarlet_witch -> "Scarlet Witch"
+        R.drawable.black_widow -> "Black Widow"
+        R.drawable.wasp -> "Wasp"
+        R.drawable.hela -> "Hela"
+        R.drawable.thor -> "Thor"
+        R.drawable.spider_man -> "Spider Man"
         else -> ""
     }
 }
@@ -533,12 +533,12 @@ fun ScratchCardScreen(
             "Hulk" -> R.drawable.hulk_
             "Captain Marvel" -> R.drawable.captain_marvel
             "Captain America" -> R.drawable.captain_america
-            "Scarlet Witch" -> R.drawable.scarlet_witch_
-            "Black Widow" -> R.drawable.black_widow_
-            "Wasp" -> R.drawable.wasp_
-            "Hela" -> R.drawable.hela_
-            "Thor" -> R.drawable.thor_
-            "Spider Man" -> R.drawable.spider_man_
+            "Scarlet Witch" -> R.drawable.scarlet_witch
+            "Black Widow" -> R.drawable.black_widow
+            "Wasp" -> R.drawable.wasp
+            "Hela" -> R.drawable.hela
+            "Thor" -> R.drawable.thor
+            "Spider Man" -> R.drawable.spider_man
             else -> R.drawable.inner // Default fallback image
         }
     }
@@ -612,12 +612,12 @@ fun ScratchCardScreen(
                         "Hulk" -> R.drawable.hulk_
                         "Captain Marvel" -> R.drawable.captain_marvel
                         "Captain America" -> R.drawable.captain_america
-                        "Scarlet Witch" -> R.drawable.scarlet_witch_
-                        "Black Widow" -> R.drawable.black_widow_
-                        "Wasp" -> R.drawable.wasp_
-                        "Hela" -> R.drawable.hela_
-                        "Thor" -> R.drawable.thor_
-                        "Spider Man" -> R.drawable.spider_man_
+                        "Scarlet Witch" -> R.drawable.scarlet_witch
+                        "Black Widow" -> R.drawable.black_widow
+                        "Wasp" -> R.drawable.wasp
+                        "Hela" -> R.drawable.hela
+                        "Thor" -> R.drawable.thor
+                        "Spider Man" -> R.drawable.spider_man
                         else -> R.drawable.inner
                     }
                 ),

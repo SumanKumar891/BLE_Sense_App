@@ -2,6 +2,7 @@ package com.example.ble_jetpackcompose
 
 import android.app.Activity
 import android.app.Application
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -29,6 +30,11 @@ fun AppNavigation(navController: NavHostController) {
 
     // Get system theme and initialize ThemeManager
     val systemDarkMode = isSystemInDarkTheme()
+
+
+//    val intent = Intent(context, RobotControlCompose::class.java)
+//    context.startActivity(intent)
+
 
 
 
@@ -67,6 +73,8 @@ fun AppNavigation(navController: NavHostController) {
             else -> {}
         }
     }
+
+
 
     NavHost(
         navController = navController,
@@ -135,7 +143,22 @@ fun AppNavigation(navController: NavHostController) {
         composable("game_screen") {
             val activity = LocalContext.current as Activity
             GameActivityScreen(activity = activity)
+
         }
+
+//        composable("landscape_screen") {
+//            RobotControlScreen()
+//        }
+
+
+        composable("robot_screen") {
+            LocalContext.current as Activity
+            RobotControlScreen()
+        }
+
+
+
+
 
         composable("settings_screen") {
             ModernSettingsScreen(
