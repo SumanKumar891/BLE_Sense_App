@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-72:/values-v17/values-v17.xml",
+            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-74:/values-v17/values-v17.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Awadh\\.gradle\\caches\\8.11.1\\transforms\\d1aab57633987076fd7761a2ba2937f6\\transformed\\appcompat-1.6.1\\res\\values-v17\\values-v17.xml",

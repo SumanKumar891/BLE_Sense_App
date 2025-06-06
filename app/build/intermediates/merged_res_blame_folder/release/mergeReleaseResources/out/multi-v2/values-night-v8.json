@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-72:/values-night-v8/values-night-v8.xml",
+            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-74:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Awadh\\BLE-Jetpack-V3.0\\app\\src\\main\\res\\values-night\\splash.xml",

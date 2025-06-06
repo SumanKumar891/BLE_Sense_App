@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-72:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-74:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Awadh\\.gradle\\caches\\8.11.1\\transforms\\44cd842856810a8ae655ead9cd0f54c1\\transformed\\play-services-auth-20.7.0\\res\\values-watch-v20\\values.xml",

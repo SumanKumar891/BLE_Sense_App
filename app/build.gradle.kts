@@ -20,6 +20,15 @@ android {
         buildConfigField("boolean", "DUMMY", "true") // Force generation
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/Awadh/BLE-Jetpack-V3.0/BLE_App.jks")
+            storePassword = "your-keystore-password"
+            keyAlias = "awadh-release" // or whatever alias you used
+            keyPassword = "your-keystore-password"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

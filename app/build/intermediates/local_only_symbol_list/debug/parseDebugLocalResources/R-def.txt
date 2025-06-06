@@ -41,6 +41,7 @@ drawable hth
 drawable hulk_
 drawable hunt_the_heroes
 drawable ic_accelerometer
+drawable ic_back_arrow
 drawable ic_bluetooth
 drawable ic_horn
 drawable ic_landscape

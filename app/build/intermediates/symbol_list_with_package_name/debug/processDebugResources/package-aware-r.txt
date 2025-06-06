@@ -2953,6 +2953,7 @@ drawable hulk_
 drawable hunt_the_heroes
 drawable ic_accelerometer
 drawable ic_arrow_back_black_24
+drawable ic_back_arrow
 drawable ic_bluetooth
 drawable ic_call_answer
 drawable ic_call_answer_low

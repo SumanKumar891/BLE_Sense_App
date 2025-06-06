@@ -5,6 +5,8 @@ import android.content.Intent
 //import com.example.ble_jetpackcompose.BuildConfig
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -1065,7 +1067,7 @@ fun generateRandomColor(): Color {
 fun BottomNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    isDarkMode: Boolean
+    isDarkMode: Boolean = false
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -1073,6 +1075,12 @@ fun BottomNavigation(
     val backgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
     val contentColor = if (isDarkMode) Color.White else Color.Black
     val selectedColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { /* Handle result if needed */ }
+    )
+
 
     BottomNavigation(
         modifier = modifier,
@@ -1105,6 +1113,24 @@ fun BottomNavigation(
                 navController.navigate("game_loading")
             }
         )
+
+        BottomNavigationItem(
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.robo_car_icon),
+                    contentDescription = "Robot Control",
+                    modifier = Modifier.size(32.dp),
+                    tint = contentColor
+                )
+            },
+            selected = false,
+            onClick = {
+                // ✅ Correct way to launch another Compose Activity
+                val intent = Intent(context, RobotControlCompose::class.java)
+                launcher.launch(intent)
+            }
+        )
+
         BottomNavigationItem(
             icon = {
                 Icon(

@@ -90,8 +90,6 @@ data class TranslatedMainScreenText(
 @Composable
 fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothScanViewModel<Any?>) {
     val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    var showRobotControls by remember { mutableStateOf(false) }
 
     // Your existing state variables
     val bluetoothDevices by bluetoothViewModel.devices.collectAsState()
@@ -156,7 +154,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5)
     val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
     val textColor = if (isDarkMode) Color.White else Color.Black
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575)
     val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
 
     // Check permissions initially
@@ -609,7 +606,7 @@ fun CustomBottomNavigation(
     val contentColor = if (isDarkMode) Color.White else Color.Black
     val selectedColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF2196F3)
 
-    // 🚀 Add this launcher
+
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),

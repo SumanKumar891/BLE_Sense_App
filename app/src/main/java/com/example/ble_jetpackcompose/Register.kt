@@ -1,6 +1,7 @@
 package com.example.ble_jetpackcompose
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -15,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -99,11 +99,11 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-
     var isUsernameValid by remember { mutableStateOf(false) }
     var isEmailValid by remember { mutableStateOf(false) }
     var isPasswordValid by remember { mutableStateOf(false) }
     var isConfirmPasswordValid by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -126,9 +126,6 @@ fun RegisterScreen(
         viewModel.setGoogleSignInClient(googleSignInClient)
     }
 
-
-    LocalFocusManager.current
-
     val authState by viewModel.authState.collectAsState()
 
     fun validateUsername(value: String): Boolean {
@@ -141,11 +138,28 @@ fun RegisterScreen(
 
     fun validatePassword(value: String): Boolean {
         return value.length >= 8 &&
-                value.matches(Regex(".*[A-Z].*")) &&
-                value.matches(Regex(".*[a-z].*")) &&
-                value.matches(Regex(".*\\d.*")) &&
-                value.matches(Regex(".*[!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*"))
+                value.matches(Regex(".[A-Z].")) &&
+                value.matches(Regex(".[a-z].")) &&
+                value.matches(Regex(".\\d.")) &&
+                value.matches(Regex(".[!@#\$%^&()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*"))
     }
+
+    // Show a toast if the username exceeds 3 characters
+    LaunchedEffect(username) {
+        if (username.length > 3) {
+            Toast.makeText(context, "Username must be less than 3 chars, digits, and _ allowed", Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(password) {
+        if (password.length > 8) {
+            Toast.makeText(
+                context,
+                "Password must be more than 8 chars , digits  & special char",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
 
     if (authState is AuthState.Loading) {
         AlertDialog(
@@ -184,7 +198,6 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(60.dp))
-
         Text(
             text = translatedText.createAccount,
             style = TextStyle(
@@ -195,7 +208,6 @@ fun RegisterScreen(
             ),
             textAlign = TextAlign.Center
         )
-
         Text(
             text = translatedText.signUpToGetStarted,
             style = TextStyle(
@@ -206,7 +218,6 @@ fun RegisterScreen(
             ),
             modifier = Modifier.padding(top = 8.dp)
         )
-
         Spacer(modifier = Modifier.height(60.dp))
 
         TextField(
@@ -425,12 +436,6 @@ fun RegisterScreen(
                 backgroundColor = textFieldBackgroundColor,
                 borderColor = borderColor
             )
-//            SocialLoginButton(
-//                icon = R.drawable.facebook_f_,
-//                onClick = { /* Handle Facebook sign up */ },
-//                backgroundColor = textFieldBackgroundColor,
-//                borderColor = borderColor
-//            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -476,11 +481,5 @@ data class TranslatedRegisterScreenText(
     val orContinueWith: String,
     val alreadyHaveAccount: String,
     val loginNow: String,
-    val creatingAccount: String
+    val creatingAccount:String
 )
-
-//@Preview(showBackground = true)
-//@Composable
-//fun RegisterScreenPreview() {
-//    RegisterScreen(onNavigateToLogin = { }, onNavigateToHome = {}, viewModel = AuthViewModel())
-//}

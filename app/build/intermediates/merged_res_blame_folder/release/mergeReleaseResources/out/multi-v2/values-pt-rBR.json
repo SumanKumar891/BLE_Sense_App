@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-72:/values-pt-rBR/values-pt-rBR.xml",
+            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-74:/values-pt-rBR/values-pt-rBR.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Awadh\\.gradle\\caches\\8.11.1\\transforms\\50bfdebf20deeb07be5c2c514d5bd43e\\transformed\\ui-release\\res\\values-pt-rBR\\values-pt-rBR.xml",

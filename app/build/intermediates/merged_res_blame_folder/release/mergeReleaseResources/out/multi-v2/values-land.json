@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-72:/values-land/values-land.xml",
+            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-74:/values-land/values-land.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Awadh\\.gradle\\caches\\8.11.1\\transforms\\372be93f414d0814bfed19e0c5397cf8\\transformed\\material-1.9.0\\res\\values-land\\values-land.xml",

@@ -758,6 +758,19 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
+      name="androidx.compose.ui:ui-tooling-data-android:1.6.8@aar"
+      jars="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\910b97126ab8a82c66f24c851c762247\transformed\ui-tooling-data-release\jars\classes.jar"
+      resolved="androidx.compose.ui:ui-tooling-data-android:1.6.8"
+      folder="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\910b97126ab8a82c66f24c851c762247\transformed\ui-tooling-data-release"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
       name="androidx.compose.ui:ui-util-android:1.6.8@aar"
       jars="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\2d2ce9e75883304f36aae52391161c63\transformed\ui-util-release\jars\classes.jar"
       resolved="androidx.compose.ui:ui-util-android:1.6.8"
@@ -801,6 +814,19 @@
       jars="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\fd1751355aac864f89f9e6dae73ed1a6\transformed\ui-geometry-release\jars\classes.jar"
       resolved="androidx.compose.ui:ui-geometry-android:1.6.8"
       folder="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\fd1751355aac864f89f9e6dae73ed1a6\transformed\ui-geometry-release"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="androidx.compose.ui:ui-tooling-android:1.6.8@aar"
+      jars="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\3b384aba1baba55355602fd480b1e698\transformed\ui-tooling-release\jars\classes.jar"
+      resolved="androidx.compose.ui:ui-tooling-android:1.6.8"
+      folder="C:\Users\Awadh\.gradle\caches\8.11.1\transforms\3b384aba1baba55355602fd480b1e698\transformed\ui-tooling-release"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

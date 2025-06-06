@@ -153,7 +153,8 @@ fun AppNavigation(navController: NavHostController) {
 
         composable("robot_screen") {
             LocalContext.current as Activity
-            RobotControlScreen()
+            RobotControlScreen(onBackPressed = {activity.finish()})
+
         }
 
 

@@ -7,6 +7,7 @@ import android.app.Activity
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -148,9 +149,7 @@ fun AdvertisingDataScreen(
     var isThresholdSet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-//    // MediaPlayer for alarm
-//    val context = LocalContext.current
-//    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
 
     // Initialize MediaPlayer
     LaunchedEffect(Unit) {
@@ -192,7 +191,6 @@ fun AdvertisingDataScreen(
         }
     }
 
-// Then use it in your UI
     AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
 
     var displayedAmmoniaValue by remember { mutableStateOf(0f) }
@@ -210,9 +208,6 @@ fun AdvertisingDataScreen(
 
 
     // Threshold check for SHT40Data and AmmoniaSensorData
-    // Inside AdvertisingDataScreen composable, modify the LaunchedEffect for threshold checks:
-
-    // Replace the current LaunchedEffect for threshold checks with this:
     LaunchedEffect(currentDevice, thresholdValue, parameterType, isThresholdSet) {
         delay(500L) // Debounce
         if (isThresholdSet) {
@@ -427,11 +422,17 @@ fun AdvertisingDataScreen(
                     translatedText.lightIntensity to "${sensorData.calculatedLux} LUX"
                 )
 
-                is BluetoothScanViewModel.SensorData.LIS2DHData -> listOf(
-                    translatedText.xAxis to "${sensorData.x.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
-                    translatedText.yAxis to "${sensorData.y.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
-                    translatedText.zAxis to "${sensorData.z.takeIf { it.isNotEmpty() } ?: "0"} m/s²"
-                )
+                is BluetoothScanViewModel.SensorData.LIS2DHData -> {
+                    val now = System.currentTimeMillis()
+                    val data = listOf(
+                        translatedText.xAxis to "${sensorData.x} m/s²",
+                        translatedText.yAxis to "${sensorData.y} m/s²",
+                        translatedText.zAxis to "${sensorData.z} m/s²",
+                        "Process Time" to "${System.currentTimeMillis() - now}ms"
+                    )
+                    Log.d("LIS2DH", "Data processed in ${System.currentTimeMillis() - now}ms")
+                    data
+                }
 
                 is BluetoothScanViewModel.SensorData.SoilSensorData -> listOf(
                     translatedText.nitrogen to "${sensorData.nitrogen.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
@@ -590,7 +591,6 @@ fun AdvertisingDataScreen(
                 translatedText = translatedText
             )
 
-            // Update the AlertDialog section
             // Alert Dialog for threshold
             if (showAlertDialog) {
                 AlertDialog(
@@ -1185,8 +1185,10 @@ private fun ResponsiveDataCards(
                     color = textColor,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
+                AmmoniaSensorDisplay(
+                    ammoniaValue = ammoniaValue,
+                    modifier = Modifier.size(250.dp)
+                )
             }
         }
 

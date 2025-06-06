@@ -835,7 +835,6 @@ fun GameActivityScreen(
             }
         }
 
-        // Replace the existing Box containing the Row and AnimatedVisibility at the bottom of the main Box:
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -893,7 +892,7 @@ fun GameActivityScreen(
             }
         }
 
-// Add this as a separate top-level composable within the main Box (after all other content):
+
         AnimatedVisibility(
             visible = isGameBoxOpen,
             enter = fadeIn() + slideInVertically(),

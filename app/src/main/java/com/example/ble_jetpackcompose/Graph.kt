@@ -2,6 +2,7 @@ package com.example.ble_jetpackcompose
 
 import android.app.Activity
 import android.app.Application
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,9 +19,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +35,95 @@ import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.cos
+import kotlin.math.sin
+
+
+data class Point3D(val x: Float, val y: Float, val z: Float) {
+    fun rotateX(angle: Double): Point3D = Point3D(
+        x,
+        (y * cos(angle) - z * sin(angle)).toFloat(),
+        (y * sin(angle) + z * cos(angle)).toFloat()
+    )
+
+    fun rotateY(angle: Double): Point3D = Point3D(
+        (x * cos(angle) + z * sin(angle)).toFloat(),
+        y,
+        (-x * sin(angle) + z * cos(angle)).toFloat()
+    )
+
+    fun rotateZ(angle: Double): Point3D = Point3D(
+        (x * cos(angle) - y * sin(angle)).toFloat(),
+        (x * sin(angle) + y * cos(angle)).toFloat(),
+        z
+    )
+}
+
+private fun DrawScope.draw3DCube(rotX: Float, rotY: Float, rotZ: Float, canvasSize: Size) {
+    val centerX = canvasSize.width / 2
+    val centerY = canvasSize.height / 2
+    val cubeSize = 80f
+
+    // Define all 8 vertices of the cube
+    val vertices = listOf(
+        Point3D(-cubeSize/2, -cubeSize/2, -cubeSize/2), // 0
+        Point3D(cubeSize/2, -cubeSize/2, -cubeSize/2),  // 1
+        Point3D(cubeSize/2, cubeSize/2, -cubeSize/2),   // 2
+        Point3D(-cubeSize/2, cubeSize/2, -cubeSize/2),  // 3
+        Point3D(-cubeSize/2, -cubeSize/2, cubeSize/2),  // 4
+        Point3D(cubeSize/2, -cubeSize/2, cubeSize/2),   // 5
+        Point3D(cubeSize/2, cubeSize/2, cubeSize/2),    // 6
+        Point3D(-cubeSize/2, cubeSize/2, cubeSize/2)    // 7
+    )
+
+    // Apply rotations and project to 2D
+    val projectedVertices = vertices.map { vertex ->
+        val rotated = vertex
+            .rotateX(Math.toRadians(rotX.toDouble()))
+            .rotateY(Math.toRadians(rotY.toDouble()))
+            .rotateZ(Math.toRadians(rotZ.toDouble()))
+
+        // Simple perspective projection
+        val scale = 200f / (200f + rotated.z)
+        Offset(
+            centerX + rotated.x * scale,
+            centerY + rotated.y * scale
+        )
+    }
+
+    // Draw cube edges
+    drawCubeEdges(projectedVertices)
+}
+
+private fun DrawScope.drawCubeEdges(vertices: List<Offset>) {
+    // Define edges by connecting vertices (12 edges in a cube)
+    val edges = listOf(
+        0 to 1, 1 to 2, 2 to 3, 3 to 0, // Front face
+        4 to 5, 5 to 6, 6 to 7, 7 to 4, // Back face
+        0 to 4, 1 to 5, 2 to 6, 3 to 7  // Connecting edges
+    )
+
+    // Draw each edge
+    edges.forEach { (startIdx, endIdx) ->
+        if (startIdx < vertices.size && endIdx < vertices.size) {
+            drawLine(
+                color = Color.White,
+                start = vertices[startIdx],
+                end = vertices[endIdx],
+                strokeWidth = 3f
+            )
+        }
+    }
+
+    // Draw small circles at each vertex
+    vertices.forEach { vertex ->
+        drawCircle(
+            color = Color.Red,
+            radius = 5f,
+            center = vertex
+        )
+    }
+}
 
 // Data class for translatable text in ChartScreen
 data class TranslatedChartText(
@@ -328,6 +420,18 @@ fun ChartScreen(
                             item { SensorGraphCard(translatedText.xAxisLabel, xAxisData, xAxisHistory, Color(0xFFE91E63), cardBackground, textColor, secondaryTextColor, translatedText) }
                             item { SensorGraphCard(translatedText.yAxisLabel, yAxisData, yAxisHistory, Color(0xFF9C27B0), cardBackground, textColor, secondaryTextColor, translatedText) }
                             item { SensorGraphCard(translatedText.zAxisLabel, zAxisData, zAxisHistory, Color(0xFF009688), cardBackground, textColor, secondaryTextColor, translatedText) }
+
+                            // Add this new item below
+                            item {
+                                Accelerometer3DVisualization(
+                                    xAxis = xAxisData,
+                                    yAxis = yAxisData,
+                                    zAxis = zAxisData,
+                                    cardBackground = cardBackground,
+                                    textColor = textColor,
+                                    isDarkMode = isDarkMode // ← Pass this
+                                )
+                            }
                         }
                         if (sensorData is BluetoothScanViewModel.SensorData.SoilSensorData) {
                             item {
@@ -597,4 +701,135 @@ fun SoilSensorDataTable(
             }
         }
     }
+}
+
+@Composable
+fun Accelerometer3DVisualization(
+    xAxis: Float?,
+    yAxis: Float?,
+    zAxis: Float?,
+    cardBackground: Color,
+    textColor: Color,
+    isDarkMode: Boolean // ← Add this
+) {
+    val rotationX by animateFloatAsState((yAxis ?: 0f) * 30f)
+    val rotationY by animateFloatAsState((xAxis ?: 0f) * 30f)
+    val rotationZ by animateFloatAsState((zAxis ?: 0f) * 15f)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp),
+        elevation = 4.dp,
+        backgroundColor = cardBackground
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("3D Orientation Visualizer", color = textColor, fontSize = 18.sp)
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            ) {
+                drawOptimized3DCube(rotationX, rotationY, rotationZ, size, isDarkMode)
+            }
+        }
+    }
+}
+// Pre-defined cube vertices (8 corners)
+private val cubeVertices = arrayOf(
+    floatArrayOf(-1f, -1f, -1f), // 0
+    floatArrayOf(1f, -1f, -1f),  // 1
+    floatArrayOf(1f, 1f, -1f),   // 2
+    floatArrayOf(-1f, 1f, -1f),  // 3
+    floatArrayOf(-1f, -1f, 1f),  // 4
+    floatArrayOf(1f, -1f, 1f),   // 5
+    floatArrayOf(1f, 1f, 1f),    // 6
+    floatArrayOf(-1f, 1f, 1f)    // 7
+)
+
+// Pre-defined cube edges (12 edges)
+private val cubeEdges = arrayOf(
+    intArrayOf(0, 1), intArrayOf(1, 2), intArrayOf(2, 3), intArrayOf(3, 0), // Front
+    intArrayOf(4, 5), intArrayOf(5, 6), intArrayOf(6, 7), intArrayOf(7, 4), // Back
+    intArrayOf(0, 4), intArrayOf(1, 5), intArrayOf(2, 6), intArrayOf(3, 7)  // Connectors
+)
+
+private fun DrawScope.drawOptimized3DCube(
+    rotX: Float,
+    rotY: Float,
+    rotZ: Float,
+    canvasSize: Size,
+    isDarkMode: Boolean // ← New parameter
+) {
+    val centerX = canvasSize.width / 2
+    val centerY = canvasSize.height / 2
+    val scale = minOf(canvasSize.width, canvasSize.height) * 0.3f
+
+    val cosX = cos(Math.toRadians(rotX.toDouble())).toFloat()
+    val sinX = sin(Math.toRadians(rotX.toDouble())).toFloat()
+    val cosY = cos(Math.toRadians(rotY.toDouble())).toFloat()
+    val sinY = sin(Math.toRadians(rotY.toDouble())).toFloat()
+    val cosZ = cos(Math.toRadians(rotZ.toDouble())).toFloat()
+    val sinZ = sin(Math.toRadians(rotZ.toDouble())).toFloat()
+
+    val projectedVertices = Array(8) { i ->
+        val x = cubeVertices[i][0]
+        val y = cubeVertices[i][1]
+        val z = cubeVertices[i][2]
+
+        val yRotX = x * cosY + z * sinY
+        val yRotZ = -x * sinY + z * cosY
+
+        val xRotY = y * cosX - yRotZ * sinX
+        val xRotZ = y * sinX + yRotZ * cosX
+
+        val zRotX = yRotX * cosZ - xRotY * sinZ
+        val zRotY = yRotX * sinZ + xRotY * cosZ
+
+        val projectedX = centerX + zRotX * scale
+        val projectedY = centerY + zRotY * scale
+
+        Offset(projectedX, projectedY)
+    }
+
+    // Choose appropriate color for edges
+    val edgeColor = if (isDarkMode) Color.White.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.8f)
+
+    cubeEdges.forEach { edge ->
+        val start = projectedVertices[edge[0]]
+        val end = projectedVertices[edge[1]]
+        drawLine(
+            color = edgeColor,
+            start = start,
+            end = end,
+            strokeWidth = 3f
+        )
+    }
+
+    projectedVertices.forEach { vertex ->
+        drawCircle(
+            color = edgeColor,
+            radius = 5f,
+            center = vertex
+        )
+    }
+
+    drawLine(
+        color = Color.Red,
+        start = Offset(centerX, centerY),
+        end = projectedVertices[1],
+        strokeWidth = 2f
+    )
+    drawLine(
+        color = Color.Green,
+        start = Offset(centerX, centerY),
+        end = projectedVertices[3],
+        strokeWidth = 2f
+    )
+    drawLine(
+        color = Color.Blue,
+        start = Offset(centerX, centerY),
+        end = projectedVertices[4],
+        strokeWidth = 2f
+    )
 }
