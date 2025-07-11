@@ -151,6 +151,15 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             val reflectanceValues: List<Float>, // List of 18 reflectance values (6 bytes each)
             val rawData: String // Raw data for debugging
         ) : SensorData()
+
+        //DO SensorData sealed class
+        data class DOSensorData(
+            override val deviceId: String,
+            val temperature: String,  // in °C
+            val doPercentage: String, // in %
+            val doValue: String       // in mg/L
+        ) : SensorData()
+
     }
 
     data class BluetoothDevice(
@@ -433,7 +442,6 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
 
         return when (deviceType) {
             "SHT40" -> parseSHT40Data(data)
-            //"Lux Sensor" -> parseLuxSensorData(data)
             "LIS2DH" -> parseLIS2DHData(data)
             "Soil Sensor" -> parseSoilSensorData(data)
             "SPEED_DISTANCE" -> parseSDTData(data)
@@ -441,8 +449,8 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             "Step Counter" -> parseStepCounterData(data, deviceAddress)
             "Ammonia Sensor" -> parseAmmoniaSensorData(data, deviceAddress)
             "Optical Sensor" -> parseOpticalSensorData(data, deviceAddress)
-            // new lux sensor
             "Lux Sensor" -> parseLuxSensorData(data, deviceAddress)
+            "DO Sensor" -> parseDOSensorData(data, deviceAddress)
             else -> null
         }
     }
@@ -500,18 +508,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             humidity = "${data[3].toUByte()}.${data[4].toUByte()}"
         )
     }
-//
-//    private fun parseLuxSensorData(data: ByteArray): SensorData? {
-//        if (data.size < 11) return null
-//        val deviceId = data[0].toUByte().toString()
-//        val digits = data.sliceArray(5..10).map { it.toUByte().toInt() }
-//        val luxValueStr = digits.joinToString("") { it.toString() }.trimStart('0')
-//        val luxValue = if (luxValueStr.isEmpty()) 0f else luxValueStr.toFloat()
-//        return SensorData.LuxData(
-//            deviceId = deviceId,
-//            calculatedLux = luxValue
-//        )
-//    }
+
 
     private fun parseLIS2DHData(data: ByteArray): SensorData? {
         if (data.size < 7) return null
@@ -565,6 +562,32 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             steps = adjustedStepCount.toString()
         )
     }
+
+    // Add parsing function
+    private fun parseDOSensorData(data: ByteArray, deviceAddress: String): SensorData? {
+        if (data.size < 7) return null // Need at least 7 bytes (2 manufacturer + 5 data)
+
+        // Skip first 2 manufacturer bytes
+        val deviceId = data[2].toUByte().toString()
+
+        // Bytes 3-4: Temperature (big-endian, 0.1°C units)
+        val tempRaw = ((data[3].toInt() and 0xFF) shl 8) or (data[4].toInt() and 0xFF)
+        val temperature = "%.1f".format(tempRaw / 10f)
+
+        // Byte 5: DO percentage (0-100%)
+        val doPercentage = "${data[5].toUByte()}"
+
+        // Byte 6: DO value in mg/L (0-20 mg/L)
+        val doValue = "%.1f".format(data[6].toUByte().toFloat() / 10f)
+
+        return SensorData.DOSensorData(
+            deviceId = deviceId,
+            temperature = "$temperature °C",
+            doPercentage = "$doPercentage%",
+            doValue = "$doValue mg/L"
+        )
+    }
+
 
     private fun parseAmmoniaSensorData(data: ByteArray?, deviceAddress: String): SensorData? {
         if (data == null) {
@@ -671,13 +694,6 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-
-
-
-
-
-
-
     fun resetStepCounter(deviceAddress: String) {
         viewModelScope.launch {
             val devices = _devices.value
@@ -703,15 +719,9 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-    // Region: Utility Functions
-    /**
-     * Determine device type based on BLE device name.
-     * Add new devices by matching keywords in name (case-insensitive).
-     */
+
     private fun determineDeviceType(name: String?): String = when {
         name?.contains("SHT", ignoreCase = true) == true -> "SHT40"
-        //name?.contains("Data", ignoreCase = true) == true -> "Lux Sensor"
-        // new lux data
         name?.contains("Lux_Data", ignoreCase = true) == true -> "Lux Sensor"
         name?.contains("SOIL", ignoreCase = true) == true -> "Soil Sensor"
         name?.contains("Activity", ignoreCase = true) == true -> "LIS2DH"
@@ -719,12 +729,12 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         name?.contains("Object", ignoreCase = true) == true -> "Metal Detector"
         name?.contains("Step", ignoreCase = true) == true -> "Step Counter"
         name?.contains("NH", ignoreCase = true) == true -> "Ammonia Sensor"
+        name?.contains("DO_Sensor", ignoreCase = true) == true -> "DO Sensor"
+        name?.contains("Dissolved", ignoreCase = true) == true -> "DO Sensor"
         name?.contains("Optical_Sensor", ignoreCase = true) == true -> "Optical Sensor"
 
         else -> "Unknown Device"
     }
-
-    //  name?.contains("Soil_insight", ignoreCase = true) == true -> "Optical Sensor"
 
     private fun updateDevice(newDevice: BluetoothDevice, sensorData: SensorData? = null) {
         _devices.update { devices ->
