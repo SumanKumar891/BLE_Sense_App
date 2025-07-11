@@ -107,9 +107,9 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
 
     var expanded by remember { mutableStateOf(false) }
     val sensorTypes = listOf(
-        "SHT40", "LIS2DH", "Soil Sensor", "Weather", "Lux Sensor",
+        "SHT40", "LIS2DH", "Weather", "Lux Sensor",
         "Speed Distance", "Metal Detector", "Step Counter",
-        "Ammonia Sensor", "Optical Sensor"  // Added Optical Sensor
+        "Ammonia Sensor", "Optical Sensor", "DO Sensor"
     )
 
     var selectedSensor by remember { mutableStateOf(sensorTypes[0]) }
@@ -551,6 +551,17 @@ fun BluetoothDeviceItem(
 
             // Display sensor data based on selected sensor type
             device.sensorData?.let { sensorData ->
+
+                if (showPreview && sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
+                    DOSensorPreview(
+                        temperature = sensorData.temperature,
+                        doPercentage = sensorData.doPercentage,
+                        doValue = sensorData.doValue,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    )
+                }
                 // Show preview for Optical Sensor if enabled
                 if (showPreview && sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData) {
                     OpticalSensorPreview(
@@ -563,56 +574,43 @@ fun BluetoothDeviceItem(
 
                 Text(
                     text = when {
-                        // If no sensor is selected, show data based on sensor data type
-                        selectedSensor.isEmpty() -> when {
-                            sensorData is BluetoothScanViewModel.SensorData.SHT40Data ->
+                        selectedSensor.isEmpty() -> when (sensorData) {
+                            is BluetoothScanViewModel.SensorData.SHT40Data ->
                                 "Temp: ${sensorData.temperature}°C, Humidity: ${sensorData.humidity}%"
-                            sensorData is BluetoothScanViewModel.SensorData.LIS2DHData ->
+                            is BluetoothScanViewModel.SensorData.LIS2DHData ->
                                 "X: ${sensorData.x}, Y: ${sensorData.y}, Z: ${sensorData.z}"
-                            sensorData is BluetoothScanViewModel.SensorData.SoilSensorData ->
-                                "Temp: ${sensorData.temperature}°C, Moisture: ${sensorData.moisture}%"
-//                            sensorData is BluetoothScanViewModel.SensorData.LuxData ->
-//                                "Light: ${sensorData.calculatedLux} LUX"
-                            sensorData  is BluetoothScanViewModel.SensorData.LuxSensorData ->
-                                "Device ID: ${sensorData.deviceId}, Raw: ${sensorData.rawData}" // Show device ID and raw
-                            sensorData is BluetoothScanViewModel.SensorData.StepCounterData ->
-                                "Steps: ${sensorData.steps}"
-                            sensorData is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
+                            is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
                                 "Metal Detected: ${if (sensorData.detection) "Yes" else "No"}"
-                            sensorData is BluetoothScanViewModel.SensorData.SDTData ->
+                            is BluetoothScanViewModel.SensorData.SDTData ->
                                 "Speed: ${sensorData.speed}m/s, Distance: ${sensorData.distance}m"
-                            sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
+                            is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                                 "Ammonia: ${sensorData.ammonia}"
-                            sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData ->
+                            is BluetoothScanViewModel.SensorData.DOSensorData ->  // Add this case
+                                "Temp: ${sensorData.temperature}, DO: ${sensorData.doPercentage}, ${sensorData.doValue}"
+                            is BluetoothScanViewModel.SensorData.OpticalSensorData ->
                                 "Reflectance: ${sensorData.reflectanceValues.take(3).joinToString(", ") { "%.2f".format(it) }}" +
                                         (if (sensorData.reflectanceValues.size > 3) " +${sensorData.reflectanceValues.size - 3} more" else "")
+                            is BluetoothScanViewModel.SensorData.LuxSensorData ->
+                                "Device ID: ${sensorData.deviceId}, Raw: ${sensorData.rawData}"
                             else -> "No data available"
                         }
-
-                        // Show specific sensor data based on selection
                         selectedSensor == "SHT40" && sensorData is BluetoothScanViewModel.SensorData.SHT40Data ->
                             "Temp: ${sensorData.temperature}°C, Humidity: ${sensorData.humidity}%"
                         selectedSensor == "Metal Detector" && sensorData is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
                             "Metal Detected: ${if (sensorData.detection) "Yes" else "No"}"
                         selectedSensor == "LIS2DH" && sensorData is BluetoothScanViewModel.SensorData.LIS2DHData ->
                             "X: ${sensorData.x}, Y: ${sensorData.y}, Z: ${sensorData.z}"
-                        selectedSensor == "Soil Sensor" && sensorData is BluetoothScanViewModel.SensorData.SoilSensorData ->
-                            "N: ${sensorData.nitrogen}, P: ${sensorData.phosphorus}, K: ${sensorData.potassium}\n" +
-                                    "Moisture: ${sensorData.moisture}%, Temp: ${sensorData.temperature}°C\n" +
-                                    "EC: ${sensorData.ec}, pH: ${sensorData.pH}"
-                        selectedSensor == "Step Counter" && sensorData is BluetoothScanViewModel.SensorData.StepCounterData ->
-                            "Steps: ${sensorData.steps}"
-//                        selectedSensor == "LUX" && sensorData is BluetoothScanViewModel.SensorData.LuxData ->
-//                            "Light: ${sensorData.calculatedLux} LUX"
-                        selectedSensor == "Lux Sensor" && sensorData is BluetoothScanViewModel.SensorData.LuxSensorData ->
-                            "Device ID: ${sensorData.deviceId}, Raw: ${sensorData.rawData}" // Show device ID and raw data
                         selectedSensor == "Speed Distance" && sensorData is BluetoothScanViewModel.SensorData.SDTData ->
                             "Speed: ${sensorData.speed}m/s, Distance: ${sensorData.distance}m"
                         selectedSensor == "Ammonia Sensor" && sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                             "Ammonia: ${sensorData.ammonia}"
+                        selectedSensor == "DO Sensor" && sensorData is BluetoothScanViewModel.SensorData.DOSensorData ->  // Add this case
+                            "Temp: ${sensorData.temperature}, DO: ${sensorData.doPercentage}, ${sensorData.doValue}"
                         selectedSensor == "Optical Sensor" && sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData ->
                             "Reflectance: ${sensorData.reflectanceValues.take(3).joinToString(", ") { "%.2f".format(it) }}" +
                                     (if (sensorData.reflectanceValues.size > 3) " +${sensorData.reflectanceValues.size - 3} more" else "")
+                        selectedSensor == "Lux Sensor" && sensorData is BluetoothScanViewModel.SensorData.LuxSensorData ->
+                            "Device ID: ${sensorData.deviceId}, Raw: ${sensorData.rawData}"
                         else -> "Incompatible sensor type"
                     },
                     style = MaterialTheme.typography.caption,
@@ -624,6 +622,55 @@ fun BluetoothDeviceItem(
                 style = MaterialTheme.typography.caption,
                 color = if (isDarkMode) Color(0xFF64B5F6) else MaterialTheme.colors.primary
             )
+        }
+    }
+}
+
+@Composable
+fun DOSensorPreview(
+    temperature: String,
+    doPercentage: String,
+    doValue: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(60.dp)
+            .fillMaxWidth()
+            .background(
+                if (isSystemInDarkTheme()) Color(0xFF1E1E1E) else Color.White,
+                RoundedCornerShape(8.dp)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = temperature,
+                    style = MaterialTheme.typography.caption,
+                    color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3)
+                )
+                Text("Temp", style = MaterialTheme.typography.overline)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = doPercentage,
+                    style = MaterialTheme.typography.caption,
+                    color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3)
+                )
+                Text("DO %", style = MaterialTheme.typography.overline)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = doValue,
+                    style = MaterialTheme.typography.caption,
+                    color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3)
+                )
+                Text("DO mg/L", style = MaterialTheme.typography.overline)
+            }
         }
     }
 }

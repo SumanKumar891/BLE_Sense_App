@@ -134,7 +134,11 @@ data class TranslatedAdvertisingText(
     val warningMessage: String = "The %s has exceeded the threshold of %s!",
     val dismissButton: String = "Dismiss",
     val reflectanceValues: String = "Reflectance Values",
-    val rawData: String = "Raw Data"
+    val rawData: String = "Raw Data",
+    val doTemperature: String = "DO Temp",
+    val doPercentage: String = "DO %",
+    val doValue: String = "DO Value"
+
 )
 
 
@@ -165,9 +169,6 @@ fun AdvertisingDataScreen(
         }
     }
     var mediaPlayer by remember { mutableStateOf(MediaPlayer.create(context, R.raw.nuclear_alarm)) }
-//    val viewModel: BluetoothScanViewModel<Any?> =
-//        viewModel(factory = BluetoothScanViewModelFactory(context))
-
 
     // Theme and Language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
@@ -179,8 +180,6 @@ fun AdvertisingDataScreen(
         derivedStateOf { devices.find { it.address == deviceAddress } }
     }
 
-
-
     // Threshold and alarm state
     var thresholdValue by remember { mutableStateOf("") }
     var isAlarmActive by remember { mutableStateOf(false) }
@@ -188,10 +187,6 @@ fun AdvertisingDataScreen(
     var parameterType by remember { mutableStateOf("Temperature") }
     var isThresholdSet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
-//    // MediaPlayer for alarm
-//    val context = LocalContext.current
-//    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
     // Initialize MediaPlayer
     LaunchedEffect(Unit) {
@@ -206,9 +201,6 @@ fun AdvertisingDataScreen(
         }
     }
 
-
-
-
     // Blinking animation state
     val isBlinking by remember(isAlarmActive) { derivedStateOf { isAlarmActive } }
     val blinkAlpha by animateFloatAsState(
@@ -219,6 +211,8 @@ fun AdvertisingDataScreen(
         ),
         label = "blinkAlpha"
     )
+
+
 
     // Use derivedStateOf to minimize recompositions
     val ammoniaValue by remember(currentDevice?.sensorData) {
@@ -257,14 +251,6 @@ fun AdvertisingDataScreen(
             }
         }
     }
-
-
-
-
-
-
-    // Threshold check for SHT40Data and AmmoniaSensorData
-    // Inside AdvertisingDataScreen composable, modify the LaunchedEffect for threshold checks:
 
     // Replace the current LaunchedEffect for threshold checks with this:
     LaunchedEffect(currentDevice, thresholdValue, parameterType, isThresholdSet) {
@@ -435,7 +421,10 @@ fun AdvertisingDataScreen(
             "RESET STEPS",
             "Warning",
             "Threshold Exceeded",
-            "Dismiss"
+            "Dismiss",
+            "DO Temp",
+            "DO %",
+            "DO Value"
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
         translatedText = TranslatedAdvertisingText(
@@ -464,7 +453,11 @@ fun AdvertisingDataScreen(
             resetSteps = translatedList[22],
             warningTitle = translatedList[23],
             warningMessage = translatedList[24],
-            dismissButton = translatedList[25]
+            dismissButton = translatedList[25],
+            doTemperature = translatedList[26],
+            doPercentage = translatedList[27],
+            doValue = translatedList[28]
+
         )
     }
     var nutrientPredictions by remember { mutableStateOf<SoilNutrientModelHelper.NutrientPrediction?>(null) }
@@ -473,15 +466,23 @@ fun AdvertisingDataScreen(
     val displayData by remember(currentDevice?.sensorData, translatedText, nutrientPredictions) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
+
                 is BluetoothScanViewModel.SensorData.SHT40Data -> listOf(
                     translatedText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
                     translatedText.humidity to "${sensorData.humidity.takeIf { it.isNotEmpty() } ?: "0"}%"
                 )
-// lux data
+
+                is BluetoothScanViewModel.SensorData.DOSensorData -> listOf(
+                    translatedText.doTemperature to "${sensorData.temperature}",
+                    translatedText.doPercentage to sensorData.doPercentage,
+                    translatedText.doValue to sensorData.doValue
+                )
+
                 is BluetoothScanViewModel.SensorData.SDTData -> listOf(
                     translatedText.speed to "${sensorData.speed.takeIf { it.isNotEmpty() } ?: "0"} m/s",
                     translatedText.distance to "${sensorData.distance.takeIf { it.isNotEmpty() } ?: "0"} m"
                 )
+
                 is BluetoothScanViewModel.SensorData.LIS2DHData -> listOf(
                     translatedText.xAxis to "${sensorData.x.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
                     translatedText.yAxis to "${sensorData.y.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
@@ -577,10 +578,6 @@ fun AdvertisingDataScreen(
         }
     }
 
-
-
-
-
     // Theme-based colors
     val backgroundGradient = if (isDarkMode) {
         Brush.verticalGradient(listOf(Color(0xFF1E1E1E), Color(0xFF424242)))
@@ -663,6 +660,19 @@ fun AdvertisingDataScreen(
 
             }
 
+          if  ( currentDevice?.sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
+              val doData =
+                  currentDevice!!.sensorData as BluetoothScanViewModel.SensorData.DOSensorData
+
+              DOSensorDisplay(
+                  temperature = doData.temperature.replace(" °C", "").toFloatOrNull() ?: 0f,
+                  doPercentage = doData.doPercentage.replace("%", "").toFloatOrNull() ?: 0f,
+                  doValue = doData.doValue.replace(" mg/L", "").toFloatOrNull() ?: 0f,
+                  modifier = Modifier.fillMaxWidth()
+              )
+          }
+
+
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData) {
                 ResponsiveDataCards(
                     data = displayData,
@@ -673,29 +683,34 @@ fun AdvertisingDataScreen(
                 )
             }
 
-
             Spacer(modifier = Modifier.height(32.dp))
 
 
+
+
             // In the AdvertisingDataScreen's main Column, update the ThresholdInputSection usage:
-//            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data ||
-//                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData) {
-//                ThresholdInputSection(
-//                    thresholdValue = thresholdValue,
-//                    onThresholdChange = { thresholdValue = it },
-//                    parameterType = parameterType,
-//                    onParameterChange = { parameterType = it },
-//                    isDarkMode = isDarkMode,
-//                    sensorData = currentDevice?.sensorData,
-//                    onConfirmThreshold = {
-//                        if (thresholdValue.toFloatOrNull() != null) {
-//                            isThresholdSet = true
-//                        }
-//                    }
-//                )
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-// SHT40 sensor path → show threshold input AND temperature/humidity cards
+            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data ||
+                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData ||
+                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.LuxSensorData ||
+                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
+                ThresholdInputSection(
+                    thresholdValue = thresholdValue,
+                    onThresholdChange = { thresholdValue = it },
+                    parameterType = parameterType,
+                    onParameterChange = { parameterType = it },
+                    isDarkMode = isDarkMode,
+                    sensorData = currentDevice?.sensorData,
+                    onConfirmThreshold = {
+                        if (thresholdValue.toFloatOrNull() != null) {
+                            isThresholdSet = true
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+
+          // SHT40 sensor path → show threshold input AND temperature/humidity cards
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data) {
 
                 // Show SHT40 temperature & humidity cards
@@ -725,6 +740,8 @@ fun AdvertisingDataScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
+
+
 
 // For Ammonia sensor: show only threshold input
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData) {
@@ -1079,6 +1096,8 @@ private fun ThresholdInputSection(
             val parameters = when (sensorData) {
                 is BluetoothScanViewModel.SensorData.SHT40Data -> listOf("Temperature", "Humidity")
                 is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> listOf("Ammonia")
+                is BluetoothScanViewModel.SensorData.LuxSensorData -> listOf("Light Intensity")
+                is BluetoothScanViewModel.SensorData.DOSensorData -> listOf("DO Temperature", "DO Percentage", "DO Value")
                 else -> emptyList()
             }
             parameters.forEach { type ->
@@ -1372,13 +1391,20 @@ private fun exportDataToCSV(
                             is BluetoothScanViewModel.SensorData.SHT40Data -> dataBuilder.append("${sensorData.temperature},${sensorData.humidity}")
                             is BluetoothScanViewModel.SensorData.LIS2DHData -> dataBuilder.append("${sensorData.x},${sensorData.y},${sensorData.z}")
                             is BluetoothScanViewModel.SensorData.SoilSensorData -> dataBuilder.append("${sensorData.nitrogen},${sensorData.phosphorus},${sensorData.potassium},${sensorData.moisture},${sensorData.temperature},${sensorData.ec},${sensorData.pH}")
-                            is BluetoothScanViewModel.SensorData.LuxSensorData -> dataBuilder.append("${sensorData.lux}")
+                            is BluetoothScanViewModel.SensorData.LuxSensorData -> {
+                                val parsedLux = sensorData.lux.replace("Lux=", "").trim().toFloatOrNull() ?: 0f
+                                dataBuilder.append("$parsedLux")
+                            }
                             is BluetoothScanViewModel.SensorData.SDTData -> dataBuilder.append("${sensorData.speed},${sensorData.distance}")
                             is BluetoothScanViewModel.SensorData.ObjectDetectorData -> dataBuilder.append("${sensorData.detection}")
                             is BluetoothScanViewModel.SensorData.StepCounterData -> dataBuilder.append("${sensorData.steps}")
                             is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> dataBuilder.append("${sensorData.ammonia}")
+                            is BluetoothScanViewModel.SensorData.DOSensorData -> {
+                                dataBuilder.append("${sensorData.temperature.replace(" °C", "")}," +
+                                        "${sensorData.doPercentage.replace("%", "")}," +
+                                        "${sensorData.doValue.replace(" mg/L", "")}")
+                            }
                             is BluetoothScanViewModel.SensorData.OpticalSensorData -> {
-                                // Add all 18 reflectance values with proper wavelength mapping
                                 sensorData.reflectanceValues.forEach { value ->
                                     dataBuilder.append("$value,")
                                 }
@@ -1402,6 +1428,68 @@ private fun exportDataToCSV(
     }
 }
 
+@Composable
+fun DOSensorDisplay(
+    temperature: Float,
+    doPercentage: Float,
+    doValue: Float,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Temperature gauge
+        CircularProgressIndicator(
+            progress = (temperature / 50f).coerceIn(0f, 1f), // Assuming max 50°C
+            modifier = Modifier.size(100.dp),
+            color = when {
+                temperature > 30 -> Red
+                temperature > 20 -> Color.Yellow
+                else -> Color.Green
+            },
+            strokeWidth = 8.dp
+        )
+        Text("$temperature °C", style = MaterialTheme.typography.titleMedium)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // DO percentage gauge
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(
+                    progress = doPercentage / 100f,
+                    modifier = Modifier.size(80.dp),
+                    color = when {
+                        doPercentage < 30 -> Red
+                        doPercentage < 60 -> Color.Yellow
+                        else -> Color.Green
+                    }
+                )
+                Text("$doPercentage%", style = MaterialTheme.typography.bodyLarge)
+                Text("Saturation", style = MaterialTheme.typography.labelSmall)
+            }
+
+            // DO value gauge
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(
+                    progress = (doValue / 20f).coerceIn(0f, 1f), // Assuming max 20 mg/L
+                    modifier = Modifier.size(80.dp),
+                    color = when {
+                        doValue < 2 -> Red
+                        doValue < 5 -> Color.Yellow
+                        else -> Color.Green
+                    }
+                )
+                Text("$doValue mg/L", style = MaterialTheme.typography.bodyLarge)
+                Text("Concentration", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
 
 @Composable
 fun OpticalSensorVisualization(
@@ -1895,6 +1983,50 @@ private fun ResponsiveDataCards(
 
     }
 }
+
+@Composable
+fun LIS2DHDataCards(
+    data: List<Pair<String, String>>,
+    cardBackground: Color,
+    cardGradient: Brush,
+    textColor: Color
+) {
+    if (data.isNotEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "LIS2DH Live Data",
+                style = MaterialTheme.typography.titleLarge,
+                color = textColor,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(data, key = { it.first }) { pair ->
+                    val label = pair.first
+                    val value = pair.second
+                    DataCard(
+                        label = label,
+                        value = value,
+                        cardBackground = cardBackground,
+                        cardGradient = cardGradient,
+                        textColor = textColor
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun SHT40DataCards(
     data: List<Pair<String, String>>,
