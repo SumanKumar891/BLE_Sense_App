@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="deploymentTargetSelector">
+    <selectionStates>
+      <SelectionState runConfigName="app">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2025-04-05T06:24:06.253326200Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=t4l795dqbikjbawg" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="PreviewRobotControlScreen">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+    </selectionStates>
+  </component>
+</project>
