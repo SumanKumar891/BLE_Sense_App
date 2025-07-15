@@ -1,5 +1,6 @@
 package com.example.ble_jetpackcompose
 
+// Import necessary Android and Compose libraries for UI, permissions, and navigation
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -74,52 +75,59 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
 
+// Data class for translatable text in MainScreen
 data class TranslatedMainScreenText(
-    val appTitle: String = "BLE Sense",
-    val nearbyDevices: String = "Nearby Devices",
-    val gameDevices: String = "Game Devices",
-    val bluetoothPermissionsRequired: String = "Bluetooth permissions required",
-    val scanningForDevices: String = "Scanning for devices...",
-    val noDevicesFound: String = "No devices found",
-    val scanningForGameDevices: String = "Scanning for game devices...",
-    val noGameDevicesFound: String = "No game devices found",
-    val showMore: String = "Show More",
-    val showLess: String = "Show Less"
+    val appTitle: String = "BLE Sense", // Default app title
+    val nearbyDevices: String = "Nearby Devices", // Label for nearby devices section
+    val gameDevices: String = "Game Devices", // Label for game devices section
+    val bluetoothPermissionsRequired: String = "Bluetooth permissions required", // Message for missing permissions
+    val scanningForDevices: String = "Scanning for devices...", // Message during device scanning
+    val noDevicesFound: String = "No devices found", // Message when no devices are found
+    val scanningForGameDevices: String = "Scanning for game devices...", // Message during game device scanning
+    val noGameDevicesFound: String = "No game devices found", // Message when no game devices are found
+    val showMore: String = "Show More", // Label for showing more devices
+    val showLess: String = "Show Less" // Label for showing fewer devices
 )
 
-
-
-
+// Main composable for the app's main screen
 @Composable
 fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothScanViewModel<Any?>) {
+    // Check if device is in landscape orientation
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    // State to toggle robot controls visibility
     var showRobotControls by remember { mutableStateOf(false) }
 
-    // Your existing state variables
+    // Observe Bluetooth devices and scanning state
     val bluetoothDevices by bluetoothViewModel.devices.collectAsState()
     val isScanning by bluetoothViewModel.isScanning.collectAsState()
+    // Get current context
     val context = LocalContext.current
 
+    // Get activity context
     val activity = context as ComponentActivity
 
+    // Track Bluetooth permission status
     val isPermissionGranted = remember { mutableStateOf(checkBluetoothPermissions(context)) }
 
+    // State for dropdown menu and sensor selection
     var expanded by remember { mutableStateOf(false) }
+    // List of supported sensor types
     val sensorTypes = listOf(
         "SHT40", "LIS2DH", "Weather", "Lux Sensor",
         "Speed Distance", "Metal Detector", "Step Counter",
         "Ammonia Sensor", "Optical Sensor", "DO Sensor"
     )
-
+    // Track selected sensor type
     var selectedSensor by remember { mutableStateOf(sensorTypes[0]) }
+    // Toggle to show all devices or a limited number
     var showAllDevices by remember { mutableStateOf(false) }
 
-    // Sync with ThemeManager and LanguageManager
+    // Observe theme and language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
 
-    // State for translated text
+    // Initialize translated text with cached values or defaults
     var translatedText by remember {
         mutableStateOf(
             TranslatedMainScreenText(
@@ -137,7 +145,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
         )
     }
 
-    // Preload translations on language change
+    // Preload translations when language changes
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
@@ -146,6 +154,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
             "No game devices found", "Show More", "Show Less"
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
+        // Update translated text state
         translatedText = TranslatedMainScreenText(
             appTitle = translatedList[0],
             nearbyDevices = translatedList[1],
@@ -160,26 +169,26 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
         )
     }
 
-    // Define colors based on theme
-    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5)
-    val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
-    val textColor = if (isDarkMode) Color.White else Color.Black
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575)
-    val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
+    // Define theme-based colors
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5) // Background color
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Card background color
+    val textColor = if (isDarkMode) Color.White else Color.Black // Primary text color
+    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575) // Secondary text color
+    val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0) // Divider color
 
-    // Check permissions initially
+    // Check permissions on initial composition
     LaunchedEffect(Unit) {
         isPermissionGranted.value = checkBluetoothPermissions(context)
     }
 
-    // Handle permission requests
+    // Handle Bluetooth permission requests
     BluetoothPermissionHandler(
         onPermissionsGranted = {
             isPermissionGranted.value = true
         }
     )
 
-    // Start periodic scanning when screen is visible, stop when disposed
+    // Start periodic Bluetooth scanning when permissions are granted, stop on dispose
     DisposableEffect(isPermissionGranted.value) {
         if (isPermissionGranted.value) {
             bluetoothViewModel.startPeriodicScan(activity)
@@ -189,14 +198,16 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
         }
     }
 
+    // Main UI container
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
             // Apply system bars padding to avoid overlap with status and navigation bars
             .padding(WindowInsets.systemBars.asPaddingValues())
-    ){
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Top app bar
             androidx.compose.material.TopAppBar(
                 backgroundColor = cardBackgroundColor,
                 elevation = 8.dp
@@ -214,6 +225,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                         textAlign = TextAlign.Center
                     )
 
+                    // Theme toggle button
                     IconButton(
                         onClick = { ThemeManager.toggleDarkMode(!isDarkMode) },
                         modifier = Modifier.align(Alignment.CenterEnd)
@@ -228,13 +240,14 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
             }
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Main content list
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-
+                // Nearby Devices section
                 item {
                     Card(
                         modifier = Modifier
@@ -262,6 +275,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    // Refresh scan button
                                     IconButton(
                                         onClick = {
                                             if (isPermissionGranted.value && !isScanning) {
@@ -275,6 +289,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                             tint = textColor
                                         )
                                     }
+                                    // Sensor type dropdown menu
                                     Box {
                                         IconButton(onClick = { expanded = true }) {
                                             Icon(
@@ -303,6 +318,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                             }
                             Spacer(modifier = Modifier.height(16.dp))
 
+                            // Handle permission and device states
                             if (!isPermissionGranted.value) {
                                 Text(
                                     text = translatedText.bluetoothPermissionsRequired,
@@ -326,6 +342,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     }
                                 }
                             } else {
+                                // Display devices (limited or all based on showAllDevices)
                                 val devicesToShow = if (showAllDevices) bluetoothDevices else bluetoothDevices.take(4)
                                 devicesToShow.forEach { device ->
                                     BluetoothDeviceItem(
@@ -336,6 +353,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     )
                                     Divider(color = dividerColor)
                                 }
+                                // Show more/less toggle if more than 4 devices
                                 if (bluetoothDevices.size > 4) {
                                     Box(
                                         modifier = Modifier
@@ -363,11 +381,14 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
 
                 item { Spacer(modifier = Modifier.height(16.dp)) }
 
+                // Game Devices section
                 item {
+                    // List of allowed game device names
                     val allowedGameDevices = listOf(
                         "Scarlet Witch", "Black Widow", "Captain Marvel", "Wasp", "Hela",
                         "Hulk", "Thor", "Iron_Man", "Spider Man", "Captain America"
                     )
+                    // Filter devices to show only game devices
                     val gameDevices = bluetoothDevices.filter { it.name in allowedGameDevices }
                     val devicesToShow = if (showAllDevices) gameDevices else gameDevices.take(4)
 
@@ -390,6 +411,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     style = MaterialTheme.typography.h6,
                                     color = textColor
                                 )
+                                // Refresh scan button for game devices
                                 IconButton(
                                     onClick = {
                                         if (isPermissionGranted.value && !isScanning) {
@@ -406,6 +428,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                             }
                             Spacer(modifier = Modifier.height(16.dp))
 
+                            // Handle permission and game device states
                             if (!isPermissionGranted.value) {
                                 Text(
                                     text = translatedText.bluetoothPermissionsRequired,
@@ -429,6 +452,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     }
                                 }
                             } else {
+                                // Display game devices (limited or all based on showAllDevices)
                                 devicesToShow.forEach { device ->
                                     BluetoothDeviceItem(
                                         device = device,
@@ -438,6 +462,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     )
                                     Divider(color = dividerColor)
                                 }
+                                // Show more/less toggle if more than 4 game devices
                                 if (gameDevices.size > 4) {
                                     Box(
                                         modifier = Modifier
@@ -464,6 +489,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                 }
             }
 
+            // Bottom navigation bar
             Box {
                 CustomBottomNavigation(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -474,17 +500,23 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
         }
     }
 }
+
+// Helper function to check Bluetooth permissions based on Android version
 private fun checkBluetoothPermissions(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        // For Android 12 and above, check new Bluetooth permissions
         checkPermission(context, Manifest.permission.BLUETOOTH_SCAN) &&
                 checkPermission(context, Manifest.permission.BLUETOOTH_CONNECT) &&
                 checkPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-    } else
+    } else {
+        // For older Android versions, check legacy Bluetooth permissions
         checkPermission(context, Manifest.permission.BLUETOOTH) &&
                 checkPermission(context, Manifest.permission.BLUETOOTH_ADMIN) &&
                 checkPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+    }
 }
 
+// Helper function to check a single permission
 private fun checkPermission(context: Context, permission: String): Boolean {
     return ContextCompat.checkSelfPermission(
         context,
@@ -492,19 +524,22 @@ private fun checkPermission(context: Context, permission: String): Boolean {
     ) == PackageManager.PERMISSION_GRANTED
 }
 
+// Composable for individual Bluetooth device item
 @Composable
 fun BluetoothDeviceItem(
-    device: BluetoothScanViewModel.BluetoothDevice,
-    navController: NavHostController,
-    selectedSensor: String,
-    isDarkMode: Boolean,
-    showPreview: Boolean = false
+    device: BluetoothScanViewModel.BluetoothDevice, // Device data
+    navController: NavHostController, // Navigation controller
+    selectedSensor: String, // Selected sensor type
+    isDarkMode: Boolean, // Dark mode state
+    showPreview: Boolean = false // Whether to show sensor preview
 ) {
+    // Define theme-based colors
     val textColor = if (isDarkMode) Color.White else Color.Black
     val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575)
     val iconBackgroundColor = if (isDarkMode) Color(0xFF0D47A1) else Color(0xFFE3F2FD)
     val iconTintColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF2196F3)
 
+    // Device item row, clickable to navigate to details
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -516,7 +551,7 @@ fun BluetoothDeviceItem(
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon box
+        // Device icon
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -533,16 +568,19 @@ fun BluetoothDeviceItem(
 
         Spacer(modifier = Modifier.width(12.dp))
         Column {
+            // Device name
             Text(
                 text = device.name,
                 style = MaterialTheme.typography.subtitle1,
                 color = textColor
             )
+            // Device address
             Text(
                 text = "Address: ${device.address}",
                 style = MaterialTheme.typography.caption,
                 color = secondaryTextColor
             )
+            // Signal strength
             Text(
                 text = "Signal Strength: ${device.rssi} dBm",
                 style = MaterialTheme.typography.caption,
@@ -551,7 +589,7 @@ fun BluetoothDeviceItem(
 
             // Display sensor data based on selected sensor type
             device.sensorData?.let { sensorData ->
-
+                // Show preview for DO Sensor if enabled
                 if (showPreview && sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
                     DOSensorPreview(
                         temperature = sensorData.temperature,
@@ -572,6 +610,7 @@ fun BluetoothDeviceItem(
                     )
                 }
 
+                // Display sensor data text based on sensor type
                 Text(
                     text = when {
                         selectedSensor.isEmpty() -> when (sensorData) {
@@ -585,7 +624,7 @@ fun BluetoothDeviceItem(
                                 "Speed: ${sensorData.speed}m/s, Distance: ${sensorData.distance}m"
                             is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                                 "Ammonia: ${sensorData.ammonia}"
-                            is BluetoothScanViewModel.SensorData.DOSensorData ->  // Add this case
+                            is BluetoothScanViewModel.SensorData.DOSensorData ->
                                 "Temp: ${sensorData.temperature}, DO: ${sensorData.doPercentage}, ${sensorData.doValue}"
                             is BluetoothScanViewModel.SensorData.OpticalSensorData ->
                                 "Reflectance: ${sensorData.reflectanceValues.take(3).joinToString(", ") { "%.2f".format(it) }}" +
@@ -604,7 +643,7 @@ fun BluetoothDeviceItem(
                             "Speed: ${sensorData.speed}m/s, Distance: ${sensorData.distance}m"
                         selectedSensor == "Ammonia Sensor" && sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                             "Ammonia: ${sensorData.ammonia}"
-                        selectedSensor == "DO Sensor" && sensorData is BluetoothScanViewModel.SensorData.DOSensorData ->  // Add this case
+                        selectedSensor == "DO Sensor" && sensorData is BluetoothScanViewModel.SensorData.DOSensorData ->
                             "Temp: ${sensorData.temperature}, DO: ${sensorData.doPercentage}, ${sensorData.doValue}"
                         selectedSensor == "Optical Sensor" && sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData ->
                             "Reflectance: ${sensorData.reflectanceValues.take(3).joinToString(", ") { "%.2f".format(it) }}" +
@@ -626,11 +665,12 @@ fun BluetoothDeviceItem(
     }
 }
 
+// Composable for DO Sensor data preview
 @Composable
 fun DOSensorPreview(
-    temperature: String,
-    doPercentage: String,
-    doValue: String,
+    temperature: String, // Temperature value
+    doPercentage: String, // Dissolved oxygen percentage
+    doValue: String, // Dissolved oxygen value
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -647,6 +687,7 @@ fun DOSensorPreview(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
+            // Temperature display
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = temperature,
@@ -655,6 +696,7 @@ fun DOSensorPreview(
                 )
                 Text("Temp", style = MaterialTheme.typography.overline)
             }
+            // DO percentage display
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = doPercentage,
@@ -663,6 +705,7 @@ fun DOSensorPreview(
                 )
                 Text("DO %", style = MaterialTheme.typography.overline)
             }
+            // DO value display
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = doValue,
@@ -675,11 +718,13 @@ fun DOSensorPreview(
     }
 }
 
+// Composable for Optical Sensor data preview
 @Composable
 fun OpticalSensorPreview(
-    values: List<Float>,
+    values: List<Float>, // Reflectance values
     modifier: Modifier = Modifier
 ) {
+    // Exit if insufficient data
     if (values.size < 18) return // Need all 18 values
 
     Box(
@@ -688,6 +733,7 @@ fun OpticalSensorPreview(
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
+        // Draw bar chart for reflectance values
         Canvas(modifier = Modifier.fillMaxSize()) {
             val barWidth = size.width / 20f
             val maxValue = values.maxOrNull() ?: 1f
@@ -715,9 +761,10 @@ fun OpticalSensorPreview(
     }
 }
 
+// Composable for Lux Sensor data preview
 @Composable
 fun LuxSensorPreview(
-    value: String,
+    value: String, // Raw sensor data
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -739,17 +786,20 @@ fun LuxSensorPreview(
         )
     }
 }
+
+// Composable for custom bottom navigation bar
 @Composable
 fun CustomBottomNavigation(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
-    isDarkMode: Boolean = false
+    navController: NavHostController, // Navigation controller
+    isDarkMode: Boolean = false // Dark mode state
 ) {
+    // Define theme-based colors
     val backgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
     val contentColor = if (isDarkMode) Color.White else Color.Black
     val selectedColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF2196F3)
 
-    // 🚀 Add this launcher
+    // Launcher for starting RobotControlCompose activity
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -762,6 +812,7 @@ fun CustomBottomNavigation(
         contentColor = contentColor,
         elevation = 8.dp
     ) {
+        // Bluetooth navigation item
         BottomNavigationItem(
             icon = {
                 Icon(
@@ -774,6 +825,7 @@ fun CustomBottomNavigation(
             selected = true,
             onClick = { /* Navigate to Bluetooth */ }
         )
+        // Gameplay navigation item
         BottomNavigationItem(
             icon = {
                 Icon(
@@ -788,6 +840,7 @@ fun CustomBottomNavigation(
                 navController.navigate("game_loading")
             }
         )
+        // Robot Control navigation item
         BottomNavigationItem(
             icon = {
                 Icon(
@@ -799,12 +852,12 @@ fun CustomBottomNavigation(
             },
             selected = false,
             onClick = {
-                // ✅ Correct way to launch another Compose Activity
+                // Launch RobotControlCompose activity
                 val intent = Intent(context, RobotControlCompose::class.java)
                 launcher.launch(intent)
             }
         )
-
+        // Settings navigation item
         BottomNavigationItem(
             icon = {
                 Icon(

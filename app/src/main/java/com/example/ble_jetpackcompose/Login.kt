@@ -2,7 +2,9 @@
 
 package com.example.ble_jetpackcompose
 
+// Import necessary Android and Compose libraries for UI, authentication, and animations
 import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -38,11 +40,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.delay
 
+// Define custom font family for Helvetica
 val helveticaFont = FontFamily(
     Font(R.font.helvetica),
     Font(R.font.helvetica_bold, weight = FontWeight.Bold)
 )
 
+// Object for app-specific colors
 object AppColors {
     val PrimaryColor = Color(0xFF007AFF) // iOS blue
     val TextFieldBackgroundColor = Color(0xFFFFFFFF) // White
@@ -51,38 +55,39 @@ object AppColors {
 
 // Data class for translatable text in LoginScreen
 data class TranslatedLoginScreenText(
-    val welcomeBack: String = "Welcome Back",
-    val signInToContinue: String = "Sign in to continue",
-    val emailPlaceholder: String = "Email",
-    val passwordPlaceholder: String = "Password",
-    val invalidEmail: String = "Please enter a valid email address",
-    val invalidPassword: String = "Password must be at least 8 characters",
-    val forgotPassword: String = "Forgot Password?",
-    val signIn: String = "Sign In",
-    val orContinueWith: String = "Or continue with",
-    val dontHaveAccount: String = "Don't have an account?",
-    val registerNow: String = "Register Now",
-    val resetPassword: String = "Reset Password",
-    val resetPasswordPrompt: String = "Enter your email address and we'll send you a link to reset your password.",
-    val sendResetLink: String = "Send Reset Link",
-    val cancel: String = "Cancel",
-    val resetEmailSent: String = "Password reset email sent! Please check your inbox.",
-    val networkError: String = "Network error. Please check your connection.",
-    val invalidCredentials: String = "Invalid email or password.",
-    val unexpectedError: String = "An unexpected error occurred. Please try again."
+    val welcomeBack: String = "Welcome Back", // Welcome message
+    val signInToContinue: String = "Sign in to continue", // Subtitle
+    val emailPlaceholder: String = "Email", // Email field placeholder
+    val passwordPlaceholder: String = "Password", // Password field placeholder
+    val invalidEmail: String = "Please enter a valid email address", // Email validation error
+    val invalidPassword: String = "Password must be at least 8 characters", // Password validation error
+    val forgotPassword: String = "Forgot Password?", // Forgot password link text
+    val signIn: String = "Sign In", // Sign-in button text
+    val orContinueWith: String = "Or continue with", // Social login divider text
+    val dontHaveAccount: String = "Don't have an account?", // Register prompt text
+    val registerNow: String = "Register Now", // Register button text
+    val resetPassword: String = "Reset Password", // Reset password dialog title
+    val resetPasswordPrompt: String = "Enter your email address and we'll send you a link to reset your password.", // Reset password prompt
+    val sendResetLink: String = "Send Reset Link", // Send reset link button text
+    val cancel: String = "Cancel", // Cancel button text
+    val resetEmailSent: String = "Password reset email sent! Please check your inbox.", // Success message for reset email
+    val networkError: String = "Network error. Please check your connection.", // Network error message
+    val invalidCredentials: String = "Invalid email or password.", // Invalid credentials error
+    val unexpectedError: String = "An unexpected error occurred. Please try again." // Generic error message
 )
 
+// Composable for the login screen
 @Composable
 fun LoginScreen(
-    viewModel: AuthViewModel,
-    onNavigateToRegister: () -> Unit,
-    onNavigateToHome: () -> Unit
+    viewModel: AuthViewModel, // Authentication view model
+    onNavigateToRegister: () -> Unit, // Callback for navigating to register screen
+    onNavigateToHome: () -> Unit // Callback for navigating to home screen
 ) {
-    // Theme and Language state
+    // Observe theme and language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
 
-    // Translated text state
+    // Initialize translated text with cached values or defaults
     var translatedText by remember {
         mutableStateOf(
             TranslatedLoginScreenText(
@@ -109,7 +114,7 @@ fun LoginScreen(
         )
     }
 
-    // Preload translations on language change
+    // Preload translations when language changes
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
@@ -122,6 +127,7 @@ fun LoginScreen(
             "An unexpected error occurred. Please try again."
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
+        // Update translated text state
         translatedText = TranslatedLoginScreenText(
             welcomeBack = translatedList[0],
             signInToContinue = translatedList[1],
@@ -145,57 +151,67 @@ fun LoginScreen(
         )
     }
 
-    // Theme-based colors
-    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White
-    val textColor = if (isDarkMode) Color.White else Color.Black
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else AppColors.SecondaryTextColor
-    val textFieldBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else AppColors.TextFieldBackgroundColor
-    val buttonBackgroundColor = if (isDarkMode) Color(0xFFBB86FC) else AppColors.PrimaryColor
-    val buttonTextColor = if (isDarkMode) Color.Black else Color.White
-    val dividerColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray
-    val borderColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray
-    val errorColor = if (isDarkMode) Color(0xFFCF6679) else MaterialTheme.colorScheme.error
-    val dialogBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    // Define theme-based colors
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White // Screen background
+    val textColor = if (isDarkMode) Color.White else Color.Black // Primary text
+    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else AppColors.SecondaryTextColor // Secondary text
+    val textFieldBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else AppColors.TextFieldBackgroundColor // Text field background
+    val buttonBackgroundColor = if (isDarkMode) Color(0xFFBB86FC) else AppColors.PrimaryColor // Button background
+    val buttonTextColor = if (isDarkMode) Color.Black else Color.White // Button text
+    val dividerColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray // Divider
+    val borderColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray // Border
+    val errorColor = if (isDarkMode) Color(0xFFCF6679) else MaterialTheme.colorScheme.error // Error text
+    val dialogBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Dialog background
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) } // For popup
-    var forgotPasswordEmail by remember { mutableStateOf("") }
-    var showForgotPasswordDialog by remember { mutableStateOf(false) }
-    var showErrorDialog by remember { mutableStateOf(false) } // New state for error popup
+    // State variables for form inputs and UI
+    var email by remember { mutableStateOf("") } // Email input
+    var password by remember { mutableStateOf("") } // Password input
+    var passwordVisible by remember { mutableStateOf(false) } // Password visibility toggle
+    var errorMessage by remember { mutableStateOf<String?>(null) } // Error message for popup
+    var forgotPasswordEmail by remember { mutableStateOf("") } // Email for password reset
+    var showForgotPasswordDialog by remember { mutableStateOf(false) } // Forgot password dialog visibility
+    var showErrorDialog by remember { mutableStateOf(false) } // Error dialog visibility
+    // Validate form based on email and password
     val isFormValid by remember(email, password) {
         derivedStateOf { isValidEmail(email) && isValidPassword(password) }
     }
 
+    // Observe authentication state
     val authState by viewModel.authState.collectAsState()
+    // Get current context
     val context = LocalContext.current
+    // Launcher for Google Sign-In
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
+            // Handle successful Google Sign-In
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
                 account.idToken?.let { viewModel.signInWithGoogle(it) }
             } catch (e: ApiException) {
-                errorMessage = "Google Sign-In failed: ${e.statusCode} - ${e.message}"
-                showErrorDialog = true
+                // Log and handle Google Sign-In failure
+                Log.e("AuthViewModel", "Google Sign-In Failed", e)
+                viewModel.handleGoogleSignInError("Google Sign-In failed: ${e.statusCode} - ${e.message}")
             }
         } else {
-            errorMessage = "Google Sign-In cancelled with result code: $result.resultCode"
-            showErrorDialog = true
+            // Log and handle Google Sign-In cancellation
+            Log.w("AuthViewModel", "Google Sign-In Cancelled: ${result.resultCode}")
+            viewModel.handleGoogleSignInError("Google Sign-In was cancelled")
         }
     }
+    // Initialize Google Sign-In client
     val googleSignInClient = remember { GoogleSignInHelper.getGoogleSignInClient(context) }
     LaunchedEffect(Unit) {
         viewModel.setGoogleSignInClient(googleSignInClient)
     }
-
+    // Show loading dialog during authentication
     if (authState is AuthState.Loading) {
         LoadingDialog(onDismissRequest = {})
     }
 
+    // Auto-dismiss error message after 5 seconds
     errorMessage?.let { error ->
         LaunchedEffect(error) {
             delay(5000)
@@ -203,22 +219,26 @@ fun LoginScreen(
         }
     }
 
+    // Handle authentication state changes
     LaunchedEffect(authState) {
         when (authState) {
-            is AuthState.Success -> onNavigateToHome()
+            is AuthState.Success -> onNavigateToHome() // Navigate to home on success
             is AuthState.Error -> {
+                // Show error dialog
                 errorMessage = (authState as AuthState.Error).message
                 showErrorDialog = true
             }
             is AuthState.PasswordResetEmailSent -> {
+                // Show success message for password reset
                 showForgotPasswordDialog = false
                 errorMessage = translatedText.resetEmailSent
-                showErrorDialog = true // Show success as popup too
+                showErrorDialog = true
             }
             else -> {}
         }
     }
 
+    // Main UI layout
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -229,6 +249,7 @@ fun LoginScreen(
     ) {
         Spacer(modifier = Modifier.height(60.dp))
 
+        // Welcome text
         Text(
             text = translatedText.welcomeBack,
             style = TextStyle(
@@ -240,6 +261,7 @@ fun LoginScreen(
             textAlign = TextAlign.Center
         )
 
+        // Subtitle
         Text(
             text = translatedText.signInToContinue,
             style = TextStyle(
@@ -253,6 +275,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(90.dp))
 
+        // Email input field
         EmailTextField(
             email = email,
             onEmailChange = {
@@ -269,9 +292,10 @@ fun LoginScreen(
             textColor = textColor,
             borderColor = borderColor,
             errorColor = errorColor,
-            buttonBackgroundColor = buttonBackgroundColor // Passed explicitly
+            buttonBackgroundColor = buttonBackgroundColor
         )
 
+        // Password input field
         PasswordTextField(
             password = password,
             onPasswordChange = {
@@ -288,7 +312,7 @@ fun LoginScreen(
             textColor = textColor,
             borderColor = borderColor,
             errorColor = errorColor,
-            buttonBackgroundColor = buttonBackgroundColor // Passed explicitly
+            buttonBackgroundColor = buttonBackgroundColor
         )
 
 //        AnimatedVisibility(
@@ -304,6 +328,7 @@ fun LoginScreen(
 //            )
 //        }
 
+        // Forgot password link
         TextButton(
             onClick = { showForgotPasswordDialog = true },
             modifier = Modifier
@@ -323,6 +348,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Sign-in button
         Button(
             onClick = {
                 if (isFormValid) {
@@ -359,6 +385,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(48.dp))
 
+        // Social login divider
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -386,6 +413,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Social login buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -406,7 +434,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Replace this Row in LoginScreen (near the bottom of the Column):
+        // Register prompt
         Row(
             modifier = Modifier.padding(bottom = 32.dp),
             horizontalArrangement = Arrangement.Center,
@@ -424,9 +452,9 @@ fun LoginScreen(
             TextButton(
                 onClick = {
                     try {
-                        onNavigateToRegister() // Ensure navigation is called safely
+                        onNavigateToRegister() // Navigate to register screen
                     } catch (e: Exception) {
-                        // Log the error to identify the crash cause (optional, remove in production)
+                        // Log navigation errors (optional, remove in production)
                         println("Navigation to register failed: ${e.message}")
                     }
                 },
@@ -444,6 +472,7 @@ fun LoginScreen(
             }
         }
 
+        // Error dialog
         if (showErrorDialog && errorMessage != null) {
             AlertDialog(
                 onDismissRequest = {
@@ -488,6 +517,7 @@ fun LoginScreen(
             )
         }
 
+        // Forgot password dialog
         if (showForgotPasswordDialog) {
             AlertDialog(
                 onDismissRequest = { showForgotPasswordDialog = false },
@@ -562,12 +592,13 @@ fun LoginScreen(
     }
 }
 
+// Composable for social login buttons
 @Composable
 fun SocialLoginButton(
-    icon: Int,
-    onClick: () -> Unit,
-    backgroundColor: Color,
-    borderColor: Color
+    icon: Int, // Icon resource ID
+    onClick: () -> Unit, // Click handler
+    backgroundColor: Color, // Button background
+    borderColor: Color // Border color
 ) {
     OutlinedButton(
         onClick = onClick,
@@ -586,19 +617,20 @@ fun SocialLoginButton(
     }
 }
 
+// Composable for email input field
 @Composable
 private fun EmailTextField(
-    email: String,
-    onEmailChange: (String) -> Unit,
-    isError: Boolean,
+    email: String, // Email input value
+    onEmailChange: (String) -> Unit, // Email change handler
+    isError: Boolean, // Error state
     modifier: Modifier = Modifier,
-    placeholder: String,
-    invalidMessage: String,
-    backgroundColor: Color,
-    textColor: Color,
-    borderColor: Color,
-    errorColor: Color,
-    buttonBackgroundColor: Color // Added parameter
+    placeholder: String, // Placeholder text
+    invalidMessage: String, // Error message
+    backgroundColor: Color, // Field background
+    textColor: Color, // Text color
+    borderColor: Color, // Border color
+    errorColor: Color, // Error text color
+    buttonBackgroundColor: Color // Focus indicator color
 ) {
     TextField(
         value = email,
@@ -624,21 +656,22 @@ private fun EmailTextField(
     )
 }
 
+// Composable for password input field
 @Composable
 private fun PasswordTextField(
-    password: String,
-    onPasswordChange: (String) -> Unit,
-    passwordVisible: Boolean,
-    onPasswordVisibilityChange: (Boolean) -> Unit,
-    isError: Boolean,
+    password: String, // Password input value
+    onPasswordChange: (String) -> Unit, // Password change handler
+    passwordVisible: Boolean, // Password visibility state
+    onPasswordVisibilityChange: (Boolean) -> Unit, // Visibility toggle handler
+    isError: Boolean, // Error state
     modifier: Modifier = Modifier,
-    placeholder: String,
-    invalidMessage: String,
-    backgroundColor: Color,
-    textColor: Color,
-    borderColor: Color,
-    errorColor: Color,
-    buttonBackgroundColor: Color // Added parameter
+    placeholder: String, // Placeholder text
+    invalidMessage: String, // Error message
+    backgroundColor: Color, // Field background
+    textColor: Color, // Text color
+    borderColor: Color, // Border color
+    errorColor: Color, // Error text color
+    buttonBackgroundColor: Color // Focus indicator color
 ) {
     TextField(
         value = password,
@@ -674,15 +707,17 @@ private fun PasswordTextField(
     )
 }
 
-// Validation functions
+// Validation function for email
 private fun isValidEmail(email: String): Boolean {
     return email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
+// Validation function for password
 private fun isValidPassword(password: String): Boolean {
     return password.length >= 8
 }
 
+// Preview composable for LoginScreen
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {

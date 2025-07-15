@@ -1,5 +1,6 @@
 package com.example.ble_jetpackcompose
 
+// Import necessary Compose libraries for animations, UI components, and state management
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -31,26 +32,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Data class for translatable text in AnimatedFirstScreen
+// Data class to hold translatable text for the AnimatedFirstScreen
 data class TranslatedFirstScreenText(
-    val appName: String = "BLE Sense",
-    val login: String = "Login",
-    val signUp: String = "Sign Up",
-    val or: String = "OR",
-    val continueAsGuest: String = "Continue as Guest"
+    val appName: String = "BLE Sense", // Default app name
+    val login: String = "Login", // Default login text
+    val signUp: String = "Sign Up", // Default sign-up text
+    val or: String = "OR", // Default divider text
+    val continueAsGuest: String = "Continue as Guest" // Default guest sign-in text
 )
 
+// Composable function for the initial animated screen with login, sign-up, and guest options
 @Composable
 fun AnimatedFirstScreen(
-    onNavigateToLogin: () -> Unit,
-    onNavigateToSignup: () -> Unit,
-    onGuestSignIn: () -> Unit
+    onNavigateToLogin: () -> Unit, // Callback for navigating to login screen
+    onNavigateToSignup: () -> Unit, // Callback for navigating to sign-up screen
+    onGuestSignIn: () -> Unit // Callback for guest sign-in
 ) {
-    // Theme and Language state
+    // Observe theme and language state from managers
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
 
-    // Translated text state
+    // State to hold translated text, initialized with cached or default values
     var translatedText by remember {
         mutableStateOf(
             TranslatedFirstScreenText(
@@ -63,11 +65,14 @@ fun AnimatedFirstScreen(
         )
     }
 
-    // Preload translations on language change
+    // Preload translations when language changes
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
+        // List of texts to translate
         val textsToTranslate = listOf("BLE Sense", "Login", "Sign Up", "OR", "Continue as Guest")
+        // Translate texts to the current language
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
+        // Update translated text state
         translatedText = TranslatedFirstScreenText(
             appName = translatedList[0],
             login = translatedList[1],
@@ -77,58 +82,65 @@ fun AnimatedFirstScreen(
         )
     }
 
-    // Theme-based colors
-    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White
-    val shapeBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color(0xFFD9EFFF)
-    val textColor = if (isDarkMode) Color.White else Color.Black
-    val dividerColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray
-    val buttonBackgroundColor = if (isDarkMode) Color(0xFFBB86FC) else colorResource(R.color.btnColor)
-    val buttonTextColor = if (isDarkMode) Color.Black else Color.White
-    val loadingIndicatorColor = if (isDarkMode) Color(0xFFBB86FC) else colorResource(R.color.btnColor)
+    // Define theme-based colors
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White // Background color
+    val shapeBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color(0xFFD9EFFF) // Shape background
+    val textColor = if (isDarkMode) Color.White else Color.Black // Text color
+    val dividerColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray // Divider color
+    val buttonBackgroundColor = if (isDarkMode) Color(0xFFBB86FC) else colorResource(R.color.btnColor) // Button background
+    val buttonTextColor = if (isDarkMode) Color.Black else Color.White // Button text color
+    val loadingIndicatorColor = if (isDarkMode) Color(0xFFBB86FC) else colorResource(R.color.btnColor) // Loading indicator color
 
-    // Animations
-    val backgroundScale = remember { Animatable(0f) }
-    val iconAlpha = remember { Animatable(0f) }
-    val textAlpha = remember { Animatable(0f) }
-    val buttonAlpha = remember { Animatable(0f) }
+    // Animation states for background, icon, text, and buttons
+    val backgroundScale = remember { Animatable(0f) } // Scale for background shape
+    val iconAlpha = remember { Animatable(0f) } // Alpha for icon
+    val textAlpha = remember { Animatable(0f) } // Alpha for text
+    val buttonAlpha = remember { Animatable(0f) } // Alpha for buttons
 
-    // Trigger animations
+    // Trigger animations on composition
     LaunchedEffect(Unit) {
+        // Animate background scale
         backgroundScale.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
         )
+        // Animate icon alpha
         iconAlpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 500, easing = LinearEasing)
         )
+        // Animate text alpha
         textAlpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 500, easing = LinearEasing)
         )
+        // Animate button alpha
         buttonAlpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 500, easing = LinearEasing)
         )
     }
 
+    // State to track loading status
     var isLoading by remember { mutableStateOf(false) }
 
+    // Main container for the screen
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
+            .fillMaxSize() // Fill the entire screen
+            .background(backgroundColor) // Apply theme-based background color
     ) {
         // Animated Background Shape
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize() // Fill the entire screen
                 .graphicsLayer(
                     scaleX = backgroundScale.value,
                     scaleY = backgroundScale.value,
-                    transformOrigin = TransformOrigin(0f, 1f)
+                    transformOrigin = TransformOrigin(0f, 1f) // Scale from bottom-left
                 )
                 .clip(GenericShape { size, _ ->
+                    // Define a custom shape using a quadratic Bezier curve
                     val path = Path().apply {
                         moveTo(0f, size.height * 0.9f)
                         quadraticBezierTo(
@@ -145,153 +157,167 @@ fun AnimatedFirstScreen(
                     }
                     addPath(path)
                 })
-                .background(shapeBackgroundColor)
+                .background(shapeBackgroundColor) // Apply theme-based shape background
         )
 
-        // Content
+        // Main content column
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .fillMaxSize() // Fill the entire screen
+                .padding(16.dp), // Apply padding
+            horizontalAlignment = Alignment.CenterHorizontally, // Center horizontally
+            verticalArrangement = Arrangement.Center // Center vertically
         ) {
+            // App icon
             Image(
                 painter = painterResource(id = R.drawable.bg_remove_ble),
                 contentDescription = "App Icon",
                 modifier = Modifier
-                    .size(200.dp)
-                    .alpha(iconAlpha.value)
+                    .size(200.dp) // Fixed size for icon
+                    .alpha(iconAlpha.value) // Apply animated alpha
             )
 
+            // App name text
             Text(
                 text = translatedText.appName,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = helveticaFont,
-                color = textColor,
+                fontFamily = helveticaFont, // Custom Helvetica font
+                color = textColor, // Theme-based text color
                 modifier = Modifier
-                    .alpha(textAlpha.value)
-                    .padding(bottom = 140.dp)
+                    .alpha(textAlpha.value) // Apply animated alpha
+                    .padding(bottom = 140.dp) // Bottom padding
             )
 
+            // Spacer for vertical spacing
             Spacer(modifier = Modifier.height(80.dp))
 
             // Login Button
             Button(
-                onClick = { onNavigateToLogin() },
+                onClick = { onNavigateToLogin() }, // Navigate to login screen
                 modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .alpha(buttonAlpha.value)
-                    .padding(vertical = 8.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackgroundColor),
-                elevation = ButtonDefaults.elevation(defaultElevation = 8.dp)
+                    .fillMaxWidth(0.6f) // 60% of screen width
+                    .alpha(buttonAlpha.value) // Apply animated alpha
+                    .padding(vertical = 8.dp) // Vertical padding
+                    .height(50.dp), // Fixed height
+                shape = RoundedCornerShape(12.dp), // Rounded corners
+                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackgroundColor), // Theme-based background
+                elevation = ButtonDefaults.elevation(defaultElevation = 8.dp) // Button elevation
             ) {
                 Text(
                     text = translatedText.login,
                     fontSize = 18.sp,
-                    color = buttonTextColor,
-                    fontFamily = helveticaFont,
+                    color = buttonTextColor, // Theme-based text color
+                    fontFamily = helveticaFont, // Custom Helvetica font
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
+            // Spacer for vertical spacing
             Spacer(modifier = Modifier.height(10.dp))
 
             // Sign Up Button
             Button(
-                onClick = { onNavigateToSignup() },
+                onClick = { onNavigateToSignup() }, // Navigate to sign-up screen
                 modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .alpha(buttonAlpha.value)
-                    .padding(vertical = 8.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackgroundColor),
-                elevation = ButtonDefaults.elevation(defaultElevation = 8.dp)
+                    .fillMaxWidth(0.6f) // 60% of screen width
+                    .alpha(buttonAlpha.value) // Apply animated alpha
+                    .padding(vertical = 8.dp) // Vertical padding
+                    .height(50.dp), // Fixed height
+                shape = RoundedCornerShape(12.dp), // Rounded corners
+                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackgroundColor), // Theme-based background
+                elevation = ButtonDefaults.elevation(defaultElevation = 8.dp) // Button elevation
             ) {
                 Text(
                     text = translatedText.signUp,
                     fontSize = 18.sp,
-                    color = buttonTextColor,
-                    fontFamily = helveticaFont,
+                    color = buttonTextColor, // Theme-based text color
+                    fontFamily = helveticaFont, // Custom Helvetica font
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
+            // Spacer for vertical spacing
             Spacer(modifier = Modifier.height(24.dp))
 
             // OR Divider
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .alpha(buttonAlpha.value),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth(0.6f) // 60% of screen width
+                    .alpha(buttonAlpha.value), // Apply animated alpha
+                horizontalArrangement = Arrangement.Center, // Center horizontally
+                verticalAlignment = Alignment.CenterVertically // Center vertically
             ) {
+                // Left divider line
                 Divider(
                     modifier = Modifier
-                        .weight(1f)
-                        .alpha(0.5f),
-                    color = dividerColor,
-                    thickness = 1.dp
+                        .weight(1f) // Equal weight for left divider
+                        .alpha(0.5f), // Semi-transparent
+                    color = dividerColor, // Theme-based color
+                    thickness = 1.dp // Line thickness
                 )
+                // OR text
                 Text(
                     text = "  ${translatedText.or}  ",
-                    color = dividerColor,
+                    color = dividerColor, // Theme-based color
                     fontSize = 14.sp,
-                    fontFamily = helveticaFont,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    fontFamily = helveticaFont, // Custom Helvetica font
+                    modifier = Modifier.padding(horizontal = 8.dp) // Horizontal padding
                 )
+                // Right divider line
                 Divider(
                     modifier = Modifier
-                        .weight(1f)
-                        .alpha(0.5f),
-                    color = dividerColor,
-                    thickness = 1.dp
+                        .weight(1f) // Equal weight for right divider
+                        .alpha(0.5f), // Semi-transparent
+                    color = dividerColor, // Theme-based color
+                    thickness = 1.dp // Line thickness
                 )
             }
 
+            // Spacer for vertical spacing
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Conditional display of loading animation or guest sign-in text
             if (isLoading) {
                 LoadingAnimation(
                     modifier = Modifier
-                        .size(48.dp)
-                        .alpha(buttonAlpha.value),
-                    color = loadingIndicatorColor
+                        .size(48.dp) // Fixed size for loading animation
+                        .alpha(buttonAlpha.value), // Apply animated alpha
+                    color = loadingIndicatorColor // Theme-based color
                 )
             } else {
+                // Guest sign-in text
                 Text(
                     text = translatedText.continueAsGuest,
                     fontSize = 16.sp,
-                    color = textColor,
-                    fontFamily = helveticaFont,
+                    color = textColor, // Theme-based color
+                    fontFamily = helveticaFont, // Custom Helvetica font
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .alpha(buttonAlpha.value)
+                        .alpha(buttonAlpha.value) // Apply animated alpha
                         .clickable(
-                            indication = null,
+                            indication = null, // No ripple effect
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
-                            isLoading = true
-                            onGuestSignIn()
+                            isLoading = true // Show loading animation
+                            onGuestSignIn() // Trigger guest sign-in
                         }
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 8.dp) // Vertical padding
                 )
             }
         }
     }
 }
 
+// Composable function for a loading animation
 @Composable
 fun LoadingAnimation(
     modifier: Modifier = Modifier,
-    color: Color
+    color: Color // Color for the loading indicator
 ) {
+    // Create an infinite transition for animations
     val infiniteTransition = rememberInfiniteTransition()
+    // Animate rotation from 0 to 360 degrees
     val rotationAngle by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
@@ -301,6 +327,7 @@ fun LoadingAnimation(
         )
     )
 
+    // Animate scale between 0.6 and 1.0
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.6f,
         targetValue = 1f,
@@ -310,10 +337,12 @@ fun LoadingAnimation(
         )
     )
 
+    // Container for the loading animation
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center // Center the content
     ) {
+        // Circular progress indicator with animated scale and rotation
         CircularProgressIndicator(
             modifier = Modifier
                 .graphicsLayer {
@@ -321,9 +350,9 @@ fun LoadingAnimation(
                     scaleY = scale
                     rotationZ = rotationAngle
                 }
-                .size(32.dp),
-            color = color,
-            strokeWidth = 3.dp
+                .size(32.dp), // Fixed size
+            color = color, // Theme-based color
+            strokeWidth = 3.dp // Stroke width
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.example.ble_jetpackcompose
 
+// Import necessary Compose and Android UI libraries
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
@@ -8,7 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-//import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Visibility
 //import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,30 +25,40 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Composable function for the Create New Password screen
 @Composable
 fun CreateNewPasswordScreen() {
+    // State to hold the new password input
     var newPassword by remember { mutableStateOf("") }
+    // State to hold the confirm password input
     var confirmPassword by remember { mutableStateOf("") }
+    // State to toggle visibility of the new password
     var isNewPasswordVisible by remember { mutableStateOf(false) }
+    // State to toggle visibility of the confirm password
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
-    val primaryColor = Color(0xFF007AFF) // iOS blue
+    // Define the primary color for UI elements (iOS blue)
+    val primaryColor = Color(0xFF007AFF)
 
+    // Main container for the screen
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(24.dp)
+            .fillMaxSize() // Fill the entire screen
+            .background(Color.White) // Set white background
+            .padding(24.dp) // Apply padding to all sides
     ) {
+        // Column to organize content vertically
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween // Space content evenly
         ) {
-            // Top Section
+            // Top Section: Title and description
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth() // Fill available width
             ) {
+                // Spacer to add vertical padding at the top
                 Spacer(modifier = Modifier.height(70.dp))
 
+                // Animated title with slide-in and fade-in effects
                 AnimatedVisibility(
                     visible = true,
                     enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn()
@@ -56,165 +67,159 @@ fun CreateNewPasswordScreen() {
                         text = "Create new password",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = helveticaFont,
+                        fontFamily = helveticaFont, // Custom Helvetica font
                         color = Color.Black,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier.padding(bottom = 16.dp) // Bottom padding
                     )
                 }
 
-
+                // Spacer for vertical spacing
                 Spacer(modifier = Modifier.height(10.dp))
 
-
-
+                // Description text for password requirements
                 Text(
                     text = "Your new password must be unique from those previously used.",
                     fontSize = 16.sp,
-                    color = Color.Gray.copy(alpha = 0.8f),
-                    fontFamily = helveticaFont,
-                    lineHeight = 24.sp,
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    color = Color.Gray.copy(alpha = 0.8f), // Semi-transparent gray
+                    fontFamily = helveticaFont, // Custom Helvetica font
+                    lineHeight = 24.sp, // Line height for readability
+                    modifier = Modifier.padding(bottom = 32.dp) // Bottom padding
                 )
 
+                // Spacer for additional vertical spacing
                 Spacer(modifier = Modifier.height(10.dp))
-
 
                 // Password Fields Section
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp)
+                        .fillMaxWidth() // Fill available width
+                        .padding(bottom = 24.dp) // Bottom padding
                 ) {
+                    // New Password input field
                     OutlinedTextField(
                         value = newPassword,
-                        onValueChange = { newPassword = it },
+                        onValueChange = { newPassword = it }, // Update state on input change
                         label = { Text("New Password", fontFamily = helveticaFont) },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .fillMaxWidth() // Fill available width
+                            .padding(bottom = 16.dp), // Bottom padding
+                        shape = RoundedCornerShape(12.dp), // Rounded corners
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = MaterialTheme.colors.primary,
-                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                            focusedBorderColor = MaterialTheme.colors.primary, // Border color when focused
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f) // Border color when unfocused
                         ),
                         visualTransformation = if (isNewPasswordVisible)
-                            VisualTransformation.None
+                            VisualTransformation.None // Show password if visible
                         else
-                            PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            PasswordVisualTransformation(), // Hide password if not visible
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Password keyboard
                         trailingIcon = {
+                            // Icon button to toggle password visibility
                             androidx.compose.material3.IconButton(
                                 onClick = { isNewPasswordVisible = !isNewPasswordVisible },
-                                modifier = Modifier.size(24.dp)
-                            )
-                            {
+                                modifier = Modifier.size(24.dp) // Fixed icon size
+                            ) {
                                 androidx.compose.material3.Icon(
                                     painter = painterResource(
                                         id = if (isNewPasswordVisible) {
-                                            R.drawable.monkey // Replace with your visible icon resource
+                                            R.drawable.monkey // Icon for visible password (placeholder)
                                         } else {
-                                            R.drawable.eyes // Replace with your hidden icon resource
+                                            R.drawable.eyes // Icon for hidden password (placeholder)
                                         }
                                     ),
                                     contentDescription = if (isNewPasswordVisible) "Hide password" else "Show password",
-                                    tint = Color.Unspecified // Ensure original colors of the icon are preserved
-
-
+                                    tint = Color.Unspecified // Preserve original icon colors
                                 )
                             }
-                        },
+                        }
                     )
 
-
-                        OutlinedTextField(
-                            value = confirmPassword,
-                            onValueChange = { confirmPassword = it },
-                            label = { Text("Confirm Password", fontFamily = helveticaFont) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = MaterialTheme.colors.primary,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
-                            ),
-                            visualTransformation = if (isConfirmPasswordVisible)
-                                VisualTransformation.None
-                            else
-                                PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                androidx.compose.material3.IconButton(
-                                    onClick = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
-                                    modifier = Modifier.size(24.dp)
+                    // Confirm Password input field
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it }, // Update state on input change
+                        label = { Text("Confirm Password", fontFamily = helveticaFont) },
+                        modifier = Modifier
+                            .fillMaxWidth() // Fill available width
+                            .padding(bottom = 16.dp), // Bottom padding
+                        shape = RoundedCornerShape(12.dp), // Rounded corners
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = MaterialTheme.colors.primary, // Border color when focused
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f) // Border color when unfocused
+                        ),
+                        visualTransformation = if (isConfirmPasswordVisible)
+                            VisualTransformation.None // Show password if visible
+                        else
+                            PasswordVisualTransformation(), // Hide password if not visible
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Password keyboard
+                        trailingIcon = {
+                            // Icon button to toggle password visibility
+                            androidx.compose.material3.IconButton(
+                                onClick = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                                modifier = Modifier.size(24.dp) // Fixed icon size
+                            ) {
+                                androidx.compose.material3.Icon(
+                                    painter = painterResource(
+                                        id = if (isConfirmPasswordVisible) {
+                                            R.drawable.monkey // Icon for visible password (placeholder)
+                                        } else {
+                                            R.drawable.eyes // Icon for hidden password (placeholder)
+                                        }
+                                    ),
+                                    contentDescription = if (isConfirmPasswordVisible) "Hide password" else "Show password",
+                                    tint = Color.Unspecified // Preserve original icon colors
                                 )
-                                {
-                                    androidx.compose.material3.Icon(
-                                        painter = painterResource(
-                                            id = if (isConfirmPasswordVisible) {
-                                                R.drawable.monkey // Replace with your visible icon resource
-                                            } else {
-                                                R.drawable.eyes // Replace with your hidden icon resource
-                                            }
-                                        ),
-                                        contentDescription = if (isConfirmPasswordVisible) "Hide password" else "Show password",
-                                        tint = Color.Unspecified // Ensure original colors of the icon are preserved
-
-
-                                    )
-                                }
-                            },
+                            }
+                        }
                     )
                 }
 
+                // Spacer for vertical spacing
                 Spacer(modifier = Modifier.height(10.dp))
 
-
+                // Continue button to submit the new password
                 Button(
                     onClick = { /* Handle send code action */ },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .fillMaxWidth() // Fill available width
+                        .height(56.dp) // Fixed height
+                        .clip(RoundedCornerShape(12.dp)), // Rounded corners
                     colors = ButtonDefaults.buttonColors(
-                        backgroundColor = primaryColor ,
-                        contentColor = Color.White
+                        backgroundColor = primaryColor, // iOS blue background
+                        contentColor = Color.White // White text
                     )
-                )
-
-
-                {
+                ) {
                     Text(
                         text = "Continue",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = helveticaFont
+                        fontFamily = helveticaFont // Custom Helvetica font
                     )
                 }
-
-//                Spacer(modifier = Modifier.height(0.dp))
             }
 
-            // Bottom Section
+            // Bottom Section: Link to login screen
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth() // Fill available width
+                    .padding(bottom = 32.dp), // Bottom padding
+                horizontalArrangement = Arrangement.Center, // Center content horizontally
+                verticalAlignment = Alignment.CenterVertically // Center content vertically
             ) {
+                // Text prompting user if they remember their password
                 Text(
                     text = "Remember Password? ",
-                    color = Color.Gray.copy(alpha = 0.8f),
-                    fontFamily = helveticaFont,
+                    color = Color.Gray.copy(alpha = 0.8f), // Semi-transparent gray
+                    fontFamily = helveticaFont, // Custom Helvetica font
                     fontWeight = FontWeight.SemiBold
                 )
+                // Button to navigate to the login screen
                 TextButton(onClick = { /* Navigate to login */ }) {
                     Text(
                         text = "Login",
-                        color = primaryColor,
+                        color = primaryColor, // iOS blue color
                         fontWeight = FontWeight.SemiBold,
-                        fontFamily = helveticaFont
+                        fontFamily = helveticaFont // Custom Helvetica font
                     )
                 }
             }
@@ -222,6 +227,7 @@ fun CreateNewPasswordScreen() {
     }
 }
 
+// Preview composable for the Create New Password screen
 @Preview(showBackground = true)
 @Composable
 fun CreateNewPasswordScreenPreview() {

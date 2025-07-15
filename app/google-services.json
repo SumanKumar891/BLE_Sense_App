@@ -1,49 +1,42 @@
 {
   "project_info": {
-    "project_number": "191296193641",
-    "project_id": "ble-sense",
-    "storage_bucket": "ble-sense.firebasestorage.app"
+    "project_number": "634409104545",
+    "firebase_url": "https://ble-sense-65650-default-rtdb.firebaseio.com",
+    "project_id": "ble-sense-65650",
+    "storage_bucket": "ble-sense-65650.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:191296193641:android:ea8f76cb77180e8dd30ef8",
+        "mobilesdk_app_id": "1:634409104545:android:9d244a218aedc4a4856ce0",
         "android_client_info": {
           "package_name": "com.example.ble_jetpackcompose"
         }
       },
       "oauth_client": [
         {
-          "client_id": "191296193641-sm6u6o6cv26nm4lga3cd5jgi4b3tiuis.apps.googleusercontent.com",
+          "client_id": "634409104545-0jrsg33257cfslbj56acobfuhc692kis.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.ble_jetpackcompose",
-            "certificate_hash": "d35b68b7f3849039f5bb7bdf6de8cfc6fe6f8f76"
+            "certificate_hash": "9c053375ba5949d3f19bffcab3f2c27d3372fd16"
           }
         },
         {
-          "client_id": "191296193641-vjgm5e4ho29eg9sl14iqhk53c7bjjjbp.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.ble_jetpackcompose",
-            "certificate_hash": "87e7facbedff9cc60e786dbbf2659a336ce5fc73"
-          }
-        },
-        {
-          "client_id": "191296193641-4v0nodopmvanuvbci7155rnfgcrsog23.apps.googleusercontent.com",
+          "client_id": "634409104545-t9obf7nmakk2jhahr31jlaspva4858fb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAf2PUaq5NaQCLfOi4U3mCLRRWuU5Gr4WM"
+          "current_key": "AIzaSyBsXEO72wRyVpobEpIhpQG4zSI5W5ZQWHs"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "191296193641-4v0nodopmvanuvbci7155rnfgcrsog23.apps.googleusercontent.com",
+              "client_id": "634409104545-t9obf7nmakk2jhahr31jlaspva4858fb.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

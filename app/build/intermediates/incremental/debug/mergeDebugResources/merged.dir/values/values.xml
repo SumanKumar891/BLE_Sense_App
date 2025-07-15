@@ -1959,7 +1959,7 @@
     <string name="copy_toast_msg">Link copied to clipboard</string>
     <string name="default_error_message">"Invalid input"</string>
     <string name="default_popup_window_title" ns1:ignore="ExtraTranslation">"Pop-Up Window"</string>
-    <string name="default_web_client_id" translatable="false">191296193641-4v0nodopmvanuvbci7155rnfgcrsog23.apps.googleusercontent.com</string>
+    <string name="default_web_client_id" translatable="false">634409104545-t9obf7nmakk2jhahr31jlaspva4858fb.apps.googleusercontent.com</string>
     <string name="dropdown_menu">"Dropdown menu"</string>
     <string description="Screen reader announcement for when a checkbox is on error. [CHAR LIMIT=NONE]" name="error_a11y_label">
     Error: invalid
@@ -1971,11 +1971,12 @@
     <string name="fallback_menu_item_copy_link">Copy link</string>
     <string name="fallback_menu_item_open_in_browser">Open in browser</string>
     <string name="fallback_menu_item_share_link">Share link</string>
-    <string name="gcm_defaultSenderId" translatable="false">191296193641</string>
-    <string name="google_api_key" translatable="false">AIzaSyAf2PUaq5NaQCLfOi4U3mCLRRWuU5Gr4WM</string>
-    <string name="google_app_id" translatable="false">1:191296193641:android:ea8f76cb77180e8dd30ef8</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAf2PUaq5NaQCLfOi4U3mCLRRWuU5Gr4WM</string>
-    <string name="google_storage_bucket" translatable="false">ble-sense.firebasestorage.app</string>
+    <string name="firebase_database_url" translatable="false">https://ble-sense-65650-default-rtdb.firebaseio.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">634409104545</string>
+    <string name="google_api_key" translatable="false">AIzaSyBsXEO72wRyVpobEpIhpQG4zSI5W5ZQWHs</string>
+    <string name="google_app_id" translatable="false">1:634409104545:android:9d244a218aedc4a4856ce0</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBsXEO72wRyVpobEpIhpQG4zSI5W5ZQWHs</string>
+    <string name="google_storage_bucket" translatable="false">ble-sense-65650.firebasestorage.app</string>
     <string name="hide_bottom_view_on_scroll_behavior" translatable="false">com.google.android.material.behavior.HideBottomViewOnScrollBehavior</string>
     <string description="Content description for an icon that appears in the title area of a dialog" name="icon_content_description">Dialog Icon</string>
     <string name="in_progress">In progress</string>
@@ -2155,7 +2156,7 @@
     <string name="path_password_eye_mask_strike_through" translatable="false">M2,4.27 L19.73,22 L22.27,19.46 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
     <string name="path_password_eye_mask_visible" translatable="false">M2,4.27 L2,4.27 L4.54,1.73 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
     <string name="path_password_strike_through" translatable="false">M3.27,4.27 L19.74,20.74</string>
-    <string name="project_id" translatable="false">ble-sense</string>
+    <string name="project_id" translatable="false">ble-sense-65650</string>
     <string name="range_end">"Range end"</string>
     <string name="range_start">"Range start"</string>
     <string name="search_menu_title">Search</string>

@@ -1,6 +1,8 @@
 // Robotcontrol with horn and double joystick 20/05/25
 @file:Suppress("DEPRECATION")
 package com.example.ble_jetpackcompose
+
+// Suppress warnings for mixed Material and Material3 library usage
 //noinspection UsingMaterialAndMaterial3Libraries
 import android.Manifest
 import android.annotation.SuppressLint
@@ -90,6 +92,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.toSize
 import kotlin.math.abs
 
+// Enum to represent Bluetooth scanning states
 enum class ScanState {
     IDLE, SCANNING
 }
@@ -97,20 +100,21 @@ enum class ScanState {
 // ================= BLUETOOTH SCANNING VIEW MODEL =================
 class ClassicBluetoothViewModel : ViewModel() {
     // Using StateFlow for better state handling
-    private val _devices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
-    val devices: StateFlow<List<BluetoothDevice>> = _devices.asStateFlow()
-    private val _scanState = MutableStateFlow(ScanState.IDLE)
-    val scanState: StateFlow<ScanState> = _scanState.asStateFlow()
-    internal val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _devices = MutableStateFlow<List<BluetoothDevice>>(emptyList()) // List of discovered Bluetooth devices
+    val devices: StateFlow<List<BluetoothDevice>> = _devices.asStateFlow() // Public StateFlow for devices
+    private val _scanState = MutableStateFlow(ScanState.IDLE) // Current scanning state
+    val scanState: StateFlow<ScanState> = _scanState.asStateFlow() // Public StateFlow for scan state
+    internal val _errorMessage = MutableStateFlow<String?>(null) // Error message for Bluetooth operations
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow() // Public StateFlow for error message
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
-        BluetoothAdapter.getDefaultAdapter()
+        BluetoothAdapter.getDefaultAdapter() // Get default Bluetooth adapter
     }
-    private var receiverRegistered = false
+    private var receiverRegistered = false // Track if BroadcastReceiver is registered
     private val deviceReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context, intent: Intent) {
             when (intent.action) {
                 BluetoothDevice.ACTION_FOUND -> {
+                    // Handle discovered device
                     val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
                     } else {
@@ -127,12 +131,14 @@ class ClassicBluetoothViewModel : ViewModel() {
                     }
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    // Update state when discovery finishes
                     _scanState.value = ScanState.IDLE
                 }
             }
         }
     }
 
+    // Start Bluetooth device discovery
     @RequiresPermission(allOf = [
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT
@@ -146,6 +152,7 @@ class ClassicBluetoothViewModel : ViewModel() {
             _errorMessage.value = "Bluetooth is disabled"
             return
         }
+        // Check for required Bluetooth permissions
         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) ==
                     PackageManager.PERMISSION_GRANTED &&
@@ -162,9 +169,10 @@ class ClassicBluetoothViewModel : ViewModel() {
             return
         }
         _scanState.value = ScanState.SCANNING
-        _devices.value = emptyList()
-        _errorMessage.value = null
+        _devices.value = emptyList() // Clear previous devices
+        _errorMessage.value = null // Clear previous errors
         if (!receiverRegistered) {
+            // Register BroadcastReceiver for device discovery
             val filter = IntentFilter().apply {
                 addAction(BluetoothDevice.ACTION_FOUND)
                 addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
@@ -175,16 +183,17 @@ class ClassicBluetoothViewModel : ViewModel() {
         if (bluetoothAdapter!!.isDiscovering) {
             bluetoothAdapter!!.cancelDiscovery()
         }
-        bluetoothAdapter!!.startDiscovery()
+        bluetoothAdapter!!.startDiscovery() // Start Bluetooth discovery
     }
 
+    // Stop Bluetooth device discovery
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     fun stopScan(context: Context) {
         _scanState.value = ScanState.IDLE
-        bluetoothAdapter?.cancelDiscovery()
+        bluetoothAdapter?.cancelDiscovery() // Cancel ongoing discovery
         if (receiverRegistered) {
             try {
-                context.unregisterReceiver(deviceReceiver)
+                context.unregisterReceiver(deviceReceiver) // Unregister BroadcastReceiver
                 receiverRegistered = false
             } catch (e: Exception) {
                 Log.e("ClassicBT", "Error unregistering receiver: ${e.message}")
@@ -192,18 +201,21 @@ class ClassicBluetoothViewModel : ViewModel() {
         }
     }
 
+    // Clear error message
     fun clearError() {
         _errorMessage.value = null
     }
 
+    // Clean up resources when ViewModel is cleared
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     override fun onCleared() {
         super.onCleared()
-        // This is important to prevent memory leaks
+        // Cancel discovery to prevent memory leaks
         bluetoothAdapter?.cancelDiscovery()
     }
 }
 
+// Enable immersive mode for full-screen experience
 fun Activity.enableImmersiveMode() {
     window.decorView.systemUiVisibility = (
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -227,6 +239,7 @@ class RobotControlCompose : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         setContent {
+            // Apply MaterialTheme and set up the UI
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -238,6 +251,7 @@ class RobotControlCompose : ComponentActivity() {
         }
     }
 
+    // Handle window focus changes to maintain immersive mode
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -245,11 +259,13 @@ class RobotControlCompose : ComponentActivity() {
         }
     }
 
+    // Re-apply immersive mode on resume
     override fun onResume() {
         super.onResume()
         enableImmersiveMode()
     }
 
+    // Helper function to enable immersive mode
     private fun enableImmersiveMode() {
         window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -261,24 +277,25 @@ class RobotControlCompose : ComponentActivity() {
                 )
     }
 
+    // Maintain landscape orientation on configuration changes
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // Maintain landscape orientation
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     }
 }
 
 // ================= ROBOT CONTROL VIEW MODEL =================
 open class RobotControlViewModel : ViewModel() {
-    private var outputStream: OutputStream? = null
+    private var outputStream: OutputStream? = null // Bluetooth output stream
     // Create connection state flow
-    private val _isConnected = MutableStateFlow(false)
-    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+    private val _isConnected = MutableStateFlow(false) // Connection status
+    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow() // Public StateFlow for connection status
 
     init {
-        initBluetooth()
+        initBluetooth() // Initialize Bluetooth on ViewModel creation
     }
 
+    // Initialize Bluetooth connection
     private fun initBluetooth() {
         try {
             outputStream = BluetoothConnectionManager.bluetoothSocket?.outputStream
@@ -288,10 +305,12 @@ open class RobotControlViewModel : ViewModel() {
         }
     }
 
+    // Check if Bluetooth is connected
     open fun isBluetoothConnected(): Boolean {
         return BluetoothConnectionManager.isConnected()
     }
 
+    // Send command to Bluetooth device
     open fun sendCommand(command: String) {
         try {
             Log.d("RobotCommand", "Sending command: $command")
@@ -326,6 +345,7 @@ open class RobotControlViewModel : ViewModel() {
         }
     }
 
+    // Handle sensor click and simulate data
     open fun handleSensorClick(sensorName: String, onDataReceived: (String, String) -> Unit) {
         if (isBluetoothConnected()) {
             when (sensorName) {
@@ -342,6 +362,7 @@ open class RobotControlViewModel : ViewModel() {
         }
     }
 
+    // Generate random sensor data for testing
     private fun generateRandomRawData(): ByteArray {
         val temperature = Random.nextInt(20, 40).toByte()
         val humidity = Random.nextInt(40, 80).toByte()
@@ -349,21 +370,22 @@ open class RobotControlViewModel : ViewModel() {
     }
 }
 
+// Fake ViewModel for preview purposes
 class FakeRobotControlViewModel : RobotControlViewModel() {
-    override fun isBluetoothConnected(): Boolean = true
-    override fun sendCommand(command: String) {}
+    override fun isBluetoothConnected(): Boolean = true // Simulate connected state
+    override fun sendCommand(command: String) {} // No-op for commands
     override fun handleSensorClick(sensorName: String, onDataReceived: (String, String) -> Unit) {
-        onDataReceived("Raw Data: [20, 40]", "Temp: 20°C, Humidity: 40%")
+        onDataReceived("Raw Data: [20, 40]", "Temp: 20°C, Humidity: 40%") // Simulate sensor data
     }
 }
 
 // ================= DEVICE SELECTION DIALOG =================
 @Composable
 fun DeviceSelectionDialog(
-    devices: List<BluetoothDevice>,
-    isScanning: Boolean,
-    onDeviceSelected: (String) -> Unit,
-    onDismissRequest: () -> Unit
+    devices: List<BluetoothDevice>, // List of discovered devices
+    isScanning: Boolean, // Scanning state
+    onDeviceSelected: (String) -> Unit, // Callback for device selection
+    onDismissRequest: () -> Unit // Callback for dialog dismissal
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         Card(modifier = Modifier.width(300.dp)) {
@@ -371,6 +393,7 @@ fun DeviceSelectionDialog(
                 Text("Select a Device", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
                 if (isScanning) {
+                    // Show scanning indicator
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -412,6 +435,7 @@ fun DeviceSelectionDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                // Dialog buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -422,7 +446,7 @@ fun DeviceSelectionDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            // This could be a refresh button if needed
+                            // Close dialog
                             onDismissRequest()
                         }
                     ) {
@@ -434,6 +458,7 @@ fun DeviceSelectionDialog(
     }
 }
 
+// Composable for individual device item in the dialog
 @Composable
 private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
     Column(
@@ -444,7 +469,7 @@ private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
     ) {
         val deviceName = remember(device) {
             try {
-                device.name ?: "Unknown Device"
+                device.name ?: "Unknown Device" // Get device name or fallback
             } catch (e: SecurityException) {
                 "Unknown Device"
             }
@@ -465,11 +490,11 @@ private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
 // ================= ROBOT CONTROL SCREEN =================
 @Composable
 fun RobotControlScreen(
-    viewModel: RobotControlViewModel = viewModel(),
-    onBackPressed: () -> Unit
+    viewModel: RobotControlViewModel = viewModel(), // ViewModel for robot control
+    onBackPressed: () -> Unit // Callback for back button
 ) {
     val context = LocalContext.current
-    val bluetoothViewModel: ClassicBluetoothViewModel = viewModel()
+    val bluetoothViewModel: ClassicBluetoothViewModel = viewModel() // ViewModel for Bluetooth scanning
     val configuration = LocalConfiguration.current
     // Track connection state
     var isConnected by remember { mutableStateOf(BluetoothConnectionManager.isConnected()) }
@@ -478,10 +503,10 @@ fun RobotControlScreen(
             // Optional: Show a message or handle rotation
         }
     }
-    var selectedSensor by remember { mutableStateOf(SensorItem(0, "Select Sensor")) }
-    var showDialog by remember { mutableStateOf(false) }
-    var dialogContent by remember { mutableStateOf("") }
-    var showDeviceDialog by remember { mutableStateOf(false) }
+    var selectedSensor by remember { mutableStateOf(SensorItem(0, "Select Sensor")) } // Selected sensor state
+    var showDialog by remember { mutableStateOf(false) } // Sensor data dialog visibility
+    var dialogContent by remember { mutableStateOf("") } // Sensor data dialog content
+    var showDeviceDialog by remember { mutableStateOf(false) } // Device selection dialog visibility
     // State for scanning and devices
     val scanState by bluetoothViewModel.scanState.collectAsState()
     val devices by bluetoothViewModel.devices.collectAsState()
@@ -493,7 +518,7 @@ fun RobotControlScreen(
             delay(1000) // Check every second
         }
     }
-    // Permission handling
+    // Define Bluetooth permissions based on Android version
     val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
@@ -506,6 +531,7 @@ fun RobotControlScreen(
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
+    // Launcher for requesting Bluetooth permissions
     val permissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -517,7 +543,7 @@ fun RobotControlScreen(
             Toast.makeText(context, "Bluetooth permissions required", Toast.LENGTH_SHORT).show()
         }
     }
-    // Bluetooth enable launcher
+    // Launcher for enabling Bluetooth
     val bluetoothEnableLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -539,6 +565,7 @@ fun RobotControlScreen(
         }
     }
 
+    // List of available sensors
     val sensorData = listOf(
         SensorItem(0, "Select Sensor"),
         SensorItem(R.drawable.ic_thermometer, "Temperature Sensor"),
@@ -549,9 +576,9 @@ fun RobotControlScreen(
         SensorItem(R.drawable.ic_switch, "Switch Sensor")
     )
 
-    // 🖼️ Background Image
+    // Background image for the screen
     val backgroundPainter = painterResource(id = R.drawable.racing_bg7)
-    // Effect to clean up scanner when leaving the screen
+    // Clean up scanner when leaving the screen
     DisposableEffect(Unit) {
         onDispose {
             if (scanState == ScanState.SCANNING) {
@@ -560,6 +587,7 @@ fun RobotControlScreen(
         }
     }
 
+    // Main layout
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image
         Image(
@@ -732,6 +760,7 @@ fun RobotControlScreen(
     }
 }
 
+// Back button composable
 @Composable
 fun BackButton(
     modifier: Modifier = Modifier,
@@ -756,6 +785,7 @@ fun BackButton(
     }
 }
 
+// Bluetooth button composable
 @Composable
 fun BluetoothButton(
     modifier: Modifier = Modifier,
@@ -779,6 +809,7 @@ fun BluetoothButton(
     }
 }
 
+// Horn button composable
 @Composable
 fun HornButton(
     modifier: Modifier = Modifier,
@@ -848,10 +879,10 @@ fun VerticalJoystick(
     onDirectionChange: (String) -> Unit
 ) {
     val density = LocalDensity.current
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val maxDistance = with(density) { 60.dp.toPx() } // Increased from 40.dp
-    val deadZone = with(density) { 5.dp.toPx() }
-    var currentCommand by remember { mutableStateOf("C") }
+    var offset by remember { mutableStateOf(Offset.Zero) } // Joystick position
+    val maxDistance = with(density) { 60.dp.toPx() } // Maximum drag distance
+    val deadZone = with(density) { 5.dp.toPx() } // Dead zone for small movements
+    var currentCommand by remember { mutableStateOf("C") } // Current command (U, D, C)
     Box(
         modifier = modifier
             .size(150.dp) // Increased from 120.dp
@@ -865,9 +896,9 @@ fun VerticalJoystick(
                         val newOffset = Offset(0f, newY)
                         offset = newOffset
                         val newCommand = when {
-                            newY < -deadZone -> "U"
-                            newY > deadZone -> "D"
-                            else -> "C"
+                            newY < -deadZone -> "U" // Up
+                            newY > deadZone -> "D" // Down
+                            else -> "C" // Center
                         }
                         if (newCommand != currentCommand) {
                             currentCommand = newCommand
@@ -902,10 +933,10 @@ fun HorizontalJoystick(
     onDirectionChange: (String) -> Unit
 ) {
     val density = LocalDensity.current
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val maxDistance = with(density) { 60.dp.toPx() } // Increased from 40.dp
-    val deadZone = with(density) { 5.dp.toPx() }
-    var currentCommand by remember { mutableStateOf("C") }
+    var offset by remember { mutableStateOf(Offset.Zero) } // Joystick position
+    val maxDistance = with(density) { 60.dp.toPx() } // Maximum drag distance
+    val deadZone = with(density) { 5.dp.toPx() } // Dead zone for small movements
+    var currentCommand by remember { mutableStateOf("C") } // Current command (L, R, C)
     Box(
         modifier = modifier
             .size(150.dp) // Increased from 120.dp
@@ -919,9 +950,9 @@ fun HorizontalJoystick(
                         val newOffset = Offset(newX, 0f)
                         offset = newOffset
                         val newCommand = when {
-                            newX < -deadZone -> "L"
-                            newX > deadZone -> "R"
-                            else -> "C"
+                            newX < -deadZone -> "L" // Left
+                            newX > deadZone -> "R" // Right
+                            else -> "C" // Center
                         }
                         if (newCommand != currentCommand) {
                             currentCommand = newCommand
@@ -949,6 +980,7 @@ fun HorizontalJoystick(
     }
 }
 
+// Sensor spinner composable
 @SuppressLint("UseCompatLoadingForDrawables")
 @Composable
 fun SensorSpinner(
@@ -957,7 +989,7 @@ fun SensorSpinner(
     selectedSensor: SensorItem,
     onSensorSelected: (SensorItem) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) } // Dropdown menu state
     val context = LocalContext.current
     Box(
         modifier = modifier.width(150.dp),
@@ -1000,6 +1032,7 @@ fun SensorSpinner(
     }
 }
 
+// Floating joystick composable (unused in current implementation)
 @SuppressLint("AutoboxingStateCreation")
 @Composable
 fun FloatingJoystickView(
@@ -1023,6 +1056,7 @@ fun FloatingJoystickView(
     )
 }
 
+// Sensor data dialog composable
 @Composable
 fun SensorDataDialog(sensorName: String, content: String, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
@@ -1041,11 +1075,12 @@ fun SensorDataDialog(sensorName: String, content: String, onDismiss: () -> Unit)
     }
 }
 
+// Connect to a Bluetooth device
 @SuppressLint("MissingPermission")
 fun connectToDevice(context: Context, address: String) {
     val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     val device = bluetoothAdapter.getRemoteDevice(address)
-    val uuid = device.uuids?.firstOrNull()?.uuid ?: UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    val uuid = device.uuids?.firstOrNull()?.uuid ?: UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // Default SPP UUID
     // First disconnect any existing connection
     BluetoothConnectionManager.disconnect()
     Thread {
@@ -1098,6 +1133,7 @@ fun connectToDevice(context: Context, address: String) {
     }.start()
 }
 
+// Data class for sensor items
 data class SensorItem(val iconResId: Int, val name: String)
 
 // Fallback method using reflection for problematic Android devices
@@ -1115,19 +1151,19 @@ private fun createFallbackSocket(device: BluetoothDevice): BluetoothSocket? {
     return null
 }
 
-// Add this to the object definition
+// Object to manage Bluetooth connection
 object BluetoothConnectionManager {
-    var bluetoothSocket: BluetoothSocket? = null
+    var bluetoothSocket: BluetoothSocket? = null // Current Bluetooth socket
     fun disconnect() {
         try {
-            bluetoothSocket?.close()
+            bluetoothSocket?.close() // Close the socket
             bluetoothSocket = null
         } catch (e: Exception) {
             Log.e("BluetoothManager", "Error closing socket: ${e.message}")
         }
     }
     fun isConnected(): Boolean {
-        return bluetoothSocket?.isConnected == true
+        return bluetoothSocket?.isConnected == true // Check if socket is connected
     }
 }
 

@@ -4,7 +4,7 @@
             "outputFile": "com.example.ble_jetpackcompose.app-mergeDebugResources-83:/values-small-v4/values-small-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\89eb50a7ac39583400164f225b1f9bfb\\transformed\\material-1.9.0\\res\\values-small-v4\\values-small-v4.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\b357e7333f2845bca64bb4f9a845235c\\transformed\\material-1.9.0\\res\\values-small-v4\\values-small-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",

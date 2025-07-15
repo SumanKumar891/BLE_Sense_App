@@ -1,5 +1,6 @@
 package com.example.ble_jetpackcompose
 
+// Import necessary libraries for Compose, Android, and navigation
 import android.app.Activity
 import android.app.Application
 import androidx.compose.animation.core.animateFloatAsState
@@ -41,20 +42,23 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-
+// Data class for 3D point coordinates with rotation functions
 data class Point3D(val x: Float, val y: Float, val z: Float) {
+    // Rotate point around X-axis
     fun rotateX(angle: Double): Point3D = Point3D(
         x,
         (y * cos(angle) - z * sin(angle)).toFloat(),
         (y * sin(angle) + z * cos(angle)).toFloat()
     )
 
+    // Rotate point around Y-axis
     fun rotateY(angle: Double): Point3D = Point3D(
         (x * cos(angle) + z * sin(angle)).toFloat(),
         y,
         (-x * sin(angle) + z * cos(angle)).toFloat()
     )
 
+    // Rotate point around Z-axis
     fun rotateZ(angle: Double): Point3D = Point3D(
         (x * cos(angle) - y * sin(angle)).toFloat(),
         (x * sin(angle) + y * cos(angle)).toFloat(),
@@ -62,10 +66,11 @@ data class Point3D(val x: Float, val y: Float, val z: Float) {
     )
 }
 
+// Draw a 3D cube with specified rotations
 private fun DrawScope.draw3DCube(rotX: Float, rotY: Float, rotZ: Float, canvasSize: Size) {
-    val centerX = canvasSize.width / 2
-    val centerY = canvasSize.height / 2
-    val cubeSize = 80f
+    val centerX = canvasSize.width / 2 // Center X of canvas
+    val centerY = canvasSize.height / 2 // Center Y of canvas
+    val cubeSize = 80f // Cube size
 
     // Define all 8 vertices of the cube
     val vertices = listOf(
@@ -82,9 +87,9 @@ private fun DrawScope.draw3DCube(rotX: Float, rotY: Float, rotZ: Float, canvasSi
     // Apply rotations and project to 2D
     val projectedVertices = vertices.map { vertex ->
         val rotated = vertex
-            .rotateX(Math.toRadians(rotX.toDouble()))
-            .rotateY(Math.toRadians(rotY.toDouble()))
-            .rotateZ(Math.toRadians(rotZ.toDouble()))
+            .rotateX(Math.toRadians(rotX.toDouble())) // Rotate around X
+            .rotateY(Math.toRadians(rotY.toDouble())) // Rotate around Y
+            .rotateZ(Math.toRadians(rotZ.toDouble())) // Rotate around Z
 
         // Simple perspective projection
         val scale = 200f / (200f + rotated.z)
@@ -98,6 +103,7 @@ private fun DrawScope.draw3DCube(rotX: Float, rotY: Float, rotZ: Float, canvasSi
     drawCubeEdges(projectedVertices)
 }
 
+// Draw edges and vertices of the cube
 private fun DrawScope.drawCubeEdges(vertices: List<Offset>) {
     // Define edges by connecting vertices (12 edges in a cube)
     val edges = listOf(
@@ -156,21 +162,26 @@ data class TranslatedChartText(
     val soilDataTableTab: String = "Soil Data Table",
     val backToAllSensors: String = "Back to All Sensors"
 )
+
+// Composable for displaying sensor data charts and tables
 @Composable
 fun ChartScreen(
-    navController: NavController,
-    deviceAddress: String? = null
+    navController: NavController, // Navigation controller
+    deviceAddress: String? = null // Optional device address
 ) {
+    // Get application context
     val context = LocalContext.current
     val application = context.applicationContext as Application
+    // Create ViewModel factory
     val factory = remember { BluetoothScanViewModelFactory(application) }
+    // Initialize ViewModel
     val viewModel: BluetoothScanViewModel<Any?> = viewModel(factory = factory)
 
-    // Theme and Language state
+    // Observe theme and language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
 
-    // Collect sensor data
+    // Collect sensor data for the specified device
     val sensorData by remember(deviceAddress) {
         viewModel.devices
             .map { devices -> devices.find { it.address == deviceAddress }?.sensorData }
@@ -192,7 +203,7 @@ fun ChartScreen(
     val soilEcData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.ec?.toFloatOrNull()
     val soilPhData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.pH?.toFloatOrNull()
 
-    // Historical data lists
+    // Historical data lists to store sensor values
     val temperatureHistory = remember { mutableStateListOf<Float>() }
     val humidityHistory = remember { mutableStateListOf<Float>() }
     val speedHistory = remember { mutableStateListOf<Float>() }
@@ -210,7 +221,7 @@ fun ChartScreen(
     val soilDataTimestamps = remember { mutableStateListOf<String>() }
     val dateFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
 
-    // Translated text state
+    // Initialize translated text with cached values or defaults
     var translatedText by remember {
         mutableStateOf(
             TranslatedChartText(
@@ -243,7 +254,7 @@ fun ChartScreen(
         )
     }
 
-    // Preload translations on language change
+    // Preload translations when language changes
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
@@ -256,6 +267,7 @@ fun ChartScreen(
             "Current", "N/A", "Graphs", "Soil Data Table", "Back to All Sensors"
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
+        // Update translated text state
         translatedText = TranslatedChartText(
             graphsTitle = translatedList[0],
             temperatureLabel = translatedList[1],
@@ -285,32 +297,32 @@ fun ChartScreen(
         )
     }
 
-    // Theme-based colors
+    // Define theme-based colors
     val backgroundGradient = if (isDarkMode) {
-        Brush.verticalGradient(listOf(Color(0xFF121212), Color(0xFF424242)))
+        Brush.verticalGradient(listOf(Color(0xFF121212), Color(0xFF424242))) // Dark mode gradient
     } else {
-        Brush.verticalGradient(listOf(Color.White, Color.LightGray))
+        Brush.verticalGradient(listOf(Color.White, Color.LightGray)) // Light mode gradient
     }
-    val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
-    val textColor = if (isDarkMode) Color.White else Color.Black
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray
-    val accentColor = if (isDarkMode) Color(0xFFBB86FC) else Color(0xFF0A74DA)
-    val tabBackground = if (isDarkMode) Color(0xFF2A2A2A) else Color.Transparent
-    val appBarBackground = if (isDarkMode) Color(0xFF121212) else Color.Transparent // Updated for TopAppBar
+    val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Card background
+    val textColor = if (isDarkMode) Color.White else Color.Black // Primary text color
+    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray // Secondary text color
+    val accentColor = if (isDarkMode) Color(0xFFBB86FC) else Color(0xFF0A74DA) // Accent color
+    val tabBackground = if (isDarkMode) Color(0xFF2A2A2A) else Color.Transparent // Tab background
+    val appBarBackground = if (isDarkMode) Color(0xFF121212) else Color.Transparent // App bar background
 
-    // State variables
-    val isReceivingData = remember { mutableStateOf(false) }
-    val hasSoilSensorData = remember { mutableStateOf(false) }
-    var isSoilSensorClicked by remember { mutableStateOf(false) }
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabTitles = listOf(translatedText.graphsTab, translatedText.soilDataTableTab)
+    // State variables for UI control
+    val isReceivingData = remember { mutableStateOf(false) } // Track if data is being received
+    val hasSoilSensorData = remember { mutableStateOf(false) } // Track if soil sensor data exists
+    var isSoilSensorClicked by remember { mutableStateOf(false) } // Track soil sensor card click
+    var selectedTabIndex by remember { mutableStateOf(0) } // Track selected tab
+    val tabTitles = listOf(translatedText.graphsTab, translatedText.soilDataTableTab) // Tab titles
 
-    // Start scanning
+    // Start Bluetooth scanning
     LaunchedEffect(Unit) {
         viewModel.startScan(context as Activity)
     }
 
-    // Update data states
+    // Update data receiving state
     LaunchedEffect(sensorData) {
         if (temperatureData != null || humidityData != null || speedData != null ||
             distanceData != null || xAxisData != null || yAxisData != null || zAxisData != null ||
@@ -324,7 +336,7 @@ fun ChartScreen(
         }
     }
 
-    // Update history lists
+    // Update history lists with new sensor data
     LaunchedEffect(temperatureData, humidityData, speedData, distanceData, xAxisData, yAxisData, zAxisData,
         soilMoistureData, soilTemperatureData, soilNitrogenData, soilPhosphorusData, soilPotassiumData, soilEcData, soilPhData) {
         temperatureData?.let { updateHistory(temperatureHistory, it) }
@@ -338,8 +350,8 @@ fun ChartScreen(
                 soilNitrogenData != null || soilPhosphorusData != null || soilPotassiumData != null ||
                 soilEcData != null || soilPhData != null
         if (shouldAddTimestamp) {
-            if (soilDataTimestamps.size >= 20) soilDataTimestamps.removeAt(0)
-            soilDataTimestamps.add(dateFormat.format(Date()))
+            if (soilDataTimestamps.size >= 20) soilDataTimestamps.removeAt(0) // Limit to 20 entries
+            soilDataTimestamps.add(dateFormat.format(Date())) // Add timestamp
         }
         soilMoistureData?.let { updateHistory(soilMoistureHistory, it) }
         soilTemperatureData?.let { updateHistory(soilTemperatureHistory, it) }
@@ -350,8 +362,10 @@ fun ChartScreen(
         soilPhData?.let { updateHistory(soilPhHistory, it) }
     }
 
+    // Main UI structure
     Scaffold(
         topBar = {
+            // Top app bar with navigation and actions
             TopAppBar(
                 title = {
                     Text(
@@ -375,19 +389,21 @@ fun ChartScreen(
                         Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Options", tint = textColor)
                     }
                 },
-                backgroundColor = appBarBackground, // Updated to use theme-based color
+                backgroundColor = appBarBackground, // Theme-based app bar color
                 elevation = 0.dp
             )
         },
-        backgroundColor = Color.Transparent
+        backgroundColor = Color.Transparent // Transparent scaffold background
     ) { paddingValues ->
+        // Main content
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundGradient)
+                .background(backgroundGradient) // Apply gradient background
                 .padding(paddingValues)
         ) {
             Column {
+                // Show tabs for soil sensor data if clicked
                 if (isSoilSensorClicked && hasSoilSensorData.value) {
                     TabRow(
                         selectedTabIndex = selectedTabIndex,
@@ -404,27 +420,32 @@ fun ChartScreen(
                     }
                 }
 
+                // Show graphs or table based on state
                 if (!isSoilSensorClicked || (isSoilSensorClicked && selectedTabIndex == 0)) {
+                    // Display sensor graphs
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // SHT40 sensor data (temperature and humidity)
                         if (sensorData is BluetoothScanViewModel.SensorData.SHT40Data) {
                             item { SensorGraphCard(translatedText.temperatureLabel, temperatureData, temperatureHistory, Color(0xFFE53935), cardBackground, textColor, secondaryTextColor, translatedText) }
                             item { SensorGraphCard(translatedText.humidityLabel, humidityData, humidityHistory, Color(0xFF1976D2), cardBackground, textColor, secondaryTextColor, translatedText) }
                         }
+                        // SDT sensor data (speed and distance)
                         if (sensorData is BluetoothScanViewModel.SensorData.SDTData) {
                             item { SensorGraphCard(translatedText.speedLabel, speedData, speedHistory, Color(0xFF43A047), cardBackground, textColor, secondaryTextColor, translatedText) }
                             item { SensorGraphCard(translatedText.distanceLabel, distanceData, distanceHistory, Color(0xFFFFB300), cardBackground, textColor, secondaryTextColor, translatedText) }
                         }
+                        // LIS2DH sensor data (accelerometer)
                         if (sensorData is BluetoothScanViewModel.SensorData.LIS2DHData) {
                             item { SensorGraphCard(translatedText.xAxisLabel, xAxisData, xAxisHistory, Color(0xFFE91E63), cardBackground, textColor, secondaryTextColor, translatedText) }
                             item { SensorGraphCard(translatedText.yAxisLabel, yAxisData, yAxisHistory, Color(0xFF9C27B0), cardBackground, textColor, secondaryTextColor, translatedText) }
                             item { SensorGraphCard(translatedText.zAxisLabel, zAxisData, zAxisHistory, Color(0xFF009688), cardBackground, textColor, secondaryTextColor, translatedText) }
 
-                            // Add this new item below
+                            // 3D accelerometer visualization
                             item {
                                 Accelerometer3DVisualization(
                                     xAxis = xAxisData,
@@ -432,16 +453,17 @@ fun ChartScreen(
                                     zAxis = zAxisData,
                                     cardBackground = cardBackground,
                                     textColor = textColor,
-                                    isDarkMode = isDarkMode // ← Pass this
+                                    isDarkMode = isDarkMode
                                 )
                             }
                         }
+                        // Soil sensor data
                         if (sensorData is BluetoothScanViewModel.SensorData.SoilSensorData) {
                             item {
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable { isSoilSensorClicked = true },
+                                        .clickable { isSoilSensorClicked = true }, // Toggle detailed view
                                     elevation = 2.dp,
                                     backgroundColor = if (isSoilSensorClicked) accentColor.copy(alpha = 0.1f) else cardBackground
                                 ) {
@@ -481,6 +503,7 @@ fun ChartScreen(
                                 }
                             }
                         }
+                        // Show message if no data is received
                         if (!isReceivingData.value) {
                             item {
                                 Column(
@@ -504,6 +527,7 @@ fun ChartScreen(
                         }
                     }
                 } else if (isSoilSensorClicked && selectedTabIndex == 1) {
+                    // Display soil sensor data table
                     SoilSensorDataTable(
                         soilMoistureHistory = soilMoistureHistory,
                         soilTemperatureHistory = soilTemperatureHistory,
@@ -523,6 +547,7 @@ fun ChartScreen(
                     )
                 }
 
+                // Button to return to all sensors
                 if (isSoilSensorClicked) {
                     Box(
                         modifier = Modifier
@@ -536,7 +561,7 @@ fun ChartScreen(
                                     color = accentColor,
                                     shape = RoundedCornerShape(8.dp)
                                 )
-                                .clickable { isSoilSensorClicked = false }
+                                .clickable { isSoilSensorClicked = false } // Reset to main view
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(
@@ -552,16 +577,17 @@ fun ChartScreen(
     }
 }
 
+// Composable for displaying a single sensor graph
 @Composable
 fun SensorGraphCard(
-    title: String,
-    currentValue: Float?,
-    history: List<Float>,
-    color: Color,
-    cardBackground: Color,
-    textColor: Color,
-    secondaryTextColor: Color,
-    translatedText: TranslatedChartText
+    title: String, // Graph title
+    currentValue: Float?, // Current sensor value
+    history: List<Float>, // Historical data
+    color: Color, // Graph color
+    cardBackground: Color, // Card background color
+    textColor: Color, // Primary text color
+    secondaryTextColor: Color, // Secondary text color
+    translatedText: TranslatedChartText // Translated text
 ) {
     Card(
         modifier = Modifier
@@ -585,6 +611,7 @@ fun SensorGraphCard(
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (history.isNotEmpty()) {
+                // Draw graph
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -592,12 +619,13 @@ fun SensorGraphCard(
                 ) {
                     val points = history.toList()
                     if (points.isNotEmpty()) {
-                        val maxValue = points.maxOrNull() ?: 0f
-                        val minValue = (points.minOrNull() ?: 0f).coerceAtMost(maxValue - 1f)
-                        val range = (maxValue - minValue).coerceAtLeast(1f)
-                        val stepX = size.width / (points.size.coerceAtLeast(2) - 1)
-                        val heightPadding = size.height * 0.1f
+                        val maxValue = points.maxOrNull() ?: 0f // Maximum value
+                        val minValue = (points.minOrNull() ?: 0f).coerceAtMost(maxValue - 1f) // Minimum value
+                        val range = (maxValue - minValue).coerceAtLeast(1f) // Value range
+                        val stepX = size.width / (points.size.coerceAtLeast(2) - 1) // X-axis step
+                        val heightPadding = size.height * 0.1f // Padding for graph
 
+                        // Draw baseline
                         drawLine(
                             color = secondaryTextColor,
                             start = Offset(0f, size.height - heightPadding),
@@ -605,6 +633,7 @@ fun SensorGraphCard(
                             strokeWidth = 1f
                         )
 
+                        // Draw data points and lines
                         for (i in 0 until points.size - 1) {
                             val x1 = i * stepX
                             val x2 = (i + 1) * stepX
@@ -624,6 +653,7 @@ fun SensorGraphCard(
                                 center = Offset(x1, y1)
                             )
                         }
+                        // Draw last point
                         val lastX = (points.size - 1) * stepX
                         val lastY = heightPadding + (size.height - 2 * heightPadding) * (1 - (points.last() - minValue) / range)
                         drawCircle(
@@ -634,6 +664,7 @@ fun SensorGraphCard(
                     }
                 }
             } else {
+                // Show waiting message if no data
                 Text(
                     translatedText.waitingForData,
                     modifier = Modifier.padding(vertical = 32.dp),
@@ -646,11 +677,11 @@ fun SensorGraphCard(
 
 // Helper function to update history lists
 private fun updateHistory(history: MutableList<Float>, value: Float) {
-    if (history.size >= 20) history.removeAt(0)
-    history.add(value)
+    if (history.size >= 20) history.removeAt(0) // Limit to 20 entries
+    history.add(value) // Add new value
 }
 
-// Assuming SoilSensorDataTable exists, update it similarly
+// Composable for displaying soil sensor data in a table
 @Composable
 fun SoilSensorDataTable(
     soilMoistureHistory: List<Float>,
@@ -676,6 +707,7 @@ fun SoilSensorDataTable(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             if (isReceivingData) {
+                // Display table of soil sensor data
                 LazyColumn {
                     items(timestamps.size) { index ->
                         Column {
@@ -696,6 +728,7 @@ fun SoilSensorDataTable(
                     }
                 }
             } else {
+                // Show waiting message if no data
                 Text(
                     translatedText.waitingForSensorData,
                     modifier = Modifier.padding(vertical = 32.dp),
@@ -706,15 +739,17 @@ fun SoilSensorDataTable(
     }
 }
 
+// Composable for 3D accelerometer visualization
 @Composable
 fun Accelerometer3DVisualization(
-    xAxis: Float?,
-    yAxis: Float?,
-    zAxis: Float?,
-    cardBackground: Color,
-    textColor: Color,
-    isDarkMode: Boolean
+    xAxis: Float?, // X-axis accelerometer data
+    yAxis: Float?, // Y-axis accelerometer data
+    zAxis: Float?, // Z-axis accelerometer data
+    cardBackground: Color, // Card background color
+    textColor: Color, // Text color
+    isDarkMode: Boolean // Dark mode state
 ) {
+    // Default to 0 if null
     val x = xAxis ?: 0f
     val y = yAxis ?: 0f
     val z = zAxis ?: 0f
@@ -729,20 +764,22 @@ fun Accelerometer3DVisualization(
         Column(modifier = Modifier.padding(16.dp)) {
             Text("3D Orientation Visualizer", color = textColor, fontSize = 18.sp)
 
+            // Canvas for 3D visualization
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp)
                     .padding(8.dp)
             ) {
-                val centerX = size.width / 2f
-                val centerY = size.height / 2f
-                val scale = minOf(size.width, size.height) * 0.25f
-                val axisLength = 300f
-                val diagonalLength = axisLength / sqrt(2f)
+                val centerX = size.width / 2f // Canvas center X
+                val centerY = size.height / 2f // Canvas center Y
+                val scale = minOf(size.width, size.height) * 0.25f // Scale factor
+                val axisLength = 300f // Axis length
+                val diagonalLength = axisLength / sqrt(2f) // Diagonal for Z-axis
 
-                val edgeColor = if (isDarkMode) Color.White else Color.Black
+                val edgeColor = if (isDarkMode) Color.White else Color.Black // Edge color based on theme
 
+                // Define cube vertices
                 val cubeVertices = arrayOf(
                     floatArrayOf(-1f, -1f, -1f), floatArrayOf(1f, -1f, -1f),
                     floatArrayOf(1f, 1f, -1f), floatArrayOf(-1f, 1f, -1f),
@@ -750,6 +787,7 @@ fun Accelerometer3DVisualization(
                     floatArrayOf(1f, 1f, 1f), floatArrayOf(-1f, 1f, 1f)
                 )
 
+                // Define cube edges
                 val cubeEdges = arrayOf(
                     intArrayOf(0, 1), intArrayOf(1, 2), intArrayOf(2, 3), intArrayOf(3, 0),
                     intArrayOf(4, 5), intArrayOf(5, 6), intArrayOf(6, 7), intArrayOf(7, 4),
@@ -761,6 +799,7 @@ fun Accelerometer3DVisualization(
                 val rotationY = 25f
                 val rotationZ = 5f
 
+                // Rotate 3D point
                 fun rotate3D(x: Float, y: Float, z: Float): FloatArray {
                     val radX = Math.toRadians(rotationX.toDouble()).toFloat()
                     val radY = Math.toRadians(rotationY.toDouble()).toFloat()
@@ -779,6 +818,7 @@ fun Accelerometer3DVisualization(
                     return floatArrayOf(rx3, ry3, rz2)
                 }
 
+                // Project 3D point to 2D
                 fun project3D(x: Float, y: Float, z: Float): Offset {
                     val distance = 5f
                     val perspective = distance / (distance - z)
@@ -788,6 +828,7 @@ fun Accelerometer3DVisualization(
                     )
                 }
 
+                // Project cube vertices
                 val projected = cubeVertices.map {
                     val rotated = rotate3D(it[0], it[1], it[2])
                     project3D(rotated[0], rotated[1], rotated[2])
@@ -808,7 +849,7 @@ fun Accelerometer3DVisualization(
                     drawCircle(edgeColor, 4f, it)
                 }
 
-                // Axis endpoints
+                // Define axis endpoints
                 val xEnd = Offset(centerX + axisLength, centerY)
                 val yEnd = Offset(centerX, centerY - axisLength)
                 val zEnd = Offset(centerX - diagonalLength, centerY + diagonalLength)
@@ -835,7 +876,7 @@ fun Accelerometer3DVisualization(
                     drawText("Z", zEnd.x + 20f, zEnd.y + 30f, labelPaint)
                 }
 
-                // Draw the sensor point
+                // Draw sensor point
                 val maxInputRange = 10f
                 val sensorX = (x / maxInputRange).coerceIn(-1f, 1f)
                 val sensorY = (y / maxInputRange).coerceIn(-1f, 1f)
@@ -846,6 +887,7 @@ fun Accelerometer3DVisualization(
                 drawCircle(Color.Magenta, radius = 10f, center = sensorDot)
             }
 
+            // Display accelerometer values
             Text(
                 text = "X: %.2f, Y: %.2f, Z: %.2f".format(x, y, z),
                 color = textColor,

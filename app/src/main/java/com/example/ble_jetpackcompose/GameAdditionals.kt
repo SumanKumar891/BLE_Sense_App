@@ -1,5 +1,6 @@
 package com.example.ble_jetpackcompose
 
+// Import necessary Compose libraries for animations, UI components, and state management
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
@@ -76,18 +77,20 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
+// Composable for an animated image button with expansion effects
 @Composable
 fun AnimatedImageButton(
-    imageResId: Int,
-    contentDescription: String,
-    isExpanded: Boolean,
-    expandedImageResId: Int,
-    screenWidth: Float,
-    screenHeight: Float,
-    currentPosition: IntOffset,
-    onPositioned: (IntOffset) -> Unit,
-    onClick: () -> Unit
+    imageResId: Int, // Resource ID for the default button image
+    contentDescription: String, // Accessibility description
+    isExpanded: Boolean, // Whether the button is expanded
+    expandedImageResId: Int, // Resource ID for the expanded image
+    screenWidth: Float, // Screen width for positioning
+    screenHeight: Float, // Screen height for positioning
+    currentPosition: IntOffset, // Current position of the button
+    onPositioned: (IntOffset) -> Unit, // Callback for position updates
+    onClick: () -> Unit // Click handler
 ) {
+    // Create a transition for the expansion state
     val transition = updateTransition(targetState = isExpanded, label = "buttonExpansionTransition")
 
     // Animate scale using transition
@@ -95,56 +98,58 @@ fun AnimatedImageButton(
         label = "buttonScaleAnimation",
         transitionSpec = {
             spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
+                dampingRatio = Spring.DampingRatioMediumBouncy, // Bouncy animation effect
+                stiffness = Spring.StiffnessLow // Low stiffness for smooth motion
             )
         }
     ) { expanded ->
-        if (expanded) 2f else 1f
+        if (expanded) 2f else 1f // Scale up to 2x when expanded
     }
 
     // Animate alpha using transition
     val alpha = transition.animateFloat(
         label = "buttonAlphaAnimation",
-        transitionSpec = { tween(300) }
+        transitionSpec = { tween(300) } // 300ms animation
     ) { expanded ->
-        if (expanded) 1f else 0.9f
+        if (expanded) 1f else 0.9f // Slightly transparent when not expanded
     }
 
-    // Animate the X offset
+    // Animate the X offset to center the button when expanded
     val offsetX = transition.animateFloat(
         label = "buttonOffsetXAnimation",
-        transitionSpec = { spring(stiffness = Spring.StiffnessLow) }
+        transitionSpec = { spring(stiffness = Spring.StiffnessLow) } // Low stiffness for smooth motion
     ) { expanded ->
         if (expanded) {
             val currentX = currentPosition.x.toFloat()
             val buttonWidthPx = dpToPx(200.dp) // Width of the button in pixels
             val targetX = (screenWidth - buttonWidthPx) / 3.5f // Center horizontally
-            targetX - currentX
+            targetX - currentX // Calculate offset
         } else 0f
     }
 
-    // Animate the Y offset
+    // Animate the Y offset to center the button when expanded
     val offsetY = transition.animateFloat(
         label = "buttonOffsetYAnimation",
-        transitionSpec = { spring(stiffness = Spring.StiffnessLow) }
+        transitionSpec = { spring(stiffness = Spring.StiffnessLow) } // Low stiffness for smooth motion
     ) { expanded ->
         if (expanded) {
             val currentY = currentPosition.y.toFloat()
             val buttonHeightPx = dpToPx(282.dp) // Height of the button in pixels
             val targetY = (screenHeight - buttonHeightPx) / 2.3f // Center vertically
-            targetY - currentY
+            targetY - currentY // Calculate offset
         } else 0f
     }
 
+    // Container for the button
     Box {
         Image(
-            painter = painterResource(id = if (isExpanded) expandedImageResId else imageResId),
+            painter = painterResource(id = if (isExpanded) expandedImageResId else imageResId), // Switch image based on expansion
             contentDescription = contentDescription,
             modifier = Modifier
-                .width(200.dp)
-                .height(280.dp)
+                .width(200.dp) // Fixed width
+                .height(280.dp) // Fixed height
                 .onGloballyPositioned { coordinates ->
+                    // Update position when not expanded
                     if (!isExpanded) {
                         onPositioned(
                             IntOffset(
@@ -155,32 +160,35 @@ fun AnimatedImageButton(
                     }
                 }
                 .graphicsLayer {
-                    scaleX = scale.value
+                    scaleX = scale.value // Apply animated scale
                     scaleY = scale.value
-                    this.alpha = alpha.value
-                    translationX = offsetX.value
-                    translationY = offsetY.value
+                    this.alpha = alpha.value // Apply animated alpha
+                    translationX = offsetX.value // Apply animated X offset
+                    translationY = offsetY.value // Apply animated Y offset
                 }
                 .clickable(
                     onClick = onClick,
-                    indication = null, // Disable the ripple effect
-                    interactionSource = remember { MutableInteractionSource() } // Remove ripple and interaction feedback
+                    indication = null, // Disable ripple effect
+                    interactionSource = remember { MutableInteractionSource() } // Remove interaction feedback
                 ),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop // Crop image to fit
         )
     }
 }
 
+// Composable for radar screen displaying all characters
 @Composable
 fun RadarScreenWithAllCharacters(
     modifier: Modifier = Modifier,
-    deviceList: List<Pair<Int, Offset>> = emptyList(),
-    activatedDevices: List<String> = emptyList(),
-    rssiValues: Map<String, Int?> = emptyMap()
+    deviceList: List<Pair<Int, Offset>> = emptyList(), // List of device image IDs and positions
+    activatedDevices: List<String> = emptyList(), // List of activated device names
+    rssiValues: Map<String, Int?> = emptyMap() // RSSI values for devices
 ) {
+    // Define radar colors
     val radarColor = colorResource(id = R.color.radar_color)
     val centerCircleColor = colorResource(id = R.color.radar_color)
 
+    // List of character image resources and names
     val characters = listOf(
         R.drawable.iron_man to "Iron_Man",
         R.drawable.hulk_ to "Hulk",
@@ -194,14 +202,17 @@ fun RadarScreenWithAllCharacters(
         R.drawable.thor to "Thor"
     )
 
+    // Generate symmetrical positions for characters
     val positions = remember { generateSymmetricalPositions(characters.size, 330f) } // Increased from 300f
 
+    // Map characters to their positions
     val characterPositions = remember(positions) {
         characters.zip(positions).map { (imageResId, position) ->
             imageResId.first to position
         }
     }
 
+    // Container for radar layout
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -216,60 +227,72 @@ fun RadarScreenWithAllCharacters(
     }
 }
 
-// Helper function to generate symmetrical positions
+// Helper function to generate symmetrical positions for radar icons
 fun generateSymmetricalPositions(count: Int, radius: Float): List<Offset> {
     val positions = mutableListOf<Offset>()
     for (i in 0 until count) {
-        val angle = 2 * Math.PI * i / count // Calculate the angle for each character
-        val x = (radius * cos(angle)).toFloat()
-        val y = (radius * sin(angle)).toFloat()
+        val angle = 2 * Math.PI * i / count // Calculate angle for each character
+        val x = (radius * cos(angle)).toFloat() // X position
+        val y = (radius * sin(angle)).toFloat() // Y position
         positions.add(Offset(x, y))
     }
     return positions
-}@Composable
+}
+
+// Composable for optimized radar layout
+@Composable
 fun OptimizedRadarLayout(
-    radarColor: Color,
-    centerCircleColor: Color,
-    deviceList: List<Pair<Int, Offset>> = emptyList(),
-    activatedDevices: List<String> = emptyList(),
-    rssiValues: Map<String, Int?> = emptyMap()
+    radarColor: Color, // Color for radar lines
+    centerCircleColor: Color, // Color for center circle
+    deviceList: List<Pair<Int, Offset>> = emptyList(), // List of device image IDs and positions
+    activatedDevices: List<String> = emptyList(), // List of activated device names
+    rssiValues: Map<String, Int?> = emptyMap() // RSSI values for devices
 ) {
+    // Remember activated devices to avoid recomposition
     val rememberActivatedDevices = remember(activatedDevices) { activatedDevices }
+    // Create infinite transition for radar animations
     val infiniteTransition = rememberInfiniteTransition(label = "radar_rotation")
+    // Animate radar line rotation
     val rotationAngle by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
+            animation = tween(4000, easing = LinearEasing), // 4-second rotation
             repeatMode = RepeatMode.Restart
         ), label = "radar_angle"
     )
+    // Animate blinking effect for activated devices
     val blinkAlpha by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 0.3f,
         animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
+            animation = tween(500, easing = LinearEasing), // 500ms blink
             repeatMode = RepeatMode.Reverse
         ), label = "blink_alpha"
     )
 
+    // Radar container
     Box(
         modifier = Modifier
-            .size(340.dp) // Kept at 340.dp, can increase to 350.dp if needed
-            .clip(CircleShape)
-            .background(Color.Transparent),
+            .size(340.dp) // Fixed size, can be adjusted to 350.dp
+            .clip(CircleShape) // Clip to circular shape
+            .background(Color.Transparent), // Transparent background
         contentAlignment = Alignment.Center
     ) {
+        // Draw radar base (circles)
         RadarBase(radarColor, centerCircleColor)
+        // Draw rotating radar line
         Canvas(modifier = Modifier.fillMaxSize()) {
             val radius = size.minDimension / 2
             rotate(degrees = rotationAngle) {
+                // Draw radar line
                 drawLine(
                     color = radarColor,
                     start = center,
                     end = center.copy(x = center.x, y = center.y - radius),
                     strokeWidth = 3.dp.toPx()
                 )
+                // Draw shadow arc
                 val shadowColor = Color.Black.copy(alpha = 0.2f)
                 drawArc(
                     color = shadowColor,
@@ -283,6 +306,7 @@ fun OptimizedRadarLayout(
             }
         }
 
+        // Draw device icons
         deviceList.forEach { (imageResId, position) ->
             val deviceName = getDeviceNameFromResId(imageResId)
             val isActivated = rememberActivatedDevices.contains(deviceName)
@@ -299,16 +323,20 @@ fun OptimizedRadarLayout(
             }
         }
     }
-}@Composable
+}
+
+// Composable for individual device icon on radar
+@Composable
 fun DeviceIcon(
-    imageResId: Int,
-    position: Offset,
-    isActivated: Boolean,
-    blinkAlpha: Float,
-    rssi: Int?
+    imageResId: Int, // Image resource ID
+    position: Offset, // Position on radar
+    isActivated: Boolean, // Whether the device is activated
+    blinkAlpha: Float, // Blinking alpha value
+    rssi: Int? // RSSI value
 ) {
     val localDensity = LocalDensity.current
-    val heroSize = 60.dp
+    val heroSize = 60.dp // Size of hero icon
+    // Base modifier for positioning
     val baseModifier = Modifier
         .size(heroSize)
         .offset(
@@ -316,20 +344,24 @@ fun DeviceIcon(
             y = with(localDensity) { position.y.toDp() }
         )
 
+    // Animate RSSI value
     val animatedRssi by animateFloatAsState(
         targetValue = rssi?.toFloat() ?: -100f,
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "rssiAnimation"
     )
 
+    // Track hero icon's top Y position
     var heroTopY by remember { mutableStateOf(0f) }
 
+    // Container for icon and RSSI
     Box(modifier = baseModifier) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
+            // RSSI indicator
             RssiIcon(
                 rssi = rssi,
                 animatedRssi = animatedRssi,
@@ -337,18 +369,20 @@ fun DeviceIcon(
                     .size(18.dp)
                     .offset {
                         val rssiHeightPx = with(localDensity) { 18.dp.toPx() }
-                        IntOffset(0, (heroTopY - rssiHeightPx - 2f).toInt())
+                        IntOffset(0, (heroTopY - rssiHeightPx - 2f).toInt()) // Position above hero
                     }
             )
 
+            // Hero icon container
             Box(
                 modifier = Modifier
                     .size(heroSize)
                     .align(Alignment.CenterHorizontally)
                     .onGloballyPositioned { coordinates ->
-                        heroTopY = coordinates.positionInParent().y
+                        heroTopY = coordinates.positionInParent().y // Update top Y position
                     }
             ) {
+                // Highlight background for activated devices
                 if (isActivated) {
                     Box(
                         modifier = Modifier
@@ -356,6 +390,7 @@ fun DeviceIcon(
                             .background(Color.White.copy(alpha = 0.3f), shape = CircleShape)
                     )
                 }
+                // Animate scale for activated devices
                 val scaleAnimation by animateFloatAsState(
                     targetValue = if (isActivated) 1.2f else 1f,
                     animationSpec = spring(
@@ -370,8 +405,8 @@ fun DeviceIcon(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = blinkAlpha
-                            scaleX = scaleAnimation
+                            alpha = blinkAlpha // Apply blinking effect
+                            scaleX = scaleAnimation // Apply scale animation
                             scaleY = scaleAnimation
                         }
                 )
@@ -380,16 +415,19 @@ fun DeviceIcon(
     }
 }
 
+// Composable for RSSI indicator
 @Composable
 fun RssiIcon(
-    rssi: Int?,
-    animatedRssi: Float,
+    rssi: Int?, // RSSI value
+    animatedRssi: Float, // Animated RSSI value
     modifier: Modifier = Modifier
 ) {
+    // Container for RSSI circle and text
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
+        // Draw red circle background
         Canvas(modifier = Modifier.matchParentSize()) {
             drawCircle(
                 color = Color.Red,
@@ -397,6 +435,7 @@ fun RssiIcon(
                 center = center
             )
         }
+        // Display RSSI value or "N/A"
         Text(
             text = if (rssi != null) "${animatedRssi.roundToInt()}" else "N/A",
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 8.sp),
@@ -406,6 +445,8 @@ fun RssiIcon(
         )
     }
 }
+
+// Composable for radar line (unused in OptimizedRadarLayout)
 @Composable
 fun RotatingRadarLine(radarColor: Color, rotationAngle: Float) {
     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -420,7 +461,7 @@ fun RotatingRadarLine(radarColor: Color, rotationAngle: Float) {
                 strokeWidth = 3.dp.toPx()
             )
 
-            // Draw radar sector shadow more efficiently
+            // Draw radar sector shadow
             val shadowColor = Color.Black.copy(alpha = 0.2f)
             drawArc(
                 color = shadowColor,
@@ -435,20 +476,21 @@ fun RotatingRadarLine(radarColor: Color, rotationAngle: Float) {
     }
 }
 
-
+// Composable for radar base circles
 @Composable
 fun RadarBase(radarColor: Color, centerCircleColor: Color) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         val boxSize = size.minDimension
         val radius = boxSize / 2
 
-        // Draw the radar circles
+        // Define radar circles with different radii and stroke widths
         val circles = listOf(
             radius * 0.33f to 2.dp,
             radius * 0.66f to 4.dp,
             radius to 6.dp
         )
 
+        // Draw radar circles
         circles.forEach { (circleRadius, strokeWidth) ->
             drawCircle(
                 color = radarColor,
@@ -466,7 +508,7 @@ fun RadarBase(radarColor: Color, centerCircleColor: Color) {
     }
 }
 
-// Helper function to get device name from resource ID
+// Helper function to map resource ID to device name
 private fun getDeviceNameFromResId(resId: Int): String {
     return when (resId) {
         R.drawable.iron_man -> "Iron_Man"
@@ -483,10 +525,11 @@ private fun getDeviceNameFromResId(resId: Int): String {
     }
 }
 
+// Helper function to generate multiple positions for radar icons
 fun generateMultiplePositions(count: Int, radius: Float): List<Offset> {
     val positions = mutableListOf<Offset>()
 
-    // Number of items in inner and outer circles
+    // Divide items into inner, middle, and outer circles
     val innerCount = count / 3
     val middleCount = count / 3
     val outerCount = count - innerCount - middleCount
@@ -518,15 +561,16 @@ fun generateMultiplePositions(count: Int, radius: Float): List<Offset> {
     return positions
 }
 
+// Composable for scratch card effect
 @Composable
 fun ScratchCardScreen(
-    heroName: String,
+    heroName: String, // Name of the hero to reveal
     modifier: Modifier = Modifier,
-    onScratchCompleted: () -> Unit = {}
+    onScratchCompleted: () -> Unit = {} // Callback when scratching is complete
 ) {
+    // Load overlay image
     val overlayImage = ImageBitmap.imageResource(id = R.drawable.scratch)
     // Select base image based on hero name
-    // Get resource ID outside of ImageBitmap.imageResource call
     val heroImageResId = remember(heroName) {
         when (heroName) {
             "Iron_Man" -> R.drawable.iron_man
@@ -543,23 +587,27 @@ fun ScratchCardScreen(
         }
     }
 
-// Then use the resource ID with ImageBitmap.imageResource
+    // Load base image
     val baseImage = ImageBitmap.imageResource(id = heroImageResId)
+    // Track current scratch path
     val currentPathState = remember { mutableStateOf(DraggedPath(path = Path(), width = 150f)) }
+    // Track percentage of area scratched
     var scratchedAreaPercentage by remember { mutableFloatStateOf(0f) }
+    // Track whether completion callback has been called
     var hasCalledCompletion by remember { mutableStateOf(false) }
+    // Canvas size in pixels
     val canvasSizePx = with(LocalDensity.current) { 300.dp.toPx() }
 
     // Animation state for hero reveal
-
     var showHeroReveal by remember { mutableStateOf(false) }
+    // Animate scale for hero reveal
     val animatedScale by animateFloatAsState(
         targetValue = if (showHeroReveal) 1.2f else 1f,
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "heroRevealScale"
     )
 
-    // Trigger the completion callback when scratch reaches 95%
+    // Trigger completion callback when 95% scratched
     LaunchedEffect(scratchedAreaPercentage) {
         if (scratchedAreaPercentage >= 95f && !hasCalledCompletion) {
             hasCalledCompletion = true
@@ -568,13 +616,13 @@ fun ScratchCardScreen(
         }
     }
 
-    // Optimize scratch animation by using larger steps and fewer operations
+    // Simulate scratching animation
     LaunchedEffect(Unit) {
-        val stepSize = canvasSizePx / 2  // Much larger step size
+        val stepSize = canvasSizePx / 2 // Larger step size for efficiency
         val totalArea = canvasSizePx * canvasSizePx
         val scratchPath = currentPathState.value.path
 
-        // Use a simpler scratch pattern
+        // Create a simple scratch pattern
         for (y in 0..canvasSizePx.toInt() step stepSize.toInt()) {
             for (x in 0..canvasSizePx.toInt() step stepSize.toInt()) {
                 scratchPath.addOval(
@@ -584,16 +632,17 @@ fun ScratchCardScreen(
                     )
                 )
                 scratchedAreaPercentage = ((y * canvasSizePx + x) / totalArea * 100f).coerceAtMost(100f)
-                delay(80)  // Longer delay between operations
+                delay(80) // Delay for smooth animation
             }
         }
     }
 
+    // Scratch card container
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
     ) {
-        // Optimize by conditional rendering based on scratch state
+        // Conditional rendering based on scratch progress
         if (scratchedAreaPercentage < 95f) {
             OptimizedScratchCanvas(
                 overlayImage = overlayImage,
@@ -604,7 +653,7 @@ fun ScratchCardScreen(
                     .align(Alignment.Center)
             )
         } else {
-            // Reveal Hero Image with Animation
+            // Reveal hero image with animation
             Image(
                 painter = painterResource(
                     id = when (heroName) {
@@ -625,14 +674,14 @@ fun ScratchCardScreen(
                 modifier = Modifier
                     .size(300.dp)
                     .graphicsLayer {
-                        scaleX = animatedScale
+                        scaleX = animatedScale // Apply animated scale
                         scaleY = animatedScale
                     }
                     .align(Alignment.Center)
             )
         }
 
-        // Completion Indicator
+        // Completion indicator
         AnimatedVisibility(
             visible = scratchedAreaPercentage >= 95f,
             enter = fadeIn(),
@@ -646,7 +695,7 @@ fun ScratchCardScreen(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 16.dp)
                     .background(
-                        Color(0x99000000),
+                        Color(0x99000000), // Semi-transparent black
                         shape = RoundedCornerShape(4.dp)
                     )
                     .padding(horizontal = 12.dp, vertical = 4.dp)
@@ -655,22 +704,23 @@ fun ScratchCardScreen(
     }
 }
 
+// Composable for optimized scratch canvas
 @Composable
 fun OptimizedScratchCanvas(
-    overlayImage: ImageBitmap,
-    baseImage: ImageBitmap,
-    currentPath: Path,
+    overlayImage: ImageBitmap, // Overlay image to scratch
+    baseImage: ImageBitmap, // Base image to reveal
+    currentPath: Path, // Current scratch path
     modifier: Modifier = Modifier
 ) {
     Canvas(
         modifier = modifier
-            .clipToBounds()
-            .background(Color(0xFFF7DCA7))
+            .clipToBounds() // Clip content to canvas bounds
+            .background(Color(0xFFF7DCA7)) // Background color
     ) {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
-        // Draw the overlay image to fit the entire canvas
+        // Draw the overlay image
         drawImage(
             image = overlayImage,
             dstSize = IntSize(
@@ -679,14 +729,14 @@ fun OptimizedScratchCanvas(
             )
         )
 
-        // Clip the base image to the current path
+        // Clip the base image to the scratched path
         clipPath(path = currentPath) {
-            // Calculate a smaller size for the base image
+            // Scale base image to fit
             val baseImageScaleFactor = 0.8f
             val baseImageWidth = (canvasWidth * baseImageScaleFactor).toInt()
             val baseImageHeight = (canvasHeight * baseImageScaleFactor).toInt()
 
-            // Center the base image within the canvas
+            // Center the base image
             val baseImageOffsetX = (canvasWidth - baseImageWidth) / 2
             val baseImageOffsetY = (canvasHeight - baseImageHeight) / 2
 
@@ -702,8 +752,8 @@ fun OptimizedScratchCanvas(
     }
 }
 
-
+// Data class for tracking scratch path
 data class DraggedPath(
-    val path: Path,
-    val width: Float = 50f
+    val path: Path, // Scratch path
+    val width: Float = 50f // Default path width
 )

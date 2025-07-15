@@ -4,7 +4,17 @@
             "outputFile": "com.example.ble_jetpackcompose.app-mergeDebugResources-83:/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\89eb50a7ac39583400164f225b1f9bfb\\transformed\\material-1.9.0\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\d1b5570e68daae6ff10574d436211613\\transformed\\appcompat-1.6.1\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,124,193,263,337,413,472,543",
+                        "endColumns": "68,68,69,73,75,58,70,67",
+                        "endOffsets": "119,188,258,332,408,467,538,606"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\b357e7333f2845bca64bb4f9a845235c\\transformed\\material-1.9.0\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,10,11,12,13,14",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
@@ -20,16 +30,6 @@
                         "endLines": "10,11,12,13,14,15,17,18,19,20,21,25",
                         "endColumns": "59,69,70,71,57,57,10,63,55,58,62,10",
                         "endOffsets": "666,736,807,879,937,995,1104,1168,1224,1283,1346,1518"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\378044621395f248ba72ce6050108f66\\transformed\\appcompat-1.6.1\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,124,193,263,337,413,472,543",
-                        "endColumns": "68,68,69,73,75,58,70,67",
-                        "endOffsets": "119,188,258,332,408,467,538,606"
                     }
                 }
             ]

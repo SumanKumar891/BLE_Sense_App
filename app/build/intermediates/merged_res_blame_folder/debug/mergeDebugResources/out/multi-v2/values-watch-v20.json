@@ -4,7 +4,7 @@
             "outputFile": "com.example.ble_jetpackcompose.app-mergeDebugResources-83:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\d400a779df8bc283301ff033dc0316bb\\transformed\\play-services-auth-20.7.0\\res\\values-watch-v20\\values.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\a9c75454070eb8f45457cecfda374dda\\transformed\\play-services-auth-20.7.0\\res\\values-watch-v20\\values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11",
                         "startColumns": "0,0,0,0,0,0,0,0",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\378044621395f248ba72ce6050108f66\\transformed\\appcompat-1.6.1\\res\\values-watch-v20\\values-watch-v20.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\d1b5570e68daae6ff10574d436211613\\transformed\\appcompat-1.6.1\\res\\values-watch-v20\\values-watch-v20.xml",
                     "from": {
                         "startLines": "2,5,8",
                         "startColumns": "4,4,4",

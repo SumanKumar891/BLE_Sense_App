@@ -40,8 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
-        mlModelBinding = true// Enable BuildConfig generation
+        buildConfig = true  // Enable BuildConfig generation
     }
 }
 
@@ -68,13 +67,10 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
-//    implementation(libs.firebase.database.ktx)
-//    implementation(libs.androidx.media3.common.ktx)
-//    implementation(libs.ads.mobile.sdk)
-    implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.work.runtime.ktx)
-//    implementation(libs.tensorflow.lite.metadata)
-//    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.litert)
+    implementation(libs.androidx.room.external.antlr)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -82,9 +78,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation ("org.tensorflow:tensorflow-lite:2.13.0")
-    implementation ("org.tensorflow:tensorflow-lite-support:0.3.1")
-    implementation ("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
 
 
 //    implementation(libs.androidx.core.ktx)
@@ -121,18 +114,22 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
     implementation ("androidx.compose.material:material:1.3.1")
     implementation ("androidx.compose.ui:ui-tooling:1.3.1")
-    implementation ("org.tensorflow:tensorflow-lite-metadata:0.1.0")
-    implementation ("org.tensorflow:tensorflow-lite:2.12.0")
-    implementation ("org.tensorflow:tensorflow-lite-support:0.4.4")
-
-    // If using metadata
-    implementation ("org.tensorflow:tensorflow-lite-metadata:0.4.4")
-
-    // If using GPU acceleration
-    implementation ("org.tensorflow:tensorflow-lite-gpu:2.12.0")
 
 //    implementation(platform("com.google.firebase:firebase-bom:32.7.1"))
 //    implementation("com.google.firebase:firebase-auth-ktx")
 //    implementation("com.google.firebase:firebase-firestore")
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,6 @@
 package com.example.ble_jetpackcompose
 
+// Import necessary Android and Compose libraries
 //import com.example.ble_jetpackcompose.BuildConfig
 import android.content.Intent
 import android.net.Uri
@@ -48,18 +49,20 @@ import retrofit2.http.Query
 import java.util.Locale
 import kotlin.random.Random
 
-// Create a singleton object to manage app-wide theme state
+// Singleton object to manage app-wide theme state
 object ThemeManager {
-    private val _isDarkMode = MutableStateFlow(false) // Default to false until initialized
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode
+    private val _isDarkMode = MutableStateFlow(false) // Default to light mode until initialized
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode // Public StateFlow for dark mode status
 
-    private var isInitialized = false
+    private var isInitialized = false // Track initialization status
 
+    // Toggle dark mode and mark as initialized
     fun toggleDarkMode(value: Boolean) {
         _isDarkMode.value = value
-        isInitialized = true // Mark as initialized once toggled
+        isInitialized = true
     }
 
+    // Initialize with system theme if not already set
     fun initializeWithSystemTheme(isSystemDark: Boolean) {
         if (!isInitialized) {
             _isDarkMode.value = isSystemDark
@@ -68,13 +71,13 @@ object ThemeManager {
     }
 }
 
-// Create a singleton object to manage language state
+// Singleton object to manage language state
 object LanguageManager {
-    // Add the missing private mutable state flow
+    // State flow to track current language
     val _currentLanguage = MutableStateFlow(Locale.ENGLISH.language)
-    val currentLanguage: StateFlow<String> = _currentLanguage
+    val currentLanguage: StateFlow<String> = _currentLanguage // Public StateFlow for current language
 
-    // List of supported Indian languages
+    // List of supported Indian languages with their codes and names
     val supportedLanguages = listOf(
         LanguageOption("en", "English"),
         LanguageOption("hi", "हिन्दी (Hindi)"),
@@ -89,47 +92,19 @@ object LanguageManager {
         LanguageOption("or", "ଓଡ଼ିଆ (Odia)")
     )
 
+    // Set the current language
     fun setLanguage(languageCode: String) {
         _currentLanguage.value = languageCode
     }
 
+    // Get the display name for a language code
     fun getLanguageName(languageCode: String): String {
         return supportedLanguages.find { it.code == languageCode }?.name ?: "English"
     }
 }
-//interface TranslationService {
-//    suspend fun translateText(text: String, targetLanguage: String): String
-//}
-//object UserRepository {
-//    private val _users = mutableStateListOf<UserData>()
-//    val users: List<UserData> get() = _users
-//
-//    fun addUser(user: UserData) {
-//        if (!_users.any { it.id == user.id }) {
-//            _users.add(user)
-//        }
-//    }
-//
-//    fun removeUser(userId: String) {
-//        _users.removeAll { it.id == userId }
-//    }
-//
-//    fun clearUsers() {
-//        _users.clear()
-//    }
-//}
-//
-////data class UserData(
-//    val id: String,
-//    val name: String,
-//    val email: String,
-//    val isAnonymous: Boolean,
-//    val profilePictureUrl: String? = null,
-//    val signInTime: Long = System.currentTimeMillis()
-//)
 
 
-
+// Interface for Gemini Translation API
 interface GeminiTranslationApi {
     @POST("v1beta/models/gemini-2.0-flash:generateContent")
     suspend fun translateText(
@@ -138,7 +113,7 @@ interface GeminiTranslationApi {
     ): TranslationResponse
 }
 
-// Update TranslationRequest and Response models
+// Data classes for translation request and response
 data class TranslationRequest(
     val contents: List<Content>,
     val generationConfig: GenerationConfig
@@ -153,7 +128,7 @@ data class Part(
 )
 
 data class GenerationConfig(
-    val temperature: Float = 0.7f
+    val temperature: Float = 0.7f // Controls randomness of translation output
 )
 
 data class TranslationResponse(
@@ -163,23 +138,27 @@ data class TranslationResponse(
 data class TranslationCandidate(
     val content: Content
 )
+
+// Interface for translation service
 interface TranslationService {
     suspend fun translateText(text: String, targetLanguage: String): String
 }
+
+// Object to cache translation results
 object TranslationCache {
     private val cache = mutableMapOf<String, String>()
 
-
+    // Get cached translation
     fun get(key: String): String? = cache[key]
+    // Store translation in cache
     fun put(key: String, value: String) {
         cache[key] = value
     }
 }
 
-
-// Modified GoogleTranslationService
+// Translation service using Gemini API
 class GoogleTranslationService(
-    private val apiKey: String = BuildConfig.API_KEY
+    private val apiKey: String = BuildConfig.API_KEY // API key for Gemini
 ) : TranslationService {
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://generativelanguage.googleapis.com/")
@@ -188,6 +167,7 @@ class GoogleTranslationService(
 
     private val translationApi = retrofit.create(GeminiTranslationApi::class.java)
 
+    // Translate a single text
     override suspend fun translateText(
         text: String,
         targetLanguage: String
@@ -208,6 +188,7 @@ class GoogleTranslationService(
                 return texts.map { TranslationCache.get("$it-$targetLanguage")!! }
             }
 
+            // Create translation prompt
             val prompt = """
                 Provide only the translations of the following texts into ${getLanguageName(targetLanguage)}, 
                 one per line, in the same order, with no additional text or explanations:
@@ -223,6 +204,7 @@ class GoogleTranslationService(
                 generationConfig = GenerationConfig()
             )
 
+            // Call translation API
             val response = translationApi.translateText(request, apiKey)
             val translatedText = response.candidates.firstOrNull()
                 ?.content?.parts?.firstOrNull()?.text
@@ -243,8 +225,8 @@ class GoogleTranslationService(
         }
     }
 
+    // Map language codes to names for translation
     private fun getLanguageName(languageCode: String): String {
-        // Map language codes to their names
         return when (languageCode) {
             "en" -> "English"
             "hi" -> "Hindi"
@@ -262,18 +244,11 @@ class GoogleTranslationService(
     }
 }
 
-//// Extension function for easy translation
-//suspend fun String.translateTo(
-//    targetLanguage: String,
-//    apiKey: String = "AIzaSyBr_EdKrLRXftUK9MN2TDTKctiEZD6-mOM"
-//): String {
-//    val translator = GoogleTranslationService(apiKey)
-//    return translator.translateText(this, targetLanguage)
-//}
 
 // Data class for language options
 data class LanguageOption(val code: String, val name: String)
 
+// Data class for translated settings text
 data class TranslatedSettings(
     val settingsTitle: String = "Settings",
     val darkMode: String = "Dark Mode",
@@ -283,15 +258,15 @@ data class TranslatedSettings(
     val about: String = "About BLE"
 )
 
-// Update ModernSettingsScreen
+// Main settings screen composable
 @Composable
 fun ModernSettingsScreen(
-    viewModel: AuthViewModel = viewModel(),
-    onSignOut: () -> Unit,
-    navController: NavHostController
+    viewModel: AuthViewModel = viewModel(), // Authentication ViewModel
+    onSignOut: () -> Unit, // Callback for sign-out
+    navController: NavHostController // Navigation controller
 ) {
-    val isDarkMode by ThemeManager.isDarkMode.collectAsState()
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState()
+    val isDarkMode by ThemeManager.isDarkMode.collectAsState() // Observe dark mode state
+    val currentLanguage by LanguageManager.currentLanguage.collectAsState() // Observe current language
 
     // State for translated text with initial fallback
     var translatedText by remember {
@@ -307,7 +282,7 @@ fun ModernSettingsScreen(
         )
     }
 
-    // Preload translations on language change
+    // Preload translations when language changes
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
@@ -324,6 +299,7 @@ fun ModernSettingsScreen(
         )
     }
 
+    // Define colors based on theme
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF2F2F7)
     val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
     val textColor = if (isDarkMode) Color.White else Color.Black
@@ -331,8 +307,9 @@ fun ModernSettingsScreen(
     val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
     val iconTint = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
 
-    val currentUser = viewModel.checkCurrentUser()
+    val currentUser = viewModel.checkCurrentUser() // Get current user
 
+    // Main scaffold for settings screen
     Scaffold(
         backgroundColor = backgroundColor,
         topBar = {
@@ -366,6 +343,7 @@ fun ModernSettingsScreen(
         ) {
             val context = LocalContext.current
 
+            // User profile card
             UserProfileCard(
                 cardBackground = cardBackground,
                 textColor = textColor,
@@ -383,14 +361,14 @@ fun ModernSettingsScreen(
                 },
                 profilePictureUrl = currentUser?.photoUrl?.toString(),
                 onLogout = {
-                    viewModel.signOut(context) // 👈 Now passing the context
+                    viewModel.signOut(context) // Sign out with context
                     onSignOut()
                 }
             )
 
-
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Settings options list
             SettingsOptionsList(
                 cardBackground = cardBackground,
                 textColor = textColor,
@@ -403,14 +381,14 @@ fun ModernSettingsScreen(
                     ThemeManager.toggleDarkMode(newValue)
                 },
                 navController = navController
-
-
             )
+            // Privacy policy button
             PrivacyPolicyButton()
         }
     }
 }
 
+// Composable for privacy policy button
 @Composable
 fun PrivacyPolicyButton() {
     val context = LocalContext.current
@@ -418,7 +396,7 @@ fun PrivacyPolicyButton() {
     Button(
         onClick = {
             val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://sumankumar891.github.io/privacy_policy_blesense/"))
-            context.startActivity(urlIntent)
+            context.startActivity(urlIntent) // Open privacy policy URL
         },
         modifier = Modifier
             .fillMaxWidth()
@@ -428,8 +406,7 @@ fun PrivacyPolicyButton() {
     }
 }
 
-
-//// Helper function to generate a random color for the avatar (fallback)
+// Helper function to generate a random color for the avatar (fallback)
 fun generateRandomColor(): Color {
     val random = Random
     return Color(
@@ -439,7 +416,7 @@ fun generateRandomColor(): Color {
     ).copy(alpha = 0.8f)
 }
 
-
+// Composable for user profile card
 @Composable
 fun UserProfileCard(
     cardBackground: Color,
@@ -469,7 +446,7 @@ fun UserProfileCard(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape),
-//                    placeholder = painterResource(R.drawable.placeholder), // Optional
+                    //placeholder = painterResource(R.drawable.placeholder), // Optional
                     error = painterResource(R.drawable.error), // Optional
                     contentScale = ContentScale.Crop
                 )
@@ -482,7 +459,6 @@ fun UserProfileCard(
                         .size(60.dp)
                         .clip(CircleShape)
                         .background(avatarColor),
-
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -530,15 +506,7 @@ fun UserProfileCard(
     }
 }
 
-//// Helper function to generate a random color for the avatar (fallback)
-//fun generateRandomColor(): Color {
-//    val random = Random.Default
-//    return Color(
-//        red = random.nextInt(256),
-//        green = random.nextInt(256),
-//        blue = random.nextInt(256)
-//    ).copy(alpha = 0.8f)
-//}
+
 @Composable
 fun SettingsOptionsList(
     cardBackground: Color,
@@ -557,8 +525,7 @@ fun SettingsOptionsList(
         SettingsItem(Icons.AutoMirrored.Outlined.Help, translatedText.help, SettingsItemType.DETAIL),
         SettingsItem(Icons.Outlined.AccountCircle, translatedText.accounts, SettingsItemType.DETAIL),
         SettingsItem(Icons.Outlined.Info, translatedText.about, SettingsItemType.DETAIL),
-
-        )
+    )
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -600,8 +567,8 @@ fun SettingsOptionsList(
         }
     }
 }
-// Modify your SettingsItemRow function to handle language selection
-// Update SettingsItemRow with better dialog state management
+
+// Composable for individual settings item row
 @Composable
 fun SettingsItemRow(
     item: SettingsItem,
@@ -612,12 +579,12 @@ fun SettingsItemRow(
     onSwitchChange: ((Boolean) -> Unit)? = null,
     navController: NavHostController,
 ) {
-    var switchState by remember { mutableStateOf(initialSwitchState) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    var showAboutDialog by remember { mutableStateOf(false) }
-    var showHelpDialog by remember { mutableStateOf(false) }
-    var showAccountsDialog by remember { mutableStateOf(false) }
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState()
+    var switchState by remember { mutableStateOf(initialSwitchState) } // Track switch state
+    var showLanguageDialog by remember { mutableStateOf(false) } // Language dialog visibility
+    var showAboutDialog by remember { mutableStateOf(false) } // About dialog visibility
+    var showHelpDialog by remember { mutableStateOf(false) } // Help dialog visibility
+    var showAccountsDialog by remember { mutableStateOf(false) } // Accounts dialog visibility
+    val currentLanguage by LanguageManager.currentLanguage.collectAsState() // Current language
     val context = LocalContext.current
     val isLanguageItem = item.icon == Icons.Outlined.Language
     val isAboutItem = item.icon == Icons.Outlined.Info
@@ -635,7 +602,7 @@ fun SettingsItemRow(
                     isAccountsItem -> showAccountsDialog = true
                 }
             }
-            .padding(16.dp), // Restored original padding
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -654,7 +621,7 @@ fun SettingsItemRow(
                 fontWeight = FontWeight.Medium,
                 color = textColor
             ),
-            modifier = Modifier.weight(1f) // Restored alignment with weight
+            modifier = Modifier.weight(1f)
         )
 
         when (item.type) {
@@ -693,9 +660,7 @@ fun SettingsItemRow(
         }
     }
 
-
-
-    // Language selection dialog (unchanged)
+    // Language selection dialog
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
@@ -751,7 +716,7 @@ fun SettingsItemRow(
         )
     }
 
-    // About BLE dialog (unchanged)
+    // About BLE dialog
     if (showAboutDialog) {
         Dialog(
             onDismissRequest = { showAboutDialog = false }
@@ -769,16 +734,16 @@ fun SettingsItemRow(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-//                    Text(
-//                        text = "About BLE",
-//                        fontFamily = helveticaFont,
-//                        style = MaterialTheme.typography.h6,
-//                        textAlign = TextAlign.Center,
-//                        color = if (initialSwitchState) Color.White else Color.Black,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(bottom = 8.dp)
-//                    )
+                    // Text(
+                    //     text = "About BLE",
+                    //     fontFamily = helveticaFont,
+                    //     style = MaterialTheme.typography.h6,
+                    //     textAlign = TextAlign.Center,
+                    //     color = if (initialSwitchState) Color.White else Color.Black,
+                    //     modifier = Modifier
+                    //         .fillMaxWidth()
+                    //         .padding(bottom = 8.dp)
+                    // )
 
                     LazyColumn(
                         modifier = Modifier
@@ -876,7 +841,8 @@ fun SettingsItemRow(
             }
         }
     }
-// Inside SettingsItemRow
+
+    // Accounts dialog
     if (showAccountsDialog) {
         val viewModel: AuthViewModel = viewModel()
         val currentUser = viewModel.checkCurrentUser()
@@ -885,12 +851,12 @@ fun SettingsItemRow(
             isDarkMode = initialSwitchState,
             currentUserId = currentUser?.uid,
             onDismiss = { showAccountsDialog = false },
-            navController = navController, // ✅ pass the actual NavHostController
-            viewModel = viewModel          // ✅ pass the ViewModel instance
+            navController = navController,
+            viewModel = viewModel
         )
     }
 
-    // New Help dialog
+    // Help dialog
     if (showHelpDialog) {
         Dialog(
             onDismissRequest = { showHelpDialog = false }
@@ -908,16 +874,16 @@ fun SettingsItemRow(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-//                    Text(
-//                        text = "Help",
-//                        fontFamily = helveticaFont,
-//                        style = MaterialTheme.typography.h6,
-//                        textAlign = TextAlign.Center,
-//                        color = if (initialSwitchState) Color.White else Color.Black,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(bottom = 8.dp)
-//                    )
+                    // Text(
+                    //     text = "Help",
+                    //     fontFamily = helveticaFont,
+                    //     style = MaterialTheme.typography.h6,
+                    //     textAlign = TextAlign.Center,
+                    //     color = if (initialSwitchState) Color.White else Color.Black,
+                    //     modifier = Modifier
+                    //         .fillMaxWidth()
+                    //         .padding(bottom = 8.dp)
+                    // )
 
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.Help,
@@ -982,6 +948,7 @@ fun SettingsItemRow(
     }
 }
 
+// Composable for accounts dialog
 @Composable
 fun AccountsDialog(
     isDarkMode: Boolean,
@@ -991,11 +958,11 @@ fun AccountsDialog(
     viewModel: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val users = UserRepository.users
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var accountToDelete by remember { mutableStateOf<UserData?>(null) }
+    val users = UserRepository.users // Get list of saved users
+    var showDeleteConfirmation by remember { mutableStateOf(false) } // Delete confirmation dialog visibility
+    var accountToDelete by remember { mutableStateOf<UserData?>(null) } // Account to delete
 
-    // Show confirmation dialog
+    // Show confirmation dialog for account deletion
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = {
@@ -1032,15 +999,11 @@ fun AccountsDialog(
                                 viewModel.deleteAccountAndSignInAsGuest { success, message ->
                                     if (success) {
                                         Toast.makeText(context, "Account deleted. Guest session started.", Toast.LENGTH_SHORT).show()
-
-                                        // ✅ Navigate to SplashScreen
+                                        // Navigate to splash screen after deletion
                                         navController.navigate("splash_screen") {
                                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                                             launchSingleTop = true
                                         }
-
-
-
                                     } else {
                                         Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show()
                                     }
@@ -1057,8 +1020,7 @@ fun AccountsDialog(
                 ) {
                     Text("Delete")
                 }
-            }
-            ,
+            },
             dismissButton = {
                 TextButton(onClick = {
                     showDeleteConfirmation = false
@@ -1139,6 +1101,8 @@ fun AccountsDialog(
         }
     }
 }
+
+// Composable for saved account item
 @Composable
 fun SavedAccountItem(
     user: UserData,
@@ -1209,8 +1173,7 @@ fun SavedAccountItem(
     }
 }
 
-
-
+// Bottom navigation bar composable
 @Composable
 fun BottomNavigation(
     modifier: Modifier = Modifier,
@@ -1228,7 +1191,6 @@ fun BottomNavigation(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { /* Handle result if needed */ }
     )
-
 
     BottomNavigation(
         modifier = modifier,
@@ -1273,7 +1235,7 @@ fun BottomNavigation(
             },
             selected = false,
             onClick = {
-                // ✅ Correct way to launch another Compose Activity
+                // Launch RobotControlCompose activity
                 val intent = Intent(context, RobotControlCompose::class.java)
                 launcher.launch(intent)
             }
@@ -1293,6 +1255,8 @@ fun BottomNavigation(
         )
     }
 }
+
+// Composable for About BLE screen
 @Composable
 fun AboutBleScreen(
     navController: NavHostController,
@@ -1433,18 +1397,20 @@ fun AboutBleScreen(
     }
 }
 
-// Data classes for settings remain the same
+// Data classes for settings items
 data class SettingsItem(
     val icon: ImageVector,
     val title: String,
     val type: SettingsItemType
 )
 
+// Enum for settings item types
 enum class SettingsItemType {
     SWITCH,
     DETAIL
 }
 
+// Preview for settings screen
 @Preview(showBackground = true)
 @Composable
 fun ModernSettingsScreenPreview() {
