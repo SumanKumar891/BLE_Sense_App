@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeDebugResources-83:/values-h360dp-land-v13/values-h360dp-land-v13.xml",
+            "outputFile": "com.blesense.app-mergeDebugResources-85:/values-h360dp-land-v13/values-h360dp-land-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\b357e7333f2845bca64bb4f9a845235c\\transformed\\material-1.9.0\\res\\values-h360dp-land-v13\\values-h360dp-land-v13.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\d4bde58f3ee011a2374c1e13d8a40171\\transformed\\material-1.9.0\\res\\values-h360dp-land-v13\\values-h360dp-land-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10",
                         "startColumns": "4,4,4,4,4,4,4,4,4",

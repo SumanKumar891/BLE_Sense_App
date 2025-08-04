@@ -25,6 +25,7 @@
   <androidx.bluetooth/>
   <androidx.browser/>
   <androidx.camera/>
+  <androidx.camera.featurecombinationquery/>
   <androidx.camera.media3/>
   <androidx.camera.viewfinder/>
   <androidx.car/>
@@ -91,11 +92,14 @@
   <androidx.navigation/>
   <androidx.navigation.safeargs/>
   <androidx.navigation.safeargs.kotlin/>
+  <androidx.navigation3/>
+  <androidx.navigationevent/>
   <androidx.paging/>
   <androidx.palette/>
   <androidx.pdf/>
   <androidx.percentlayout/>
   <androidx.performance/>
+  <androidx.photopicker/>
   <androidx.preference/>
   <androidx.print/>
   <androidx.privacysandbox.activity/>
@@ -141,6 +145,7 @@
   <androidx.wear.protolayout/>
   <androidx.wear.tiles/>
   <androidx.wear.watchface/>
+  <androidx.wear.watchfacepush/>
   <androidx.webkit/>
   <androidx.window/>
   <androidx.window.extensions.core/>
@@ -207,6 +212,7 @@
   <com.android.tools.external.org-jetbrains/>
   <com.android.tools.fakeadbserver/>
   <com.android.tools.internal.build.test/>
+  <com.android.tools.journeys/>
   <com.android.tools.layoutlib/>
   <com.android.tools.lint/>
   <com.android.tools.metalava/>
@@ -268,6 +274,7 @@
   <com.google.android.tv.tvpanelframework/>
   <com.google.android.ump/>
   <com.google.android.wearable/>
+  <com.google.android.wearable.watchface.validator/>
   <com.google.androidbrowserhelper/>
   <com.google.ar/>
   <com.google.ar.sceneform/>
@@ -292,6 +299,7 @@
   <com.google.mlkit/>
   <com.google.net.cronet/>
   <com.google.oboe/>
+  <com.google.play.policy.insights/>
   <com.google.prefab/>
   <com.google.relay/>
   <com.google.test.platform/>

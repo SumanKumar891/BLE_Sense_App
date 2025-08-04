@@ -1,29 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeDebugResources-83:/values-v28/values-v28.xml",
+            "outputFile": "com.blesense.app-mergeDebugResources-85:/values-v28/values-v28.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\b357e7333f2845bca64bb4f9a845235c\\transformed\\material-1.9.0\\res\\values-v28\\values-v28.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,153,248,343,441,529,617,705,793,880,967,1054,1141",
-                        "endLines": "2,3,4,5,6,7,8,9,10,11,12,13,17",
-                        "endColumns": "97,94,94,97,87,87,87,87,86,86,86,86,10",
-                        "endOffsets": "148,243,338,436,524,612,700,788,875,962,1049,1136,1423"
-                    },
-                    "to": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,24",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,153,248,343,441,529,617,705,793,880,967,1054,1675",
-                        "endLines": "2,3,4,5,6,7,8,9,10,11,12,13,27",
-                        "endColumns": "97,94,94,97,87,87,87,87,86,86,86,86,10",
-                        "endOffsets": "148,243,338,436,524,612,700,788,875,962,1049,1136,1957"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\d1b5570e68daae6ff10574d436211613\\transformed\\appcompat-1.6.1\\res\\values-v28\\values-v28.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\2e02934df89c33196c840ab0bb78e7bb\\transformed\\appcompat-1.6.1\\res\\values-v28\\values-v28.xml",
                     "from": {
                         "startLines": "2,3,4,8",
                         "startColumns": "4,4,4,4",
@@ -39,6 +20,25 @@
                         "endLines": "14,15,19,23",
                         "endColumns": "74,86,12,12",
                         "endOffsets": "1211,1298,1478,1670"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\d4bde58f3ee011a2374c1e13d8a40171\\transformed\\material-1.9.0\\res\\values-v28\\values-v28.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,248,343,441,529,617,705,793,880,967,1054,1141",
+                        "endLines": "2,3,4,5,6,7,8,9,10,11,12,13,17",
+                        "endColumns": "97,94,94,97,87,87,87,87,86,86,86,86,10",
+                        "endOffsets": "148,243,338,436,524,612,700,788,875,962,1049,1136,1423"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,24",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,248,343,441,529,617,705,793,880,967,1054,1675",
+                        "endLines": "2,3,4,5,6,7,8,9,10,11,12,13,27",
+                        "endColumns": "97,94,94,97,87,87,87,87,86,86,86,86,10",
+                        "endOffsets": "148,243,338,436,524,612,700,788,875,962,1049,1136,1957"
                     }
                 }
             ]

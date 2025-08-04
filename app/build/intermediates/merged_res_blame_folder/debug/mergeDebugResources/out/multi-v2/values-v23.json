@@ -1,10 +1,20 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeDebugResources-83:/values-v23/values-v23.xml",
+            "outputFile": "com.blesense.app-mergeDebugResources-85:/values-v23/values-v23.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\616cf4d3a30803a6aa2ab7bd8f34b40d\\transformed\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\4b2041871146edec5eca03642ecf8c27\\transformed\\work-runtime-2.10.2\\res\\values-v23\\values-v23.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,121",
+                        "endColumns": "65,62",
+                        "endOffsets": "116,179"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\301be2ff1bf95d85f6381f2f9ac0e992\\transformed\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -23,36 +33,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\a5131ab6f9a49d4965fe8dd88356f5fd\\transformed\\work-runtime-2.10.2\\res\\values-v23\\values-v23.xml",
-                    "from": {
-                        "startLines": "2,3",
-                        "startColumns": "4,4",
-                        "startOffsets": "55,121",
-                        "endColumns": "65,62",
-                        "endOffsets": "116,179"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\b357e7333f2845bca64bb4f9a845235c\\transformed\\material-1.9.0\\res\\values-v23\\values-v23.xml",
-                    "from": {
-                        "startLines": "2,5,8,13,17,20,23,26,31,34,38",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,271,481,801,1038,1245,1452,1655,1987,2189,2454",
-                        "endLines": "4,7,12,16,19,22,25,30,33,37,41",
-                        "endColumns": "10,10,10,10,10,10,10,10,10,10,10",
-                        "endOffsets": "266,476,796,1033,1240,1447,1650,1982,2184,2449,2722"
-                    },
-                    "to": {
-                        "startLines": "55,58,61,66,70,73,76,79,84,87,91",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "3511,3727,3937,4257,4494,4701,4908,5111,5443,5645,5910",
-                        "endLines": "57,60,65,69,72,75,78,83,86,90,94",
-                        "endColumns": "10,10,10,10,10,10,10,10,10,10,10",
-                        "endOffsets": "3722,3932,4252,4489,4696,4903,5106,5438,5640,5905,6178"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\d1b5570e68daae6ff10574d436211613\\transformed\\appcompat-1.6.1\\res\\values-v23\\values-v23.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\2e02934df89c33196c840ab0bb78e7bb\\transformed\\appcompat-1.6.1\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,20,34,35,36,39,43,44,45,46",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -68,6 +49,25 @@
                         "endLines": "4,5,6,7,21,35,36,37,40,44,45,46,47,51",
                         "endColumns": "134,134,74,86,12,12,118,126,12,12,114,106,112,12",
                         "endOffsets": "314,449,524,611,1349,2099,2218,2345,2567,2791,2906,3013,3126,3356"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\d4bde58f3ee011a2374c1e13d8a40171\\transformed\\material-1.9.0\\res\\values-v23\\values-v23.xml",
+                    "from": {
+                        "startLines": "2,5,8,13,17,20,23,26,31,34,38",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,271,481,801,1038,1245,1452,1655,1987,2189,2454",
+                        "endLines": "4,7,12,16,19,22,25,30,33,37,41",
+                        "endColumns": "10,10,10,10,10,10,10,10,10,10,10",
+                        "endOffsets": "266,476,796,1033,1240,1447,1650,1982,2184,2449,2722"
+                    },
+                    "to": {
+                        "startLines": "55,58,61,66,70,73,76,79,84,87,91",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "3511,3727,3937,4257,4494,4701,4908,5111,5443,5645,5910",
+                        "endLines": "57,60,65,69,72,75,78,83,86,90,94",
+                        "endColumns": "10,10,10,10,10,10,10,10,10,10,10",
+                        "endOffsets": "3722,3932,4252,4489,4696,4903,5106,5438,5640,5905,6178"
                     }
                 }
             ]

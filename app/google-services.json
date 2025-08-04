@@ -8,6 +8,43 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:634409104545:android:e1615444942ee734856ce0",
+        "android_client_info": {
+          "package_name": "com.blesense.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "634409104545-ihk1vkg5bgvih2ik79g8g9sfsbnojs2c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blesense.app",
+            "certificate_hash": "99409affda6bd4a5a22f5816cce02c50ea5ab5db"
+          }
+        },
+        {
+          "client_id": "634409104545-t9obf7nmakk2jhahr31jlaspva4858fb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsXEO72wRyVpobEpIhpQG4zSI5W5ZQWHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "634409104545-t9obf7nmakk2jhahr31jlaspva4858fb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:634409104545:android:9d244a218aedc4a4856ce0",
         "android_client_info": {
           "package_name": "com.example.ble_jetpackcompose"
@@ -15,11 +52,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "634409104545-0jrsg33257cfslbj56acobfuhc692kis.apps.googleusercontent.com",
+          "client_id": "634409104545-pakgulugu692pc0rhhmdrm3jmq8kqp3s.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.ble_jetpackcompose",
-            "certificate_hash": "9c053375ba5949d3f19bffcab3f2c27d3372fd16"
+            "certificate_hash": "99409affda6bd4a5a22f5816cce02c50ea5ab5db"
           }
         },
         {

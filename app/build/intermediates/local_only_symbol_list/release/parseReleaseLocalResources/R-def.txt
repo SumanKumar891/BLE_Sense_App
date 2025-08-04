@@ -60,7 +60,6 @@ drawable jack
 drawable jjack
 drawable lock
 drawable logo3
-drawable logo_square
 drawable logoble
 drawable logoble_round
 drawable logoblelastfinal
@@ -71,12 +70,15 @@ drawable open_box
 drawable parrot
 drawable party_popper_
 drawable pirate
+drawable plant
 drawable racing_bg7
+drawable refresh
 drawable robo_car_icon
 drawable scarlet_witch
 drawable scratch
 drawable search
 drawable settings
+drawable soil_sensor
 drawable soundoff
 drawable soundon
 drawable spider_man
@@ -87,6 +89,7 @@ drawable visibility
 drawable visibility_off
 drawable visibility_on
 drawable wasp
+drawable water_quality
 font fonts
 font helvetica
 font helvetica_bold
@@ -99,6 +102,7 @@ raw wrong
 raw yayy
 string app_name
 string default_web_client_id
+string firebase_database_url
 string gcm_defaultSenderId
 string google_api_key
 string google_app_id

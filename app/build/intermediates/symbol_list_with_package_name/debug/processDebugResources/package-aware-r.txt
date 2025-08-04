@@ -1,4 +1,4 @@
-com.example.ble_jetpackcompose
+com.blesense.app
 anim abc_fade_in
 anim abc_fade_out
 anim abc_grow_fade_in_from_bottom
@@ -2991,13 +2991,13 @@ drawable ic_switch
 drawable ic_thermometer
 drawable ic_turbo
 drawable icon_background
+drawable icons_leaf
 drawable inner
 drawable iron_man
 drawable jack
 drawable jjack
 drawable lock
 drawable logo3
-drawable logo_square
 drawable logoble
 drawable logoble_round
 drawable logoblelastfinal
@@ -3080,12 +3080,17 @@ drawable open_box
 drawable parrot
 drawable party_popper_
 drawable pirate
+drawable plant
 drawable racing_bg7
+drawable refresh
 drawable robo_car_icon
 drawable scarlet_witch
 drawable scratch
 drawable search
 drawable settings
+drawable soil3
+drawable soil_sensor
+drawable soil_sensor2
 drawable soundoff
 drawable soundon
 drawable spider_man
@@ -3099,6 +3104,7 @@ drawable visibility
 drawable visibility_off
 drawable visibility_on
 drawable wasp
+drawable waterquality
 font fonts
 font helvetica
 font helvetica_bold
@@ -3297,6 +3303,7 @@ id graph_wrap
 id group_divider
 id groups
 id header_title
+id hide_graphics_layer_in_inspector_tag
 id hide_ime_id
 id hide_in_inspector_tag
 id hideable
@@ -4029,8 +4036,6 @@ string mtrl_timepicker_cancel
 string mtrl_timepicker_confirm
 string navigation_menu
 string not_selected
-string off
-string on
 string password_toggle_content_description
 string path_password_eye
 string path_password_eye_mask_strike_through
@@ -4047,6 +4052,9 @@ string selected
 string server_client_id
 string side_sheet_accessibility_pane_title
 string side_sheet_behavior
+string state_empty
+string state_off
+string state_on
 string status_bar_notification_info_overflow
 string switch_role
 string tab

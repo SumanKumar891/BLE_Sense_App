@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ble_jetpackcompose.app-mergeReleaseResources-82:/values-v29/values-v29.xml",
+            "outputFile": "com.blesense.app-mergeReleaseResources-84:/values-v29/values-v29.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.11.1\\transforms\\3a7ac5d0ace7da425f9c718f57034b0a\\transformed\\core-splashscreen-1.0.0\\res\\values-v29\\values-v29.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\2a74b61f507a0857328e4bd6445e1a75\\transformed\\core-splashscreen-1.0.0\\res\\values-v29\\values-v29.xml",
                     "from": {
                         "startLines": "2,7",
                         "startColumns": "4,4",

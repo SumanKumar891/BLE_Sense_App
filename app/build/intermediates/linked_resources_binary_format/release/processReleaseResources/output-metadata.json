@@ -4,14 +4,14 @@
     "type": "LINKED_RESOURCES_BINARY_FORMAT",
     "kind": "Directory"
   },
-  "applicationId": "com.example.ble_jetpackcompose",
+  "applicationId": "com.blesense.app",
   "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 1,
+      "versionCode": 3,
       "versionName": "1.0",
       "outputFile": "linked-resources-binary-format-release.ap_"
     }
