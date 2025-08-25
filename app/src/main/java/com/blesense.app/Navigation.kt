@@ -6,8 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,35 +33,23 @@ fun AppNavigation(navController: NavHostController) {
     // Initialize BluetoothScanViewModel with factory
     val bluetoothViewModel: BluetoothScanViewModel<Any?> by activity.viewModels { BluetoothScanViewModelFactory(application) }
 
-    // Check if system is in dark mode
-    val systemDarkMode = isSystemInDarkTheme()
-
     // Initialize ThemeManager with system theme on app start
-    LaunchedEffect(Unit) {
-        ThemeManager.initializeWithSystemTheme(systemDarkMode)
-    }
-
-    // Check authentication state when the app starts
-    LaunchedEffect(Unit) {
-        if (authViewModel.isUserAuthenticated()) {
-            // Navigate to home screen if user is authenticated
-            navController.navigate("home_screen") {
-                popUpTo("splash_screen") { inclusive = true }
-            }
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        ThemeManager.run { initializeWithSystemTheme(isSystemInDarkTheme()) }
+//    }
 
     // Handle authentication state changes
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                // Navigate to home screen on successful authentication
-                navController.navigate("home_screen") {
+                // Navigate to intermediate screen on successful authentication
+                navController.navigate("intermediate_screen") {
                     popUpTo("first_screen") { inclusive = true }
+                    popUpTo("splash_screen") { inclusive = true }
                 }
             }
             is AuthState.Error -> {
-                // Handle error if needed
+                // Handle error if needed (e.g., show a toast)
             }
             is AuthState.Idle -> {
                 // Navigate to first screen if not on splash or first screen
@@ -78,15 +66,13 @@ fun AppNavigation(navController: NavHostController) {
     // Define navigation graph
     NavHost(
         navController = navController,
-        // Set start destination based on authentication status
-        startDestination = if (authViewModel.isUserAuthenticated()) "home_screen" else "splash_screen"
+        startDestination = if (authViewModel.isUserAuthenticated()) "intermediate_screen" else "splash_screen"
     ) {
         // Splash screen route
         composable("splash_screen") {
             SplashScreen(
                 onNavigateToLogin = {
                     if (!authViewModel.isUserAuthenticated()) {
-                        // Navigate to first screen if not authenticated
                         navController.navigate("first_screen") {
                             popUpTo("splash_screen") { inclusive = true }
                         }
@@ -95,19 +81,16 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // First screen route (likely onboarding or welcome screen)
+        // First screen route
         composable("first_screen") {
             AnimatedFirstScreen(
                 onNavigateToLogin = {
-                    // Navigate to login screen
                     navController.navigate("login")
                 },
                 onNavigateToSignup = {
-                    // Navigate to register screen
                     navController.navigate("register")
                 },
                 onGuestSignIn = {
-                    // Sign in as guest
                     authViewModel.signInAsGuest()
                 }
             )
@@ -118,12 +101,10 @@ fun AppNavigation(navController: NavHostController) {
             LoginScreen(
                 viewModel = authViewModel,
                 onNavigateToRegister = {
-                    // Navigate to register screen
                     navController.navigate("register")
                 },
                 onNavigateToHome = {
-                    // Navigate to home screen, clearing back stack
-                    navController.navigate("home_screen") {
+                    navController.navigate("intermediate_screen") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -135,18 +116,37 @@ fun AppNavigation(navController: NavHostController) {
             RegisterScreen(
                 viewModel = authViewModel,
                 onNavigateToLogin = {
-                    // Navigate to login screen, clearing register screen
                     navController.navigate("login") {
                         popUpTo("register") { inclusive = true }
                     }
                 },
                 onNavigateToHome = {
-                    // Navigate to home screen, clearing back stack
-                    navController.navigate("home_screen") {
+                    navController.navigate("intermediate_screen") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
             )
+        }
+
+        // Intermediate screen route
+        composable("intermediate_screen") {
+            IntermediateScreen(
+                navController = navController,
+                isDarkMode = ThemeManager.isDarkMode.collectAsState().value
+            )
+        }
+
+        // Home screen route
+        composable("home_screen") {
+            MainScreen(
+                navController = navController,
+                bluetoothViewModel = bluetoothViewModel
+            )
+        }
+
+        // Chat screen route
+        composable("chat_screen") {
+            ChatScreen(navController = navController)
         }
 
         // Game activity screen route
@@ -159,7 +159,7 @@ fun AppNavigation(navController: NavHostController) {
             GameActivityScreen(
                 activity = activity,
                 onBackToHome = {
-                    navController.navigate("home_screen") {
+                    navController.navigate("intermediate_screen") {
                         popUpTo("game_screen") { inclusive = true }
                     }
                 }
@@ -186,16 +186,15 @@ fun AppNavigation(navController: NavHostController) {
             ModernSettingsScreen(
                 viewModel = authViewModel,
                 onSignOut = {
-                    // Navigate to first screen on sign out, clearing home screen
                     navController.navigate("first_screen") {
-                        popUpTo("home_screen") { inclusive = true }
+                        popUpTo("intermediate_screen") { inclusive = true }
                     }
                 },
                 navController = navController
             )
         }
 
-        // Advertising data screen route with arguments
+        // Advertising data screen route
         composable(
             route = "advertising/{deviceName}/{deviceAddress}/{sensorType}/{deviceId}",
             arguments = listOf(
@@ -205,27 +204,21 @@ fun AppNavigation(navController: NavHostController) {
                 navArgument("deviceId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            // Extract navigation arguments
             val deviceName = backStackEntry.arguments?.getString("deviceName") ?: ""
             val deviceAddress = backStackEntry.arguments?.getString("deviceAddress") ?: ""
-            backStackEntry.arguments?.getString("sensorType") ?: ""
+            val sensorType = backStackEntry.arguments?.getString("sensorType") ?: ""
             val deviceId = backStackEntry.arguments?.getString("deviceId") ?: ""
-            // Initialize BluetoothScanViewModel for this screen
-            val viewModel: BluetoothScanViewModel<Any?> = viewModel(factory = BluetoothScanViewModelFactory(application))
-            // Observe devices
-            val devices by viewModel.devices.collectAsState()
-            // Find device by address
-            devices.find { it.address == deviceAddress }
 
             AdvertisingDataScreen(
                 deviceAddress = deviceAddress,
                 deviceName = deviceName,
                 navController = navController,
-                deviceId = deviceId
+                deviceId = deviceId,
+                viewModel = bluetoothViewModel
             )
         }
 
-        // Chart screen route with device address argument
+        // Chart screen route
         composable(
             route = "chart_screen/{deviceAddress}",
             arguments = listOf(
@@ -238,8 +231,14 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Second chart screen route with title and value arguments
-        composable("chart_screen_2/{title}/{value}") { backStackEntry ->
+        // Second chart screen route
+        composable(
+            route = "chart_screen_2/{title}/{value}",
+            arguments = listOf(
+                navArgument("title") { type = NavType.StringType },
+                navArgument("value") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
             val title = backStackEntry.arguments?.getString("title")
             val value = backStackEntry.arguments?.getString("value")
 
@@ -251,14 +250,6 @@ fun AppNavigation(navController: NavHostController) {
             WaterQualityScreen(
                 navController = navController,
                 viewModel = bluetoothViewModel as BluetoothScanViewModel<Any>
-            )
-        }
-
-        // Home screen route
-        composable("home_screen") {
-            MainScreen(
-                navController = navController,
-                bluetoothViewModel = bluetoothViewModel
             )
         }
     }

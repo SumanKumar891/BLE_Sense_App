@@ -1,10 +1,6 @@
-// Robotcontrol with horn and double joystick 20/05/25
-@file:Suppress("DEPRECATION")
+@file:Suppress("DEPRECATION", "UseCompatLoadingForDrawables")
 package com.blesense.app
 
-// Suppress warnings for mixed Material and Material3 library usage
-//noinspection UsingMaterialAndMaterial3Libraries
-//noinspection UsingMaterialAndMaterial3Libraries
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -80,7 +76,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -96,7 +91,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
@@ -106,6 +100,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.io.OutputStream
 import java.util.UUID
 import kotlin.random.Random
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.drawable.toBitmap
 
 // Enum to represent Bluetooth scanning states
 enum class ScanState {
@@ -114,22 +110,20 @@ enum class ScanState {
 
 // ================= BLUETOOTH SCANNING VIEW MODEL =================
 class ClassicBluetoothViewModel : ViewModel() {
-    // Using StateFlow for better state handling
-    private val _devices = MutableStateFlow<List<BluetoothDevice>>(emptyList()) // List of discovered Bluetooth devices
-    val devices: StateFlow<List<BluetoothDevice>> = _devices.asStateFlow() // Public StateFlow for devices
-    private val _scanState = MutableStateFlow(ScanState.IDLE) // Current scanning state
-    val scanState: StateFlow<ScanState> = _scanState.asStateFlow() // Public StateFlow for scan state
-    internal val _errorMessage = MutableStateFlow<String?>(null) // Error message for Bluetooth operations
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow() // Public StateFlow for error message
+    private val _devices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    val devices: StateFlow<List<BluetoothDevice>> = _devices.asStateFlow()
+    private val _scanState = MutableStateFlow(ScanState.IDLE)
+    val scanState: StateFlow<ScanState> = _scanState.asStateFlow()
+    internal val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
-        BluetoothAdapter.getDefaultAdapter() // Get default Bluetooth adapter
+        BluetoothAdapter.getDefaultAdapter()
     }
-    private var receiverRegistered = false // Track if BroadcastReceiver is registered
+    private var receiverRegistered = false
     private val deviceReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context, intent: Intent) {
             when (intent.action) {
                 BluetoothDevice.ACTION_FOUND -> {
-                    // Handle discovered device
                     val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
                     } else {
@@ -137,7 +131,6 @@ class ClassicBluetoothViewModel : ViewModel() {
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     }
                     device?.let {
-                        // Update devices list without duplicates
                         val currentDevices = _devices.value.toMutableList()
                         if (!currentDevices.contains(device)) {
                             currentDevices.add(device)
@@ -146,14 +139,12 @@ class ClassicBluetoothViewModel : ViewModel() {
                     }
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    // Update state when discovery finishes
                     _scanState.value = ScanState.IDLE
                 }
             }
         }
     }
 
-    // Start Bluetooth device discovery
     @RequiresPermission(allOf = [
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT
@@ -167,7 +158,6 @@ class ClassicBluetoothViewModel : ViewModel() {
             _errorMessage.value = "Bluetooth is disabled"
             return
         }
-        // Check for required Bluetooth permissions
         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) ==
                     PackageManager.PERMISSION_GRANTED &&
@@ -184,10 +174,9 @@ class ClassicBluetoothViewModel : ViewModel() {
             return
         }
         _scanState.value = ScanState.SCANNING
-        _devices.value = emptyList() // Clear previous devices
-        _errorMessage.value = null // Clear previous errors
+        _devices.value = emptyList()
+        _errorMessage.value = null
         if (!receiverRegistered) {
-            // Register BroadcastReceiver for device discovery
             val filter = IntentFilter().apply {
                 addAction(BluetoothDevice.ACTION_FOUND)
                 addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
@@ -198,17 +187,16 @@ class ClassicBluetoothViewModel : ViewModel() {
         if (bluetoothAdapter!!.isDiscovering) {
             bluetoothAdapter!!.cancelDiscovery()
         }
-        bluetoothAdapter!!.startDiscovery() // Start Bluetooth discovery
+        bluetoothAdapter!!.startDiscovery()
     }
 
-    // Stop Bluetooth device discovery
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     fun stopScan(context: Context) {
         _scanState.value = ScanState.IDLE
-        bluetoothAdapter?.cancelDiscovery() // Cancel ongoing discovery
+        bluetoothAdapter?.cancelDiscovery()
         if (receiverRegistered) {
             try {
-                context.unregisterReceiver(deviceReceiver) // Unregister BroadcastReceiver
+                context.unregisterReceiver(deviceReceiver)
                 receiverRegistered = false
             } catch (e: Exception) {
                 Log.e("ClassicBT", "Error unregistering receiver: ${e.message}")
@@ -216,16 +204,13 @@ class ClassicBluetoothViewModel : ViewModel() {
         }
     }
 
-    // Clear error message
     fun clearError() {
         _errorMessage.value = null
     }
 
-    // Clean up resources when ViewModel is cleared
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     override fun onCleared() {
         super.onCleared()
-        // Cancel discovery to prevent memory leaks
         bluetoothAdapter?.cancelDiscovery()
     }
 }
@@ -245,16 +230,13 @@ fun Activity.enableImmersiveMode() {
 // ================= ROBOT CONTROL ACTIVITY =================
 class RobotControlCompose : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Lock to landscape before super.onCreate()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        // Make the activity fullscreen (hides notification bar)
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
         super.onCreate(savedInstanceState)
         setContent {
-            // Apply MaterialTheme and set up the UI
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -266,7 +248,6 @@ class RobotControlCompose : ComponentActivity() {
         }
     }
 
-    // Handle window focus changes to maintain immersive mode
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -274,25 +255,11 @@ class RobotControlCompose : ComponentActivity() {
         }
     }
 
-    // Re-apply immersive mode on resume
     override fun onResume() {
         super.onResume()
         enableImmersiveMode()
     }
 
-    // Helper function to enable immersive mode
-    private fun enableImmersiveMode() {
-        window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_FULLSCREEN
-                )
-    }
-
-    // Maintain landscape orientation on configuration changes
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -301,16 +268,14 @@ class RobotControlCompose : ComponentActivity() {
 
 // ================= ROBOT CONTROL VIEW MODEL =================
 open class RobotControlViewModel : ViewModel() {
-    private var outputStream: OutputStream? = null // Bluetooth output stream
-    // Create connection state flow
-    private val _isConnected = MutableStateFlow(false) // Connection status
-    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow() // Public StateFlow for connection status
+    private var outputStream: OutputStream? = null
+    private val _isConnected = MutableStateFlow(false)
+    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
     init {
-        initBluetooth() // Initialize Bluetooth on ViewModel creation
+        initBluetooth()
     }
 
-    // Initialize Bluetooth connection
     private fun initBluetooth() {
         try {
             outputStream = BluetoothConnectionManager.bluetoothSocket?.outputStream
@@ -320,22 +285,18 @@ open class RobotControlViewModel : ViewModel() {
         }
     }
 
-    // Check if Bluetooth is connected
     open fun isBluetoothConnected(): Boolean {
         return BluetoothConnectionManager.isConnected()
     }
 
-    // Send command to Bluetooth device
     open fun sendCommand(command: String) {
         try {
             Log.d("RobotCommand", "Sending command: $command")
-            // Check if socket is still connected and re-initialize if needed
             if (!isBluetoothConnected()) {
                 Log.e("RobotCommand", "Bluetooth not connected!")
                 _isConnected.value = false
                 return
             }
-            // Get the current output stream or re-initialize
             if (outputStream == null) {
                 outputStream = BluetoothConnectionManager.bluetoothSocket?.outputStream
                 if (outputStream == null) {
@@ -343,15 +304,12 @@ open class RobotControlViewModel : ViewModel() {
                     return
                 }
             }
-            // Send the command
             outputStream?.write(command.toByteArray())
             outputStream?.flush()
             Log.d("RobotCommand", "Command sent successfully")
         } catch (e: Exception) {
             Log.e("RobotCommand", "Failed to send command", e)
-            // Reset connection state on error
             _isConnected.value = false
-            // Try to refresh the output stream
             try {
                 outputStream = BluetoothConnectionManager.bluetoothSocket?.outputStream
             } catch (innerEx: Exception) {
@@ -360,7 +318,6 @@ open class RobotControlViewModel : ViewModel() {
         }
     }
 
-    // Handle sensor click and simulate data
     open fun handleSensorClick(sensorName: String, onDataReceived: (String, String) -> Unit) {
         if (isBluetoothConnected()) {
             when (sensorName) {
@@ -377,7 +334,6 @@ open class RobotControlViewModel : ViewModel() {
         }
     }
 
-    // Generate random sensor data for testing
     private fun generateRandomRawData(): ByteArray {
         val temperature = Random.nextInt(20, 40).toByte()
         val humidity = Random.nextInt(40, 80).toByte()
@@ -387,40 +343,57 @@ open class RobotControlViewModel : ViewModel() {
 
 // Fake ViewModel for preview purposes
 class FakeRobotControlViewModel : RobotControlViewModel() {
-    override fun isBluetoothConnected(): Boolean = true // Simulate connected state
-    override fun sendCommand(command: String) {} // No-op for commands
+    override fun isBluetoothConnected(): Boolean = true
+    override fun sendCommand(command: String) {}
     override fun handleSensorClick(sensorName: String, onDataReceived: (String, String) -> Unit) {
-        onDataReceived("Raw Data: [20, 40]", "Temp: 20°C, Humidity: 40%") // Simulate sensor data
+        onDataReceived("Raw Data: [20, 40]", "Temp: 20°C, Humidity: 40%")
     }
 }
 
 // ================= DEVICE SELECTION DIALOG =================
 @Composable
 fun DeviceSelectionDialog(
-    devices: List<BluetoothDevice>, // List of discovered devices
-    isScanning: Boolean, // Scanning state
-    onDeviceSelected: (String) -> Unit, // Callback for device selection
-    onDismissRequest: () -> Unit // Callback for dialog dismissal
+    devices: List<BluetoothDevice>,
+    isScanning: Boolean,
+    onDeviceSelected: (String) -> Unit,
+    onDismissRequest: () -> Unit
 ) {
+    val isDarkMode by ThemeManager.isDarkMode.collectAsState()
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    val textColor = if (isDarkMode) Color.White else Color.Black
+    val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
+
     Dialog(onDismissRequest = onDismissRequest) {
-        Card(modifier = Modifier.width(300.dp)) {
+        Card(
+            modifier = Modifier.width(300.dp),
+            backgroundColor = cardBackgroundColor
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Select a Device", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Select a Device",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 if (isScanning) {
-                    // Show scanning indicator
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Scanning for devices...")
+                        Text(
+                            text = "Scanning for devices...",
+                            color = textColor
+                        )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-                // Device list or empty state
                 if (devices.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -430,7 +403,7 @@ fun DeviceSelectionDialog(
                     ) {
                         Text(
                             text = if (isScanning) "Searching..." else "No devices found",
-                            color = Color.Gray,
+                            color = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -443,29 +416,32 @@ fun DeviceSelectionDialog(
                         items(devices) { device ->
                             DeviceItem(
                                 device = device,
-                                onClick = { onDeviceSelected(device.address) }
+                                onClick = { onDeviceSelected(device.address) },
+                                textColor = textColor
                             )
-                            Divider(color = Color.LightGray)
+                            Divider(color = dividerColor)
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                // Dialog buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismissRequest) {
-                        Text("Cancel")
+                        Text(
+                            text = "Cancel",
+                            color = textColor
+                        )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
-                        onClick = {
-                            // Close dialog
-                            onDismissRequest()
-                        }
+                        onClick = { onDismissRequest() }
                     ) {
-                        Text("Close")
+                        Text(
+                            text = "Close",
+                            color = if (isDarkMode) Color.White else Color.Black
+                        )
                     }
                 }
             }
@@ -473,9 +449,12 @@ fun DeviceSelectionDialog(
     }
 }
 
-// Composable for individual device item in the dialog
 @Composable
-private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
+private fun DeviceItem(
+    device: BluetoothDevice,
+    onClick: () -> Unit,
+    textColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -484,7 +463,7 @@ private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
     ) {
         val deviceName = remember(device) {
             try {
-                device.name ?: "Unknown Device" // Get device name or fallback
+                device.name ?: "Unknown Device"
             } catch (e: SecurityException) {
                 "Unknown Device"
             }
@@ -492,12 +471,13 @@ private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
         Text(
             text = deviceName,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
+            fontSize = 16.sp,
+            color = textColor
         )
         Text(
             text = device.address,
             fontSize = 14.sp,
-            color = Color.Gray
+            color = if (textColor == Color.White) Color(0xFFB0B0B0) else Color.Gray
         )
     }
 }
@@ -505,35 +485,39 @@ private fun DeviceItem(device: BluetoothDevice, onClick: () -> Unit) {
 // ================= ROBOT CONTROL SCREEN =================
 @Composable
 fun RobotControlScreen(
-    viewModel: RobotControlViewModel = viewModel(), // ViewModel for robot control
-    onBackPressed: () -> Unit // Callback for back button
+    viewModel: RobotControlViewModel = viewModel(),
+    onBackPressed: () -> Unit
 ) {
     val context = LocalContext.current
-    val bluetoothViewModel: ClassicBluetoothViewModel = viewModel() // ViewModel for Bluetooth scanning
+    val bluetoothViewModel: ClassicBluetoothViewModel = viewModel()
     val configuration = LocalConfiguration.current
-    // Track connection state
     var isConnected by remember { mutableStateOf(BluetoothConnectionManager.isConnected()) }
+    val isDarkMode by ThemeManager.isDarkMode.collectAsState()
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF2F2F7)
+    val textColor = if (isDarkMode) Color.White else Color.Black
+    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray
+    val iconTint = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
+
     if (configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
         LaunchedEffect(Unit) {
-            // Optional: Show a message or handle rotation
+            // Optional: Handle rotation
         }
     }
-    var selectedSensor by remember { mutableStateOf(SensorItem(0, "Select Sensor")) } // Selected sensor state
-    var showDialog by remember { mutableStateOf(false) } // Sensor data dialog visibility
-    var dialogContent by remember { mutableStateOf("") } // Sensor data dialog content
-    var showDeviceDialog by remember { mutableStateOf(false) } // Device selection dialog visibility
-    // State for scanning and devices
+    var selectedSensor by remember { mutableStateOf(SensorItem(0, "Select Sensor")) }
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogContent by remember { mutableStateOf("") }
+    var showDeviceDialog by remember { mutableStateOf(false) }
     val scanState by bluetoothViewModel.scanState.collectAsState()
     val devices by bluetoothViewModel.devices.collectAsState()
     val errorMessage by bluetoothViewModel.errorMessage.collectAsState()
-    // Check connection status periodically
+
     LaunchedEffect(Unit) {
         while (true) {
             isConnected = BluetoothConnectionManager.isConnected()
-            delay(1000) // Check every second
+            delay(1000)
         }
     }
-    // Define Bluetooth permissions based on Android version
+
     val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
@@ -546,7 +530,7 @@ fun RobotControlScreen(
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
-    // Launcher for requesting Bluetooth permissions
+
     val permissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -558,14 +542,13 @@ fun RobotControlScreen(
             Toast.makeText(context, "Bluetooth permissions required", Toast.LENGTH_SHORT).show()
         }
     }
-    // Launcher for enabling Bluetooth
+
     val bluetoothEnableLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         val bluetoothEnabled = bluetoothAdapter?.isEnabled == true
         if (bluetoothEnabled) {
-            // Check permissions before scanning
             val hasPermissions = bluetoothPermissions.all {
                 ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
             }
@@ -580,7 +563,6 @@ fun RobotControlScreen(
         }
     }
 
-    // List of available sensors
     val sensorData = listOf(
         SensorItem(0, "Select Sensor"),
         SensorItem(R.drawable.ic_thermometer, "Temperature Sensor"),
@@ -591,9 +573,8 @@ fun RobotControlScreen(
         SensorItem(R.drawable.ic_switch, "Switch Sensor")
     )
 
-    // Background image for the screen
     val backgroundPainter = painterResource(id = R.drawable.racing_bg7)
-    // Clean up scanner when leaving the screen
+
     DisposableEffect(Unit) {
         onDispose {
             if (scanState == ScanState.SCANNING) {
@@ -602,9 +583,11 @@ fun RobotControlScreen(
         }
     }
 
-    // Main layout
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+    ) {
         Image(
             painter = backgroundPainter,
             contentDescription = null,
@@ -612,22 +595,19 @@ fun RobotControlScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 🔙 Back Button and Connection Status - Top Left in same row
         Row(
             modifier = Modifier
-                .align(Alignment.TopStart)
+                .fillMaxWidth()
                 .padding(16.dp),
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button
             BackButton(
                 modifier = Modifier.size(60.dp),
-                onClick = onBackPressed
+                onClick = onBackPressed,
+                isDarkMode = isDarkMode
             )
-
             Spacer(modifier = Modifier.width(8.dp))
-
-            // Connection Status Indicator
             Box(
                 modifier = Modifier
                     .background(
@@ -645,14 +625,11 @@ fun RobotControlScreen(
             }
         }
 
-        // 🔵 Bluetooth Button - Top Right
         BluetoothButton(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp),
+                .padding(top = 16.dp, end = 16.dp),
             onClick = {
-                Log.d("BluetoothButton", "Clicked")
-                // If already connected, disconnect first
                 if (BluetoothConnectionManager.isConnected()) {
                     BluetoothConnectionManager.disconnect()
                     Toast.makeText(context, "Disconnected from device", Toast.LENGTH_SHORT).show()
@@ -660,38 +637,31 @@ fun RobotControlScreen(
                 }
                 val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
                 if (bluetoothAdapter == null) {
-                    Log.e("BluetoothButton", "Bluetooth not supported")
                     Toast.makeText(context, "Bluetooth not supported", Toast.LENGTH_SHORT).show()
                     return@BluetoothButton
                 }
-                // Check if Bluetooth is enabled
                 if (!bluetoothAdapter.isEnabled) {
-                    Log.d("BluetoothButton", "Bluetooth disabled, requesting enable...")
                     val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                     bluetoothEnableLauncher.launch(enableBtIntent)
                 } else {
-                    Log.d("BluetoothButton", "Bluetooth enabled, checking permissions...")
-                    // Check permissions
                     val hasPermissions = bluetoothPermissions.all {
                         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
                     }
                     if (hasPermissions) {
-                        Log.d("BluetoothButton", "Permissions granted, starting scan...")
                         bluetoothViewModel.startScan(context)
                         showDeviceDialog = true
                     } else {
-                        Log.d("BluetoothButton", "Requesting permissions...")
                         permissionsLauncher.launch(bluetoothPermissions)
                     }
                 }
-            }
+            },
+            isDarkMode = isDarkMode
         )
 
-        // 🎯 SensorSpinner - Center-Top
         SensorSpinner(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(top = 60.dp), // Moved down to accommodate connection status
+                .padding(top = 60.dp),
             sensorData = sensorData,
             selectedSensor = selectedSensor,
             onSensorSelected = { sensor ->
@@ -702,53 +672,54 @@ fun RobotControlScreen(
                         showDialog = true
                     }
                 }
-            }
+            },
+            isDarkMode = isDarkMode
         )
 
-        // 🔴 HornButton - Bottom Right
         HornButton(
             modifier = Modifier.align(Alignment.BottomEnd),
             isBluetoothConnected = isConnected,
             onHornActive = { isActive ->
                 if (isActive) {
-                    viewModel.sendCommand("H") // Horn ON
+                    viewModel.sendCommand("H")
                 } else {
-                    viewModel.sendCommand("C") // Horn OFF
+                    viewModel.sendCommand("C")
                 }
-            }
+            },
+            isDarkMode = isDarkMode
         )
 
-        // 🕹️ Left Joystick (Up/Down) - Center Left
         VerticalJoystick(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(start = 32.dp), // Increased from 16.dp
+                .padding(start = 32.dp),
             onDirectionChange = { command ->
                 viewModel.sendCommand(command)
-            }
+            },
+            isDarkMode = isDarkMode
         )
 
-        // 🕹️ Right Joystick (Left/Right) - Center Right
         HorizontalJoystick(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = 32.dp), // Increased from 16.dp
+                .padding(end = 32.dp),
             onDirectionChange = { direction ->
                 when (direction) {
                     "L" -> viewModel.sendCommand("L")
                     "R" -> viewModel.sendCommand("R")
                     else -> viewModel.sendCommand("C")
                 }
-            }
+            },
+            isDarkMode = isDarkMode
         )
     }
 
-    // 💬 Dialogs
     if (showDialog) {
         SensorDataDialog(
             sensorName = selectedSensor.name,
             content = dialogContent,
-            onDismiss = { showDialog = false }
+            onDismiss = { showDialog = false },
+            isDarkMode = isDarkMode
         )
     }
     if (showDeviceDialog) {
@@ -766,7 +737,6 @@ fun RobotControlScreen(
         )
     }
 
-    // Show error toast if there's an error
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -775,43 +745,45 @@ fun RobotControlScreen(
     }
 }
 
-// Back button composable
 @Composable
 fun BackButton(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isDarkMode: Boolean
 ) {
     val scale by animateFloatAsState(targetValue = 1f, animationSpec = tween(300), label = "")
+    val buttonBackgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF007AFF).copy(alpha = 0.3f)
     Box(
         modifier = modifier
             .size(60.dp)
             .clip(CircleShape)
-            .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
+            .background(buttonBackgroundColor, CircleShape)
             .clickable { onClick() }
             .scale(scale),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_back_arrow), // Replace with your back icon resource
+            painter = painterResource(id = R.drawable.ic_back_arrow),
             contentDescription = "Back Button",
-            tint = Color.White,
+            tint = if (isDarkMode) Color.White else Color.White,
             modifier = Modifier.size(30.dp)
         )
     }
 }
 
-// Bluetooth button composable
 @Composable
 fun BluetoothButton(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isDarkMode: Boolean
 ) {
     val scale by animateFloatAsState(targetValue = 1f, animationSpec = tween(300), label = "")
+    val buttonBackgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF007AFF).copy(alpha = 0.3f)
     Box(
         modifier = modifier
             .size(80.dp)
             .clip(CircleShape)
-            .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
+            .background(buttonBackgroundColor, CircleShape)
             .clickable { onClick() }
             .scale(scale),
         contentAlignment = Alignment.Center
@@ -819,17 +791,18 @@ fun BluetoothButton(
         Image(
             painter = painterResource(id = R.drawable.ic_bluetooth),
             contentDescription = "Bluetooth Button",
-            modifier = Modifier.size(50.dp)
+            modifier = Modifier.size(50.dp),
+            colorFilter = if (isDarkMode) ColorFilter.tint(Color.White) else ColorFilter.tint(Color.White)
         )
     }
 }
 
-// Horn button composable
 @Composable
 fun HornButton(
     modifier: Modifier = Modifier,
     isBluetoothConnected: Boolean,
-    onHornActive: (Boolean) -> Unit
+    onHornActive: (Boolean) -> Unit,
+    isDarkMode: Boolean
 ) {
     val context = LocalContext.current
     var isHornPressed by remember { mutableStateOf(false) }
@@ -838,10 +811,9 @@ fun HornButton(
         animationSpec = tween(300),
         label = ""
     )
-    // Background color that changes when pressed
     val backgroundColor by animateColorAsState(
         targetValue = if (isHornPressed) Color.Red.copy(alpha = 0.3f)
-        else Color.Gray.copy(alpha = 0.3f),
+        else if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF007AFF).copy(alpha = 0.3f),
         animationSpec = tween(300),
         label = "background color animation"
     )
@@ -868,9 +840,6 @@ fun HornButton(
                                 isHornPressed = false
                                 onHornActive(false)
                             }
-                        },
-                        onTap = {
-                            // Not used in this case
                         }
                     )
                 }
@@ -882,26 +851,28 @@ fun HornButton(
             painter = painterResource(id = R.drawable.ic_horn),
             contentDescription = "Horn Button",
             modifier = Modifier.size(50.dp),
-            colorFilter = if (isHornPressed) ColorFilter.tint(Color.Red) else null
+            colorFilter = if (isHornPressed) ColorFilter.tint(Color.Red) else if (isDarkMode) ColorFilter.tint(Color.White) else ColorFilter.tint(Color.White)
         )
     }
 }
 
-// ================= VERTICAL JOYSTICK (FORWARD/BACKWARD) =================
 @Composable
 fun VerticalJoystick(
     modifier: Modifier = Modifier,
-    onDirectionChange: (String) -> Unit
+    onDirectionChange: (String) -> Unit,
+    isDarkMode: Boolean
 ) {
     val density = LocalDensity.current
-    var offset by remember { mutableStateOf(Offset.Zero) } // Joystick position
-    val maxDistance = with(density) { 60.dp.toPx() } // Maximum drag distance
-    val deadZone = with(density) { 5.dp.toPx() } // Dead zone for small movements
-    var currentCommand by remember { mutableStateOf("C") } // Current command (U, D, C)
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val maxDistance = with(density) { 60.dp.toPx() }
+    val deadZone = with(density) { 5.dp.toPx() }
+    var currentCommand by remember { mutableStateOf("C") }
+    val joystickBackgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF007AFF).copy(alpha = 0.3f)
+    val joystickHandleColor = if (isDarkMode) Color(0xFF4A4A4A) else Color.White.copy(alpha = 0.8f)
     Box(
         modifier = modifier
-            .size(150.dp) // Increased from 120.dp
-            .background(Color.LightGray.copy(alpha = 0.3f), CircleShape)
+            .size(150.dp)
+            .background(joystickBackgroundColor, CircleShape)
             .clip(CircleShape)
             .pointerInput(Unit) {
                 detectDragGestures(
@@ -911,9 +882,9 @@ fun VerticalJoystick(
                         val newOffset = Offset(0f, newY)
                         offset = newOffset
                         val newCommand = when {
-                            newY < -deadZone -> "U" // Up
-                            newY > deadZone -> "D" // Down
-                            else -> "C" // Center
+                            newY < -deadZone -> "U"
+                            newY > deadZone -> "D"
+                            else -> "C"
                         }
                         if (newCommand != currentCommand) {
                             currentCommand = newCommand
@@ -934,28 +905,30 @@ fun VerticalJoystick(
         Box(
             modifier = Modifier
                 .offset { IntOffset(offset.x.toInt(), offset.y.toInt()) }
-                .size(90.dp) // Increased from 70.dp
-                .shadow(6.dp, CircleShape) // Increased shadow
-                .background(Color.LightGray.copy(alpha = 0.8f), CircleShape)
+                .size(90.dp)
+                .shadow(6.dp, CircleShape)
+                .background(joystickHandleColor, CircleShape)
         )
     }
 }
 
-// ================= HORIZONTAL JOYSTICK (LEFT/RIGHT) =================
 @Composable
 fun HorizontalJoystick(
     modifier: Modifier = Modifier,
-    onDirectionChange: (String) -> Unit
+    onDirectionChange: (String) -> Unit,
+    isDarkMode: Boolean
 ) {
     val density = LocalDensity.current
-    var offset by remember { mutableStateOf(Offset.Zero) } // Joystick position
-    val maxDistance = with(density) { 60.dp.toPx() } // Maximum drag distance
-    val deadZone = with(density) { 5.dp.toPx() } // Dead zone for small movements
-    var currentCommand by remember { mutableStateOf("C") } // Current command (L, R, C)
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val maxDistance = with(density) { 60.dp.toPx() }
+    val deadZone = with(density) { 5.dp.toPx() }
+    var currentCommand by remember { mutableStateOf("C") }
+    val joystickBackgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF007AFF).copy(alpha = 0.3f)
+    val joystickHandleColor = if (isDarkMode) Color(0xFF4A4A4A) else Color.White.copy(alpha = 0.8f)
     Box(
         modifier = modifier
-            .size(150.dp) // Increased from 120.dp
-            .background(Color.LightGray.copy(alpha = 0.3f), CircleShape)
+            .size(150.dp)
+            .background(joystickBackgroundColor, CircleShape)
             .clip(CircleShape)
             .pointerInput(Unit) {
                 detectDragGestures(
@@ -965,9 +938,9 @@ fun HorizontalJoystick(
                         val newOffset = Offset(newX, 0f)
                         offset = newOffset
                         val newCommand = when {
-                            newX < -deadZone -> "L" // Left
-                            newX > deadZone -> "R" // Right
-                            else -> "C" // Center
+                            newX < -deadZone -> "L"
+                            newX > deadZone -> "R"
+                            else -> "C"
                         }
                         if (newCommand != currentCommand) {
                             currentCommand = newCommand
@@ -988,58 +961,87 @@ fun HorizontalJoystick(
         Box(
             modifier = Modifier
                 .offset { IntOffset(offset.x.toInt(), offset.y.toInt()) }
-                .size(90.dp) // Increased from 70.dp
-                .shadow(6.dp, CircleShape) // Increased shadow
-                .background(Color.LightGray.copy(alpha = 0.8f), CircleShape)
+                .size(90.dp)
+                .shadow(6.dp, CircleShape)
+                .background(joystickHandleColor, CircleShape)
         )
     }
 }
 
-// Sensor spinner composable
 @SuppressLint("UseCompatLoadingForDrawables")
 @Composable
 fun SensorSpinner(
     modifier: Modifier = Modifier,
     sensorData: List<SensorItem>,
     selectedSensor: SensorItem,
-    onSensorSelected: (SensorItem) -> Unit
+    onSensorSelected: (SensorItem) -> Unit,
+    isDarkMode: Boolean
 ) {
-    var expanded by remember { mutableStateOf(false) } // Dropdown menu state
+    var expanded by remember { mutableStateOf(false) }
+    val backgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF007AFF).copy(alpha = 0.3f)
+    val textColor = if (isDarkMode) Color.White else Color.White
+    val dropdownBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    val dropdownTextColor = if (isDarkMode) Color.White else Color.Black
+    val iconColor = if (isDarkMode) Color.White else Color.Black
     val context = LocalContext.current
     Box(
         modifier = modifier.width(150.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = selectedSensor.name,
-            color = Color.White,
-            fontSize = 18.sp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
+                .background(backgroundColor, CircleShape)
                 .padding(12.dp)
                 .clickable { expanded = true }
-        )
+        ) {
+            if (selectedSensor.iconResId != 0) {
+                val drawable = context.resources.getDrawable(selectedSensor.iconResId, null)
+                Image(
+                    bitmap = drawable.toBitmap().asImageBitmap(),
+                    contentDescription = selectedSensor.name,
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(iconColor)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = selectedSensor.name,
+                color = textColor,
+                fontSize = 18.sp
+            )
+        }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.width(180.dp)
+            modifier = Modifier
+                .width(180.dp)
+                .background(dropdownBackgroundColor)
         ) {
             sensorData.forEach { sensor ->
-                DropdownMenuItem(onClick = {
-                    onSensorSelected(sensor)
-                    expanded = false
-                }) {
+                DropdownMenuItem(
+                    onClick = {
+                        onSensorSelected(sensor)
+                        expanded = false
+                    }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (sensor.iconResId != 0) {
                             val drawable = context.resources.getDrawable(sensor.iconResId, null)
                             Image(
                                 bitmap = drawable.toBitmap().asImageBitmap(),
                                 contentDescription = sensor.name,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
+                                colorFilter = ColorFilter.tint(iconColor)
                             )
+                        } else {
+                            Spacer(modifier = Modifier.size(24.dp))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = sensor.name, color = Color.Black)
+                        Text(
+                            text = sensor.name,
+                            color = dropdownTextColor
+                        )
                     }
                 }
             }
@@ -1047,7 +1049,6 @@ fun SensorSpinner(
     }
 }
 
-// Floating joystick composable (unused in current implementation)
 @SuppressLint("AutoboxingStateCreation")
 @Composable
 fun FloatingJoystickView(
@@ -1071,49 +1072,55 @@ fun FloatingJoystickView(
     )
 }
 
-// Sensor data dialog composable
 @Composable
-fun SensorDataDialog(sensorName: String, content: String, onDismiss: () -> Unit) {
+fun SensorDataDialog(
+    sensorName: String,
+    content: String,
+    onDismiss: () -> Unit,
+    isDarkMode: Boolean
+) {
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    val textColor = if (isDarkMode) Color.White else Color.Black
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .width(300.dp)
                 .padding(16.dp),
-            backgroundColor = Color.White
+            backgroundColor = cardBackgroundColor
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = sensorName, fontSize = 20.sp, color = Color.Black)
+                Text(
+                    text = sensorName,
+                    fontSize = 20.sp,
+                    color = textColor
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = content, fontSize = 16.sp, color = Color.Black)
+                Text(
+                    text = content,
+                    fontSize = 16.sp,
+                    color = textColor
+                )
             }
         }
     }
 }
 
-// Connect to a Bluetooth device
 @SuppressLint("MissingPermission")
 fun connectToDevice(context: Context, address: String) {
     val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     val device = bluetoothAdapter.getRemoteDevice(address)
-    val uuid = device.uuids?.firstOrNull()?.uuid ?: UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // Default SPP UUID
-    // First disconnect any existing connection
+    val uuid = device.uuids?.firstOrNull()?.uuid ?: UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     BluetoothConnectionManager.disconnect()
     Thread {
         try {
-            // Create a new socket
             val socket: BluetoothSocket = device.createRfcommSocketToServiceRecord(uuid)
-            // Cancel discovery to prevent connection slowdowns
             bluetoothAdapter.cancelDiscovery()
-            // Try to connect with timeout handling
             try {
-                // Connect to the device with a timeout
                 socket.connect()
             } catch (connectException: Exception) {
-                // Close the socket
                 try {
                     socket.close()
                 } catch (closeException: Exception) { }
-                // Try the fallback method for certain devices
                 try {
                     Log.d("BluetoothConnect", "Trying fallback connection...")
                     val fallbackSocket = createFallbackSocket(device)
@@ -1134,7 +1141,6 @@ fun connectToDevice(context: Context, address: String) {
                 }
                 throw connectException
             }
-            // Store the connected socket
             BluetoothConnectionManager.bluetoothSocket = socket
             (context as? Activity)?.runOnUiThread {
                 Toast.makeText(context, "Connected to ${device.name}", Toast.LENGTH_SHORT).show()
@@ -1148,10 +1154,8 @@ fun connectToDevice(context: Context, address: String) {
     }.start()
 }
 
-// Data class for sensor items
 data class SensorItem(val iconResId: Int, val name: String)
 
-// Fallback method using reflection for problematic Android devices
 @SuppressLint("MissingPermission", "DiscouragedPrivateApi")
 private fun createFallbackSocket(device: BluetoothDevice): BluetoothSocket? {
     try {
@@ -1166,23 +1170,21 @@ private fun createFallbackSocket(device: BluetoothDevice): BluetoothSocket? {
     return null
 }
 
-// Object to manage Bluetooth connection
 object BluetoothConnectionManager {
-    var bluetoothSocket: BluetoothSocket? = null // Current Bluetooth socket
+    var bluetoothSocket: BluetoothSocket? = null
     fun disconnect() {
         try {
-            bluetoothSocket?.close() // Close the socket
+            bluetoothSocket?.close()
             bluetoothSocket = null
         } catch (e: Exception) {
             Log.e("BluetoothManager", "Error closing socket: ${e.message}")
         }
     }
     fun isConnected(): Boolean {
-        return bluetoothSocket?.isConnected == true // Check if socket is connected
+        return bluetoothSocket?.isConnected == true
     }
 }
 
-// === PREVIEWS ===
 @Preview(showBackground = true)
 @Composable
 fun PreviewRobotControlScreen() {

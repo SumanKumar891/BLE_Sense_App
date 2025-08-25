@@ -23,8 +23,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -92,7 +90,7 @@ data class TranslatedAdvertisingText(
     val distance: String = "Distance",
     val objectDetected: String = "Object Detected",
     val steps: String = "Steps",
-    val ammonia: String = "Ammonia", // Added for ammonia sensor
+    val ammonia: String = "Ammonia",
     val resetSteps: String = "RESET STEPS",
     val warningTitle: String = "Warning",
     val warningMessage: String = "The %s has exceeded the threshold of %s!",
@@ -107,45 +105,35 @@ data class TranslatedAdvertisingText(
 // Main composable function for the Advertising Data Screen
 @Composable
 fun AdvertisingDataScreen(
-    deviceAddress: String, // Bluetooth device address
-    deviceName: String,   // Name of the Bluetooth device
-    navController: NavController, // Navigation controller for handling navigation
-    deviceId: String,     // Unique ID for the device
+    deviceAddress: String,
+    deviceName: String,
+    navController: NavController,
+    deviceId: String,
+    viewModel: BluetoothScanViewModel<Any?>,
 ) {
-    // Get the current context
     val context = LocalContext.current
-    // Cast context to Activity if possible
     val activity = context as? Activity
-
-    // Initialize ViewModel with factory
     val viewModel: BluetoothScanViewModel<Any> = viewModel(
         factory = remember { BluetoothScanViewModelFactory(context) }
     )
 
-    // Load persisted data for the device when deviceAddress changes
     LaunchedEffect(deviceAddress) {
         viewModel.loadPersistedData(deviceAddress)
     }
-    // Start Bluetooth scanning when activity is available
     LaunchedEffect(activity) {
         activity?.let {
             viewModel.startScan(it)
         }
     }
-    // Initialize MediaPlayer for alarm sound
     var mediaPlayer by remember { mutableStateOf(MediaPlayer.create(context, R.raw.nuclear_alarm)) }
 
-    // Collect theme and language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
-
-    // Collect device list and find current device
     val devices by viewModel.devices.collectAsState()
     val currentDevice by remember(devices, deviceAddress) {
         derivedStateOf { devices.find { it.address == deviceAddress } }
     }
 
-    // State for threshold input and alarm
     var thresholdValue by remember { mutableStateOf("") }
     var isAlarmActive by remember { mutableStateOf(false) }
     var showAlertDialog by remember { mutableStateOf(false) }
@@ -153,20 +141,17 @@ fun AdvertisingDataScreen(
     var isThresholdSet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Initialize MediaPlayer with looping enabled
     LaunchedEffect(Unit) {
         mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm).apply {
             isLooping = true
         }
     }
-    // Clean up MediaPlayer on dispose
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
         }
     }
 
-    // Blinking animation for alarm
     val isBlinking by remember(isAlarmActive) { derivedStateOf { isAlarmActive } }
     val blinkAlpha by animateFloatAsState(
         targetValue = if (isBlinking) 0.5f else 0f,
@@ -177,7 +162,6 @@ fun AdvertisingDataScreen(
         label = "blinkAlpha"
     )
 
-    // Derive ammonia value from sensor data
     val ammoniaValue by remember(currentDevice?.sensorData) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
@@ -189,10 +173,6 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Display ammonia value with animation
-    AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
-
-    // Debounce ammonia value updates
     var displayedAmmoniaValue by remember { mutableStateOf(0f) }
     val debouncedAmmoniaValue by remember(ammoniaValue) {
         derivedStateOf { ammoniaValue }
@@ -202,9 +182,6 @@ fun AdvertisingDataScreen(
         displayedAmmoniaValue = debouncedAmmoniaValue
     }
 
-    AmmoniaRingAnimation(ammoniaValue = displayedAmmoniaValue)
-
-    // Derive lux value from sensor data
     val luxValue by remember(currentDevice?.sensorData) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
@@ -216,9 +193,8 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Check thresholds for SHT40 and Ammonia sensors
     LaunchedEffect(currentDevice, thresholdValue, parameterType, isThresholdSet) {
-        delay(500L) // Debounce to prevent rapid updates
+        delay(500L)
         if (isThresholdSet) {
             val threshold = thresholdValue.toFloatOrNull()
             if (threshold != null) {
@@ -306,14 +282,12 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Clean up MediaPlayer on dispose
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer.release()
         }
     }
 
-    // Initialize translated text with cached values
     var translatedText by remember {
         mutableStateOf(
             TranslatedAdvertisingText(
@@ -350,12 +324,16 @@ fun AdvertisingDataScreen(
                 warningTitle = TranslationCache.get("Warning-$currentLanguage") ?: "Warning",
                 warningMessage = TranslationCache.get("Threshold Exceeded-$currentLanguage")
                     ?: "The %s has exceeded the threshold of %s!",
-                dismissButton = TranslationCache.get("Dismiss-$currentLanguage") ?: "Dismiss"
+                dismissButton = TranslationCache.get("Dismiss-$currentLanguage") ?: "Dismiss",
+                reflectanceValues = TranslationCache.get("Reflectance Values-$currentLanguage") ?: "Reflectance Values",
+                rawData = TranslationCache.get("Raw Data-$currentLanguage") ?: "Raw Data",
+                doTemperature = TranslationCache.get("DO Temp-$currentLanguage") ?: "DO Temp",
+                doPercentage = TranslationCache.get("DO %-$currentLanguage") ?: "DO %",
+                doValue = TranslationCache.get("DO Value-$currentLanguage") ?: "DO Value"
             )
         )
     }
 
-    // Preload translations when language changes
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
@@ -400,10 +378,8 @@ fun AdvertisingDataScreen(
         )
     }
 
-    // State for nutrient predictions
     var nutrientPredictions by remember { mutableStateOf<SoilNutrientModelHelper.NutrientPrediction?>(null) }
 
-    // Format display data based on sensor type
     val displayData by remember(currentDevice?.sensorData, translatedText, nutrientPredictions) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
@@ -467,7 +443,6 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Trigger nutrient prediction for optical sensor data
     LaunchedEffect(currentDevice?.sensorData) {
         val device = currentDevice
         if (device?.sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData) {
@@ -501,22 +476,15 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Define theme-based colors
     val backgroundGradient = if (isDarkMode) {
         Brush.verticalGradient(listOf(Color(0xFF1E1E1E), Color(0xFF424242)))
     } else {
         Brush.verticalGradient(listOf(Color(0xFF0A74DA), Color(0xFFADD8E6)))
     }
     val cardBackground = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF2A9EE5)
-    val cardGradient = if (isDarkMode) {
-        Brush.verticalGradient(listOf(Color(0xFF424242), Color(0xFF212121)))
-    } else {
-        Brush.verticalGradient(listOf(Color(0xFF2A9EE5), Color(0xFF076FB8)))
-    }
     val textColor = if (isDarkMode) Color.White else Color.White
     val buttonColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF0A74DA)
 
-    // Clean up scanning on dispose
     DisposableEffect(navController) {
         onDispose {
             viewModel.stopScan()
@@ -524,7 +492,6 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Main UI layout
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -532,7 +499,6 @@ fun AdvertisingDataScreen(
             .padding(WindowInsets.systemBars.asPaddingValues()),
         contentAlignment = Alignment.Center
     ) {
-        // Blinking red overlay for alarm
         if (isAlarmActive) {
             Box(
                 modifier = Modifier
@@ -544,12 +510,11 @@ fun AdvertisingDataScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())  // Enable vertical scrolling
+                .verticalScroll(rememberScrollState())
                 .padding(WindowInsets.systemBars.asPaddingValues()),
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header with navigation and title
             HeaderSection(
                 navController = navController,
                 viewModel = viewModel,
@@ -560,29 +525,25 @@ fun AdvertisingDataScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Device information section
             DeviceInfoSection(
                 deviceName = deviceName,
                 deviceAddress = deviceAddress,
                 deviceId = deviceId,
                 translatedText = translatedText,
                 cardBackground = cardBackground,
-                cardGradient = cardGradient,
+                cardGradient = Brush.verticalGradient(listOf(cardBackground, cardBackground.copy(alpha = 0.6f))),
                 textColor = textColor
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Display Lux sensor data if available
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.LuxSensorData) {
                 LuxSensorDisplay(
                     luxValue = luxValue,
-                    rawData = (currentDevice!!.sensorData as BluetoothScanViewModel.SensorData.LuxSensorData).rawData,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            // Display DO sensor data if available
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
                 val doData = currentDevice!!.sensorData as BluetoothScanViewModel.SensorData.DOSensorData
                 DOSensorDisplay(
@@ -592,45 +553,18 @@ fun AdvertisingDataScreen(
                 )
             }
 
-            // Display optical sensor data if available
-            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData) {
-                ResponsiveDataCards(
-                    data = displayData,
-                    cardBackground = Color(0xFF2A2A2A),
-                    cardGradient = Brush.verticalGradient(listOf(Color(0xFF424242), Color(0xFF212121))),
-                    textColor = Color.White,
-                    nutrientPredictions = nutrientPredictions
-                )
-            }
+            ResponsiveDataCards(
+                data = displayData,
+                cardBackground = cardBackground,
+                translatedText = translatedText,
+                textColor = textColor,
+                nutrientPredictions = nutrientPredictions
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Display threshold input for SHT40 or Ammonia sensors
-            val lis2dhData = currentDevice?.sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData
-            lis2dhData?.let {
-                LIS2DHDataCards(
-                    data = listOf(
-                        "X-Axis" to it.x,
-                        "Y-Axis" to it.y,
-                        "Z-Axis" to it.z,
-                    ),
-                    cardBackground = cardBackground,
-                    cardGradient = cardGradient,
-                    textColor = textColor
-                )
-            }
-
-            // Display SHT40 data and threshold input
-            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data) {
-                SHT40DataCards(
-                    data = displayData,
-                    cardBackground = Color(0xFF3E78B2),
-                    cardGradient = Brush.verticalGradient(listOf(Color(0xFF5FA8D3), Color(0xFF3E78B2))),
-                    textColor = Color.White
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data ||
+                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData) {
                 ThresholdInputSection(
                     thresholdValue = thresholdValue,
                     onThresholdChange = { thresholdValue = it },
@@ -644,30 +578,9 @@ fun AdvertisingDataScreen(
                         }
                     }
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Display threshold input for Ammonia sensor
-            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData) {
-                ThresholdInputSection(
-                    thresholdValue = thresholdValue,
-                    onThresholdChange = { thresholdValue = it },
-                    parameterType = parameterType,
-                    onParameterChange = { parameterType = it },
-                    isDarkMode = isDarkMode,
-                    sensorData = currentDevice?.sensorData,
-                    onConfirmThreshold = {
-                        if (thresholdValue.toFloatOrNull() != null) {
-                            isThresholdSet = true
-                        }
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Display reset steps button for StepCounterData
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.StepCounterData) {
                 ResetStepsButton(
                     viewModel = viewModel,
@@ -677,7 +590,6 @@ fun AdvertisingDataScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Download button for exporting data
             DownloadButton(
                 viewModel = viewModel,
                 deviceAddress = deviceAddress,
@@ -686,7 +598,6 @@ fun AdvertisingDataScreen(
                 translatedText = translatedText
             )
 
-            // Alert dialog for threshold exceedance
             if (showAlertDialog) {
                 AlertDialog(
                     onDismissRequest = {
@@ -743,7 +654,7 @@ fun AdvertisingDataScreen(
 // Composable for displaying ammonia sensor data
 @Composable
 fun AmmoniaSensorDisplay(
-    ammoniaValue: Float,  // Current ammonia value
+    ammoniaValue: Float,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -751,10 +662,8 @@ fun AmmoniaSensorDisplay(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Display ammonia ring animation
         AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
 
-        // Display current ammonia value with color-coded status
         Text(
             text = "%.1f ppm".format(ammoniaValue),
             style = MaterialTheme.typography.displayMedium,
@@ -773,7 +682,6 @@ fun AmmoniaRingAnimation(
     ammoniaValue: Float,
     modifier: Modifier = Modifier
 ) {
-    // Animate the fill percentage of the ring
     val animatedFill by animateFloatAsState(
         targetValue = (ammoniaValue / 100f).coerceIn(0f, 1f),
         animationSpec = spring(
@@ -783,12 +691,11 @@ fun AmmoniaRingAnimation(
         label = "ammoniaFill"
     )
 
-    // Animate color based on ammonia level
     val liquidColor by animateColorAsState(
         targetValue = when {
-            ammoniaValue <= 25 -> Color(0xFF4CAF50)  // Green - safe
-            ammoniaValue <= 50 -> Color(0xFFFFC107)  // Yellow - caution
-            else -> Color(0xFFF44336)               // Red - danger
+            ammoniaValue <= 25 -> Color(0xFF4CAF50)
+            ammoniaValue <= 50 -> Color(0xFFFFC107)
+            else -> Color(0xFFF44336)
         },
         animationSpec = tween(durationMillis = 300),
         label = "liquidColor"
@@ -805,7 +712,6 @@ fun AmmoniaRingAnimation(
             val radius = size.minDimension * 0.4f
             val ringWidth = size.minDimension * 0.1f
 
-            // Draw background ring
             drawArc(
                 color = Color(0xFF333333).copy(alpha = 0.3f),
                 startAngle = 270f,
@@ -816,11 +722,10 @@ fun AmmoniaRingAnimation(
                 style = Stroke(width = ringWidth)
             )
 
-            // Draw filled portion of the ring
             drawArc(
                 color = liquidColor.copy(alpha = 0.7f),
                 startAngle = 270f,
-                sweepAngle = -360f * animatedFill,  // Negative for counter-clockwise
+                sweepAngle = -360f * animatedFill,
                 useCenter = false,
                 size = Size(radius * 2, radius * 2),
                 topLeft = Offset(center.x - radius, center.y - radius),
@@ -828,7 +733,6 @@ fun AmmoniaRingAnimation(
             )
         }
 
-        // Display current value in the center
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "%.1f".format(ammoniaValue),
@@ -849,7 +753,6 @@ fun AmmoniaRingAnimation(
 @Composable
 fun LuxSensorDisplay(
     luxValue: Float,
-    rawData: String, // Raw sensor data
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -859,10 +762,8 @@ fun LuxSensorDisplay(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Display lux ring animation
         LuxRingAnimation(luxValue = luxValue)
 
-        // Display lux value with color-coded status
         Text(
             text = "%.0f LUX".format(luxValue),
             style = MaterialTheme.typography.displayMedium,
@@ -872,34 +773,6 @@ fun LuxSensorDisplay(
                 else -> Color.Green
             }
         )
-
-        // Display raw sensor data in a card
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            tonalElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Raw Sensor Data",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = rawData,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
     }
 }
 
@@ -909,9 +782,8 @@ fun LuxRingAnimation(
     luxValue: Float,
     modifier: Modifier = Modifier
 ) {
-    // Animate the fill percentage of the ring
     val animatedFill by animateFloatAsState(
-        targetValue = (luxValue / 20000f).coerceIn(0f, 1f), // Assuming 20,000 LUX max
+        targetValue = (luxValue / 20000f).coerceIn(0f, 1f),
         animationSpec = spring(
             dampingRatio = 0.5f,
             stiffness = 100f
@@ -919,12 +791,11 @@ fun LuxRingAnimation(
         label = "luxFill"
     )
 
-    // Animate color based on lux level
     val lightColor by animateColorAsState(
         targetValue = when {
-            luxValue > 10000 -> Color(0xFFF44336) // Red - very bright
-            luxValue > 5000 -> Color(0xFFFFC107)  // Yellow - bright
-            else -> Color(0xFF4CAF50)            // Green - normal
+            luxValue > 10000 -> Color(0xFFF44336)
+            luxValue > 5000 -> Color(0xFFFFC107)
+            else -> Color(0xFF4CAF50)
         },
         animationSpec = tween(durationMillis = 300),
         label = "lightColor"
@@ -941,7 +812,6 @@ fun LuxRingAnimation(
             val radius = size.minDimension * 0.4f
             val ringWidth = size.minDimension * 0.1f
 
-            // Draw background ring
             drawArc(
                 color = Color(0xFF333333).copy(alpha = 0.3f),
                 startAngle = 270f,
@@ -952,7 +822,6 @@ fun LuxRingAnimation(
                 style = Stroke(width = ringWidth)
             )
 
-            // Draw filled portion of the ring
             drawArc(
                 color = lightColor.copy(alpha = 0.7f),
                 startAngle = 270f,
@@ -964,7 +833,6 @@ fun LuxRingAnimation(
             )
         }
 
-        // Display current value in the center
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "%.0f".format(luxValue),
@@ -998,7 +866,6 @@ private fun ThresholdInputSection(
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Parameter type toggle buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -1024,7 +891,6 @@ private fun ThresholdInputSection(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        // Threshold input field
         TextField(
             value = thresholdValue,
             onValueChange = { onThresholdChange(it) },
@@ -1046,7 +912,6 @@ private fun ThresholdInputSection(
             )
         )
         Spacer(modifier = Modifier.height(8.dp))
-        // Confirm threshold button
         Button(
             onClick = onConfirmThreshold,
             enabled = thresholdValue.isNotEmpty() && thresholdValue.toFloatOrNull() != null,
@@ -1103,7 +968,6 @@ private fun HeaderSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Back button
         IconButton(
             onClick = {
                 viewModel.stopScan()
@@ -1117,7 +981,6 @@ private fun HeaderSection(
             )
         }
 
-        // Title
         Text(
             text = translatedText.advertisingDataTitle,
             fontFamily = helveticaFont,
@@ -1127,7 +990,6 @@ private fun HeaderSection(
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        // Chart navigation button
         IconButton(
             onClick = {
                 navController.navigate("chart_screen/$deviceAddress")
@@ -1141,6 +1003,7 @@ private fun HeaderSection(
         }
     }
 }
+
 
 // Composable for device information cards
 @Composable
@@ -1209,9 +1072,9 @@ fun DownloadButton(
 ) {
     val context = LocalContext.current
     var isExporting by remember { mutableStateOf(false) }
+    var showToast by remember { mutableStateOf(false) }
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
 
-    // Launcher for creating CSV file
     val createDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
@@ -1219,7 +1082,16 @@ fun DownloadButton(
             isExporting = true
             exportDataToCSV(context, uri, viewModel, deviceAddress, deviceName, deviceId) {
                 isExporting = false
+                showToast = true
             }
+        }
+    }
+
+    if (showToast) {
+        LaunchedEffect(Unit) {
+            // Assuming a toast function exists in the context or a similar mechanism
+            // Toast.makeText(context, "Data exported successfully", Toast.LENGTH_SHORT).show()
+            showToast = false
         }
     }
 
@@ -1276,7 +1148,6 @@ private fun exportDataToCSV(
                         }
                     }
 
-                    // Build CSV header
                     val headerBuilder = StringBuilder()
                     headerBuilder.append("Timestamp,Device Name,Device Address,Node ID,")
                     val sensorType = if (historicalData.isNotEmpty()) historicalData[0].sensorData else null
@@ -1286,11 +1157,11 @@ private fun exportDataToCSV(
                         is BluetoothScanViewModel.SensorData.SoilSensorData -> headerBuilder.append("Nitrogen (mg/kg),Phosphorus (mg/kg),Potassium (mg/kg),Moisture (%),Temperature (°C),Electric Conductivity (mS/cm),pH")
                         is BluetoothScanViewModel.SensorData.LuxSensorData -> headerBuilder.append("Light Intensity (LUX)")
                         is BluetoothScanViewModel.SensorData.SDTData -> headerBuilder.append("Speed (m/s),Distance (m)")
+                        is BluetoothScanViewModel.SensorData.DOSensorData -> headerBuilder.append("DO Temp (°C),DO % (%),DO Value (mg/L)")
                         is BluetoothScanViewModel.SensorData.ObjectDetectorData -> headerBuilder.append("Object Detected")
                         is BluetoothScanViewModel.SensorData.StepCounterData -> headerBuilder.append("Steps")
                         is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> headerBuilder.append("Ammonia (ppm)")
                         is BluetoothScanViewModel.SensorData.OpticalSensorData -> {
-                            // Add wavelength-specific headers
                             val wavelengths = listOf(410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 960)
                             wavelengths.forEach { wavelength ->
                                 headerBuilder.append("${wavelength}nm,")
@@ -1302,7 +1173,6 @@ private fun exportDataToCSV(
                     headerBuilder.append("\n")
                     outputStream.write(headerBuilder.toString().toByteArray())
 
-                    // Write data rows
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
                     historicalData.forEach { entry ->
                         val dataBuilder = StringBuilder()
@@ -1314,15 +1184,12 @@ private fun exportDataToCSV(
                             is BluetoothScanViewModel.SensorData.LuxSensorData -> dataBuilder.append("${sensorData.lux}")
                             is BluetoothScanViewModel.SensorData.SDTData -> dataBuilder.append("${sensorData.speed},${sensorData.distance}")
                             is BluetoothScanViewModel.SensorData.DOSensorData -> {
-                                dataBuilder.append("${sensorData.temperature.replace(" °C", "")}," +
-                                        "${sensorData.doPercentage.replace("%", "")}," +
-                                        "${sensorData.doValue.replace(" mg/L", "")}")
+                                dataBuilder.append("${sensorData.temperature.replace(" °C", "")},${sensorData.doPercentage.replace("%", "")},${sensorData.doValue.replace(" mg/L", "")}")
                             }
                             is BluetoothScanViewModel.SensorData.ObjectDetectorData -> dataBuilder.append("${sensorData.detection}")
                             is BluetoothScanViewModel.SensorData.StepCounterData -> dataBuilder.append("${sensorData.steps}")
                             is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> dataBuilder.append("${sensorData.ammonia}")
                             is BluetoothScanViewModel.SensorData.OpticalSensorData -> {
-                                // Add all 18 reflectance values with proper wavelength mapping
                                 sensorData.reflectanceValues.forEach { value ->
                                     dataBuilder.append("$value,")
                                 }
@@ -1358,7 +1225,6 @@ fun DOSensorDisplay(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Temperature gauge
         CircularProgressIndicator(
             progress = (temperature / 50f).coerceIn(0f, 1f),
             modifier = Modifier.size(100.dp),
@@ -1373,7 +1239,6 @@ fun DOSensorDisplay(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // DO percentage and value gauges
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -1422,7 +1287,6 @@ fun OpticalSensorVisualization(
 
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
 
-    // Validate data size
     if (values.size != 18) {
         Box(
             modifier = modifier.fillMaxWidth(),
@@ -1441,7 +1305,6 @@ fun OpticalSensorVisualization(
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // Header row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1468,7 +1331,6 @@ fun OpticalSensorVisualization(
             )
         }
 
-        // Data rows
         values.forEachIndexed { index, value ->
             val backgroundColor = if (index % 2 == 0) {
                 colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -1511,7 +1373,6 @@ fun OpticalSensorVisualization(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Chart with tap-to-select functionality
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1540,7 +1401,6 @@ fun OpticalSensorVisualization(
                 val graphWidth = size.width - padding * 2
                 val graphHeight = size.height - padding * 2
 
-                // Draw grid lines
                 val paint = Paint().apply {
                     color = darkColorScheme().onSurface.copy(alpha = 0.2f)
                     strokeWidth = 1f
@@ -1583,7 +1443,6 @@ fun OpticalSensorVisualization(
                     }
                 }
 
-                // Draw spectrum line
                 val path = Path().apply {
                     values.forEachIndexed { index, value ->
                         val x = padding + graphWidth * index / (values.size - 1f)
@@ -1594,10 +1453,9 @@ fun OpticalSensorVisualization(
 
                 drawPath(
                     path = path,
-                    color = Color.Black,  // or Color(0xFF222222) for deep dark grey
+                    color = Color.Black,
                     style = Stroke(width = 3f)
                 )
-                // Draw data points
                 values.forEachIndexed { index, value ->
                     val x = padding + graphWidth * index / (values.size - 1f)
                     val y = padding + graphHeight * (1 - (value - minValue) / valueRange)
@@ -1608,7 +1466,6 @@ fun OpticalSensorVisualization(
                     )
                 }
 
-                // Draw selected pinpoint
                 selectedIndex?.let { index ->
                     if (index in values.indices) {
                         val value = values[index]
@@ -1623,7 +1480,6 @@ fun OpticalSensorVisualization(
                 }
             }
 
-            // Display tooltip for selected point
             selectedIndex?.let { index ->
                 if (index in values.indices) {
                     val value = values[index]
@@ -1640,7 +1496,6 @@ fun OpticalSensorVisualization(
             }
         }
 
-        // Legend
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1763,53 +1618,89 @@ fun NutrientCard(
 private fun ResponsiveDataCards(
     data: List<Pair<String, String>>,
     cardBackground: Color,
-    cardGradient: Brush,
+    translatedText: TranslatedAdvertisingText,
     textColor: Color,
     nutrientPredictions: SoilNutrientModelHelper.NutrientPrediction? = null
 ) {
-    // Separate data types
     val ammoniaData = data.find { it.first.contains("Ammonia", ignoreCase = true) }
     val reflectanceData = data.find { it.first.contains("Reflectance", ignoreCase = true) }
     val rawData = data.find { it.first.contains("Raw Data", ignoreCase = true) }
+    val otherData = data.filterNot { it.first.contains("Ammonia", ignoreCase = true) || it.first.contains("Reflectance", ignoreCase = true) || it.first.contains("Raw Data", ignoreCase = true) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Nutrient predictions section
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = " Nutrient Predictions ",
-                style = MaterialTheme.typography.titleLarge,
-                color = textColor,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
+        nutrientPredictions?.let {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                NutrientCard(
-                    name = "Nitrogen",
-                    value = nutrientPredictions?.nitrogen ?: 0f,
-                    unit = "mg/kg",
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.weight(1f),
-                    isLoading = nutrientPredictions == null
+                Text(
+                    text = "Nutrient Predictions",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = textColor,
+                    fontWeight = FontWeight.Bold
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    NutrientCard(
+                        name = "Nitrogen",
+                        value = nutrientPredictions.nitrogen,
+                        unit = "mg/kg",
+                        color = Color(0xFF4CAF50),
+                        modifier = Modifier.weight(1f)
+                    )
+                    NutrientCard(
+                        name = "Phosphorus",
+                        value = nutrientPredictions.phosphorus,
+                        unit = "mg/kg",
+                        color = Color(0xFF2196F3),
+                        modifier = Modifier.weight(1f)
+                    )
+                    NutrientCard(
+                        name = "Potassium",
+                        value = nutrientPredictions.potassium,
+                        unit = "mg/kg",
+                        color = Color(0xFFFF9800),
+                        modifier = Modifier.weight(1f)
+                    )
+                    NutrientCard(
+                        name = "Organic Carbon",
+                        value = nutrientPredictions.organicCarbon,
+                        unit = "%",
+                        color = Color(0xFF795548),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 
-        // Reflectance data visualization
+        ammoniaData?.let { (label, value) ->
+            Column(
+                modifier = Modifier.padding(vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 18.sp,
+                    color = textColor,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                AmmoniaRingAnimation(ammoniaValue = value.replace(" ppm", "").toFloatOrNull() ?: 0f)
+            }
+        }
+
         reflectanceData?.let { (label, value) ->
             Column(
                 modifier = Modifier
@@ -1846,7 +1737,6 @@ private fun ResponsiveDataCards(
             }
         }
 
-        // Raw data display
         rawData?.let { (label, value) ->
             Column(
                 modifier = Modifier
@@ -1878,91 +1768,71 @@ private fun ResponsiveDataCards(
                 }
             }
         }
-    }
-}
 
-// Composable for LIS2DH data cards
-@Composable
-fun LIS2DHDataCards(
-    data: List<Pair<String, String>>,
-    cardBackground: Color,
-    cardGradient: Brush,
-    textColor: Color
-) {
-    if (data.isNotEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "LIS2DH Live Data",
-                style = MaterialTheme.typography.titleLarge,
-                color = textColor,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                items(data, key = { it.first }) { pair ->
-                    val label = pair.first
-                    val value = pair.second
+        when (otherData.size) {
+            0 -> {
+                Box(modifier = Modifier.height(100.dp))
+            }
+            1 -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     DataCard(
-                        label = label,
-                        value = value,
+                        label = otherData[0].first,
+                        value = otherData[0].second,
                         cardBackground = cardBackground,
-                        cardGradient = cardGradient,
+                        translatedText = translatedText,
                         textColor = textColor
                     )
                 }
             }
-        }
-    }
-}
-
-// Composable for SHT40 data cards
-@Composable
-fun SHT40DataCards(
-    data: List<Pair<String, String>>,
-    cardBackground: Color,
-    cardGradient: Brush,
-    textColor: Color
-) {
-    if (data.isNotEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "SHT40 Live Data",
-                style = MaterialTheme.typography.titleLarge,
-                color = textColor,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                items(data, key = { it.first }) { pair ->
-                    val label = pair.first
-                    val value = pair.second
-                    DataCard(
-                        label = label,
-                        value = value,
-                        cardBackground = cardBackground,
-                        cardGradient = cardGradient,
-                        textColor = textColor
-                    )
+            2 -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    otherData.forEach { (label, value) ->
+                        DataCard(
+                            label = label,
+                            value = value,
+                            cardBackground = cardBackground,
+                            translatedText = translatedText,
+                            textColor = textColor
+                        )
+                    }
+                }
+            }
+            else -> {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    otherData.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            rowItems.forEach { (label, value) ->
+                                DataCard(
+                                    label = label,
+                                    value = value,
+                                    cardBackground = cardBackground,
+                                    translatedText = translatedText,
+                                    textColor = textColor
+                                )
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.width(141.dp))
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1975,20 +1845,46 @@ fun DataCard(
     label: String,
     value: String,
     cardBackground: Color,
-    cardGradient: Brush?,
+    translatedText: TranslatedAdvertisingText,
     textColor: Color
 ) {
+    // Extract numeric value for temperature and humidity
+    val numericValue = value.replace("[^0-9.]".toRegex(), "").toFloatOrNull() ?: 0f
+
+    // Determine dynamic background color based on label and value
+    val dynamicColor = when {
+        label == translatedText.temperature -> when {
+            numericValue <= 15f -> Color(0xFF2196F3) // Blue for Low (0°C - 15°C)
+            numericValue <= 30f -> Color(0xFF4CAF50) // Green for Medium (16°C - 30°C)
+            else -> Color(0xFFF44336) // Red for High (31°C - 45°C)
+        }
+        label == translatedText.humidity -> when {
+            numericValue <= 40f -> Color(0xFF2196F3) // Blue for Low (0% - 40%)
+            numericValue <= 70f -> Color(0xFF4CAF50) // Green for Medium (41% - 70%)
+            else -> Color(0xFFF44336) // Red for High (71% - 100%)
+        }
+        else -> cardBackground // Default to original cardBackground for other data
+    }
+
+    // Create a gradient based on the dynamic color
+    val cardGradient = Brush.verticalGradient(
+        colors = listOf(
+            dynamicColor.copy(alpha = 0.8f),
+            dynamicColor.copy(alpha = 0.6f)
+        )
+    )
+
     Surface(
         modifier = Modifier
             .height(95.dp)
             .width(141.dp),
         shape = RoundedCornerShape(16.dp),
-        color = cardBackground,
+        color = dynamicColor,
         tonalElevation = 8.dp
     ) {
         Box(
             modifier = Modifier
-                .background(cardGradient!!, RoundedCornerShape(16.dp))
+                .background(cardGradient, RoundedCornerShape(16.dp))
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {

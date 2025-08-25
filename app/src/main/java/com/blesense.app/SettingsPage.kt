@@ -1,6 +1,5 @@
 package com.blesense.app
-// Import necessary Android and Compose libraries
-//import com.example.ble_jetpackcompose.BuildConfig
+
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -17,6 +16,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,28 +29,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.POST
-import retrofit2.http.Query
 import java.util.Locale
 import kotlin.random.Random
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 // Singleton object to manage app-wide theme state
 object ThemeManager {
@@ -106,160 +95,8 @@ object LanguageManager {
     }
 }
 
-
-// Interface for Gemini Translation API
-interface GeminiTranslationApi {
-    @POST("v1beta/models/gemini-2.0-flash:generateContent")
-    suspend fun translateText(
-        @Body request: TranslationRequest,
-        @Query("key") apiKey: String
-    ): TranslationResponse
-}
-
-// Data classes for translation request and response
-data class TranslationRequest(
-    val contents: List<Content>,
-    val generationConfig: GenerationConfig
-)
-
-data class Content(
-    val parts: List<Part>
-)
-
-data class Part(
-    val text: String
-)
-
-data class GenerationConfig(
-    val temperature: Float = 0.7f // Controls randomness of translation output
-)
-
-data class TranslationResponse(
-    val candidates: List<TranslationCandidate>
-)
-
-data class TranslationCandidate(
-    val content: Content
-)
-
-// Interface for translation service
-interface TranslationService {
-    suspend fun translateText(text: String, targetLanguage: String): String
-}
-
-// Object to cache translation results
-object TranslationCache {
-    private val cache = mutableMapOf<String, String>()
-
-    // Get cached translation
-    fun get(key: String): String? = cache[key]
-    // Store translation in cache
-    fun put(key: String, value: String) {
-        cache[key] = value
-    }
-}
-
-// Translation service using Gemini API
-class GoogleTranslationService(
-    private val apiKey: String = BuildConfig.API_KEY // API key for Gemini
-) : TranslationService {
-    private val retrofit = Retrofit.Builder()
-        .baseUrl("https://generativelanguage.googleapis.com/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    private val translationApi = retrofit.create(GeminiTranslationApi::class.java)
-
-    // Translate a single text
-    override suspend fun translateText(
-        text: String,
-        targetLanguage: String
-    ): String = translateBatch(listOf(text), targetLanguage).first()
-
-    // Batch translation method
-    suspend fun translateBatch(
-        texts: List<String>,
-        targetLanguage: String
-    ): List<String> {
-        return try {
-            // Check cache first
-            val uncachedTexts = texts.filter { text ->
-                TranslationCache.get("$text-$targetLanguage") == null
-            }
-
-            if (uncachedTexts.isEmpty()) {
-                return texts.map { TranslationCache.get("$it-$targetLanguage")!! }
-            }
-
-            // Create translation prompt
-            val prompt = """
-                Provide only the translations of the following texts into ${getLanguageName(targetLanguage)}, 
-                one per line, in the same order, with no additional text or explanations:
-                ${texts.joinToString("\n")}
-            """.trimIndent()
-
-            val request = TranslationRequest(
-                contents = listOf(
-                    Content(
-                        parts = listOf(Part(prompt))
-                    )
-                ),
-                generationConfig = GenerationConfig()
-            )
-
-            // Call translation API
-            val response = translationApi.translateText(request, apiKey)
-            val translatedText = response.candidates.firstOrNull()
-                ?.content?.parts?.firstOrNull()?.text
-                ?.trim() ?: texts.joinToString("\n")
-
-            val translatedList = translatedText.split("\n")
-            // Cache results
-            texts.forEachIndexed { index, original ->
-                val translated = translatedList.getOrElse(index) { original }
-                TranslationCache.put("$original-$targetLanguage", translated)
-            }
-
-            // Return translated texts
-            texts.map { TranslationCache.get("$it-$targetLanguage") ?: it }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            texts // Return original texts if translation fails
-        }
-    }
-
-    // Map language codes to names for translation
-    private fun getLanguageName(languageCode: String): String {
-        return when (languageCode) {
-            "en" -> "English"
-            "hi" -> "Hindi"
-            "ta" -> "Tamil"
-            "te" -> "Telugu"
-            "bn" -> "Bengali"
-            "mr" -> "Marathi"
-            "gu" -> "Gujarati"
-            "kn" -> "Kannada"
-            "ml" -> "Malayalam"
-            "pa" -> "Punjabi"
-            "or" -> "Odia"
-            else -> languageCode
-        }
-    }
-}
-
-
 // Data class for language options
 data class LanguageOption(val code: String, val name: String)
-
-// Data class for translated settings text
-data class TranslatedSettings(
-    val settingsTitle: String = "Settings",
-    val darkMode: String = "Dark Mode",
-    val language: String = "Language",
-    val help: String = "Help",
-    val accounts: String = "Accounts",
-    val about: String = "About BLE"
-)
 
 // Main settings screen composable
 @Composable
@@ -270,37 +107,6 @@ fun ModernSettingsScreen(
 ) {
     val isDarkMode by ThemeManager.isDarkMode.collectAsState() // Observe dark mode state
     val currentLanguage by LanguageManager.currentLanguage.collectAsState() // Observe current language
-
-    // State for translated text with initial fallback
-    var translatedText by remember {
-        mutableStateOf(
-            TranslatedSettings(
-                settingsTitle = TranslationCache.get("Settings-$currentLanguage") ?: "Settings",
-                darkMode = TranslationCache.get("Dark Mode-$currentLanguage") ?: "Dark Mode",
-                language = TranslationCache.get("Language-$currentLanguage") ?: "Language",
-                help = TranslationCache.get("Help-$currentLanguage") ?: "Help",
-                accounts = TranslationCache.get("Accounts-$currentLanguage") ?: "Accounts",
-                about = TranslationCache.get("About BLE-$currentLanguage") ?: "About BLE"
-            )
-        )
-    }
-
-    // Preload translations when language changes
-    LaunchedEffect(currentLanguage) {
-        val translator = GoogleTranslationService()
-        val textsToTranslate = listOf(
-            "Settings", "Dark Mode", "Language", "Help", "Accounts", "About BLE"
-        )
-        val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        translatedText = TranslatedSettings(
-            settingsTitle = translatedList[0],
-            darkMode = translatedList[1],
-            language = translatedList[2],
-            help = translatedList[3],
-            accounts = translatedList[4],
-            about = translatedList[5]
-        )
-    }
 
     // Define colors based on theme
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF2F2F7)
@@ -319,7 +125,7 @@ fun ModernSettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = translatedText.settingsTitle,
+                        text = "Settings",
                         fontFamily = helveticaFont,
                         style = MaterialTheme.typography.h5.copy(
                             fontWeight = FontWeight.Bold,
@@ -327,14 +133,17 @@ fun ModernSettingsScreen(
                         )
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("intermediate_screen") }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = textColor
+                        )
+                    }
+                },
                 backgroundColor = backgroundColor,
                 elevation = 0.dp
-            )
-        },
-        bottomBar = {
-            BottomNavigation(
-                navController = navController,
-                isDarkMode = isDarkMode
             )
         }
     ) { padding ->
@@ -379,7 +188,6 @@ fun ModernSettingsScreen(
                 dividerColor = dividerColor,
                 iconTint = iconTint,
                 isDarkMode = isDarkMode,
-                translatedText = translatedText,
                 onDarkModeToggle = { newValue ->
                     ThemeManager.toggleDarkMode(newValue)
                 },
@@ -390,6 +198,7 @@ fun ModernSettingsScreen(
         }
     }
 }
+
 // Composable for privacy policy button
 @Composable
 fun PrivacyPolicyButton() {
@@ -427,7 +236,7 @@ fun UserProfileCard(
     iconTint: Color,
     userName: String,
     userEmail: String,
-    profilePictureUrl: String? = null, // Add profile picture URL parameter
+    profilePictureUrl: String? = null,
     onLogout: () -> Unit
 ) {
     Card(
@@ -448,8 +257,7 @@ fun UserProfileCard(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape),
-                    //placeholder = painterResource(R.drawable.placeholder), // Optional
-                    error = painterResource(R.drawable.error), // Optional
+                    error = painterResource(R.drawable.error),
                     contentScale = ContentScale.Crop
                 )
             } else {
@@ -508,7 +316,6 @@ fun UserProfileCard(
     }
 }
 
-
 @Composable
 fun SettingsOptionsList(
     cardBackground: Color,
@@ -517,16 +324,15 @@ fun SettingsOptionsList(
     dividerColor: Color,
     iconTint: Color,
     isDarkMode: Boolean,
-    translatedText: TranslatedSettings,
     onDarkModeToggle: (Boolean) -> Unit,
     navController: NavHostController
 ) {
     val settingsOptions = listOf(
-        SettingsItem(Icons.Outlined.DarkMode, translatedText.darkMode, SettingsItemType.SWITCH),
-        SettingsItem(Icons.Outlined.Language, translatedText.language, SettingsItemType.DETAIL),
-        SettingsItem(Icons.AutoMirrored.Outlined.Help, translatedText.help, SettingsItemType.DETAIL),
-        SettingsItem(Icons.Outlined.AccountCircle, translatedText.accounts, SettingsItemType.DETAIL),
-        SettingsItem(Icons.Outlined.Info, translatedText.about, SettingsItemType.DETAIL),
+        SettingsItem(Icons.Outlined.DarkMode, "Dark Mode", SettingsItemType.SWITCH),
+        SettingsItem(Icons.Outlined.Language, "Language", SettingsItemType.DETAIL),
+        SettingsItem(Icons.AutoMirrored.Outlined.Help, "Help", SettingsItemType.DETAIL),
+        SettingsItem(Icons.Outlined.AccountCircle, "Accounts", SettingsItemType.DETAIL),
+        SettingsItem(Icons.Outlined.Info, "About BLE", SettingsItemType.DETAIL),
     )
 
     Card(
@@ -537,7 +343,7 @@ fun SettingsOptionsList(
     ) {
         Column {
             settingsOptions.forEachIndexed { index, item ->
-                if (item.title == translatedText.darkMode) {
+                if (item.title == "Dark Mode") {
                     SettingsItemRow(
                         item = item,
                         textColor = textColor,
@@ -736,17 +542,6 @@ fun SettingsItemRow(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    // Text(
-                    //     text = "About BLE",
-                    //     fontFamily = helveticaFont,
-                    //     style = MaterialTheme.typography.h6,
-                    //     textAlign = TextAlign.Center,
-                    //     color = if (initialSwitchState) Color.White else Color.Black,
-                    //     modifier = Modifier
-                    //         .fillMaxWidth()
-                    //         .padding(bottom = 8.dp)
-                    // )
-
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f)
@@ -876,17 +671,6 @@ fun SettingsItemRow(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Text(
-                    //     text = "Help",
-                    //     fontFamily = helveticaFont,
-                    //     style = MaterialTheme.typography.h6,
-                    //     textAlign = TextAlign.Center,
-                    //     color = if (initialSwitchState) Color.White else Color.Black,
-                    //     modifier = Modifier
-                    //         .fillMaxWidth()
-                    //         .padding(bottom = 8.dp)
-                    // )
-
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.Help,
                         contentDescription = "Help",
@@ -951,7 +735,6 @@ fun SettingsItemRow(
 }
 
 // Composable for accounts dialog
-// Composable for accounts dialog
 @Composable
 fun AccountsDialog(
     isDarkMode: Boolean,
@@ -1007,19 +790,6 @@ fun AccountsDialog(
                                 viewModel.deleteAccountAndSignInAsGuest { success, message ->
                                     if (success) {
                                         Toast.makeText(context, "Account deleted. Guest session started.", Toast.LENGTH_SHORT).show()
-
-                                        // Use a coroutine to handle navigation with proper timing
-                                        CoroutineScope(Dispatchers.Main).launch {
-                                            delay(100) // Small delay to ensure UI state is settled
-
-                                            // Clear the entire back stack and navigate to splash
-                                            navController.navigate("splash_screen") {
-                                                // Clear all destinations from the back stack
-                                                popUpTo(0) { inclusive = true }
-                                                launchSingleTop = true
-                                                restoreState = false
-                                            }
-                                        }
                                     } else {
                                         Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show()
                                     }
@@ -1105,10 +875,13 @@ fun AccountsDialog(
                     onClick = {
                         val urlIntent = Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse("https://sumankumar891.github.io/ble-sense-account-deletion")
+                            Uri.parse("https://sumankumar891.github.io/Delete_account_BLESense/")
                         )
                         context.startActivity(urlIntent)
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
                 ) {
                     Text("Account Deletion Request")
                 }
@@ -1116,7 +889,7 @@ fun AccountsDialog(
                     onClick = onDismiss,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp),
+                        .padding(top = 8.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
                     )
@@ -1199,230 +972,6 @@ fun SavedAccountItem(
     }
 }
 
-// Bottom navigation bar composable
-@Composable
-fun BottomNavigation(
-    modifier: Modifier = Modifier,
-    navController: NavHostController,
-    isDarkMode: Boolean = false
-) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    val backgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
-    val contentColor = if (isDarkMode) Color.White else Color.Black
-    val selectedColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { /* Handle result if needed */ }
-    )
-
-
-    BottomNavigation(
-        modifier = modifier,
-        backgroundColor = backgroundColor,
-        elevation = 8.dp
-    ) {
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.bluetooth),
-                    contentDescription = "Bluetooth",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "home_screen") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "home_screen",
-            onClick = { navController.navigate("home_screen") }
-        )
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.gamepad),
-                    contentDescription = "Gameplay",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "game_loading") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "game_loading",
-            onClick = {
-                navController.navigate("game_loading")
-            }
-        )
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.robo_car_icon),
-                    contentDescription = "Robot Control",
-                    modifier = Modifier.size(32.dp),
-                    tint = contentColor
-                )
-            },
-            selected = false,
-            onClick = {
-                // ✅ Correct way to launch another Compose Activity
-                val intent = Intent(context, RobotControlCompose::class.java)
-                launcher.launch(intent)
-            }
-        )
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.settings),
-                    contentDescription = "Settings",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "settings_screen") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "settings_screen",
-            onClick = { navController.navigate("settings_screen") }
-        )
-    }
-}
-// Composable for About BLE screen
-@Composable
-fun AboutBleScreen(
-    navController: NavHostController,
-    isDarkMode: Boolean
-) {
-    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF2F2F7)
-    val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
-    val textColor = if (isDarkMode) Color.White else Color.Black
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray
-
-    Scaffold(
-        backgroundColor = backgroundColor,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "About BLE",
-                        fontFamily = helveticaFont,
-                        style = MaterialTheme.typography.h5.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = textColor
-                        )
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(
-                            imageVector = Icons.Outlined.ArrowBack,
-                            contentDescription = "Back",
-                            tint = textColor
-                        )
-                    }
-                },
-                backgroundColor = backgroundColor,
-                elevation = 0.dp,
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                backgroundColor = cardBackground,
-                elevation = 0.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                ) {
-                    // BLE Icon
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = "BLE Info",
-                        tint = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF),
-                        modifier = Modifier
-                            .size(48.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Title
-                    Text(
-                        text = "Bluetooth Low Energy",
-                        fontFamily = helveticaFont,
-                        style = MaterialTheme.typography.h5.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = textColor
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Description
-                    Text(
-                        text = "Bluetooth Low Energy (BLE) is a wireless personal area network technology " +
-                                "designed for low power consumption while maintaining a similar communication " +
-                                "range to classic Bluetooth. It's ideal for applications requiring periodic " +
-                                "data transfer, such as fitness trackers, smart home devices, and IoT sensors.",
-                        fontFamily = helveticaFont,
-                        style = MaterialTheme.typography.body1.copy(
-                            color = secondaryTextColor
-                        ),
-                        textAlign = TextAlign.Justify
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Key Features
-                    Text(
-                        text = "Key Features:",
-                        fontFamily = helveticaFont,
-                        style = MaterialTheme.typography.subtitle1.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = textColor
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    listOf(
-                        "Low power consumption",
-                        "Small data packets",
-                        "Quick connection times",
-                        "Secure communication",
-                        "Wide device compatibility"
-                    ).forEach { feature ->
-                        Row(
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Check,
-                                contentDescription = "Check",
-                                tint = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF),
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = feature,
-                                fontFamily = helveticaFont,
-                                style = MaterialTheme.typography.body2.copy(
-                                    color = secondaryTextColor
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 // Data classes for settings items
 data class SettingsItem(
     val icon: ImageVector,
@@ -1434,13 +983,4 @@ data class SettingsItem(
 enum class SettingsItemType {
     SWITCH,
     DETAIL
-}
-
-// Preview for settings screen
-@Preview(showBackground = true)
-@Composable
-fun ModernSettingsScreenPreview() {
-    // Mock NavController for preview
-    val navController = rememberNavController()
-    ModernSettingsScreen(onSignOut = {}, navController = navController)
 }

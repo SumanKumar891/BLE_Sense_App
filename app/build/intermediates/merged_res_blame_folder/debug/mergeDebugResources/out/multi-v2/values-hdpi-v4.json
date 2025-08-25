@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.blesense.app-mergeDebugResources-85:/values-hdpi-v4/values-hdpi-v4.xml",
+            "outputFile": "com.blesense.app-mergeDebugResources-91:/values-hdpi-v4/values-hdpi-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\2e02934df89c33196c840ab0bb78e7bb\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\6d33db0db7be185970e3a6eaf63fb0a4\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

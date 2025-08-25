@@ -535,12 +535,24 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
     // Parse SHT40 (temperature and humidity) sensor data
     private fun parseSHT40Data(data: ByteArray): SensorData? {
         if (data.size < 5) return null
+
+        // Interpret integer parts as signed bytes (can be negative)
+        val tempInt = data[1].toInt() // signed
+        val tempFrac = data[2].toUByte().toInt() // unsigned fraction
+
+        val humInt = data[3].toInt() // signed
+        val humFrac = data[4].toUByte().toInt() // unsigned fraction
+
+        val temperature = tempInt + tempFrac / 10000.0
+        val humidity = humInt + humFrac / 10000.0
+
         return SensorData.SHT40Data(
-            deviceId = data[0].toUByte().toString(),
-            temperature = "${data[1].toUByte()}.${data[2].toUByte()}",
-            humidity = "${data[3].toUByte()}.${data[4].toUByte()}"
+            deviceId = data[0].toUByte().toString(), // still unsigned
+            temperature = String.format("%.2f", temperature),
+            humidity = String.format("%.2f", humidity)
         )
     }
+
 
     // Parse LIS2DH (accelerometer) sensor data
     private fun parseLIS2DHData(data: ByteArray): SensorData? {

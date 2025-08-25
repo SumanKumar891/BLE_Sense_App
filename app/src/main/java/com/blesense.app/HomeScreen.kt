@@ -1,8 +1,12 @@
 package com.blesense.app
-// Import necessary Android and Compose libraries for UI, permissions, and navigation
+
 import android.Manifest
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -13,46 +17,19 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.Card
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -68,22 +45,22 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
-
 // Data class for translatable text in MainScreen
 data class TranslatedMainScreenText(
-    val appTitle: String = "BLE Sense", // Default app title
-    val nearbyDevices: String = "Nearby Devices", // Label for nearby devices section
-    val gameDevices: String = "Game Devices", // Label for game devices section
-    val bluetoothPermissionsRequired: String = "Bluetooth permissions required", // Message for missing permissions
-    val scanningForDevices: String = "Scanning for devices...", // Message during device scanning
-    val noDevicesFound: String = "No devices found", // Message when no devices are found
-    val scanningForGameDevices: String = "Scanning for game devices...", // Message during game device scanning
-    val noGameDevicesFound: String = "No game devices found", // Message when no game devices are found
-    val showMore: String = "Show More", // Label for showing more devices
-    val showLess: String = "Show Less" // Label for showing fewer devices
+    val appTitle: String = "BLE Sense",
+    val nearbyDevices: String = "Nearby Devices",
+    val gameDevices: String = "Game Devices",
+    val bluetoothPermissionsRequired: String = "Bluetooth permissions required",
+    val scanningForDevices: String = "Scanning for devices...",
+    val noDevicesFound: String = "No devices found",
+    val scanningForGameDevices: String = "Scanning for game devices...",
+    val noGameDevicesFound: String = "No game devices found",
+    val showMore: String = "Show More",
+    val showLess: String = "Show Less"
 )
 
 // Main composable for the app's main screen
+@SuppressLint("MissingPermission")
 @Composable
 fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothScanViewModel<Any?>) {
     // Check if device is in landscape orientation
@@ -97,7 +74,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
     val isScanning by bluetoothViewModel.isScanning.collectAsState()
     // Get current context
     val context = LocalContext.current
-
     // Get activity context
     val activity = context as ComponentActivity
 
@@ -148,7 +124,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
             "No game devices found", "Show More", "Show Less"
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        // Update translated text state
         translatedText = TranslatedMainScreenText(
             appTitle = translatedList[0],
             nearbyDevices = translatedList[1],
@@ -164,11 +139,14 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
     }
 
     // Define theme-based colors
-    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5) // Background color
-    val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Card background color
-    val textColor = if (isDarkMode) Color.White else Color.Black // Primary text color
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575) // Secondary text color
-    val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0) // Divider color
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5)
+    val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    val textColor = if (isDarkMode) Color.White else Color.Black
+    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575)
+    val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
+
+    // Get Bluetooth adapter
+    val bluetoothAdapter = remember { BluetoothAdapter.getDefaultAdapter() }
 
     // Check permissions on initial composition
     LaunchedEffect(Unit) {
@@ -182,9 +160,34 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
         }
     )
 
-    // Start periodic Bluetooth scanning when permissions are granted, stop on dispose
-    DisposableEffect(isPermissionGranted.value) {
-        if (isPermissionGranted.value) {
+    // Monitor Bluetooth adapter state changes
+    val bluetoothStateReceiver = remember {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                        val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                        if (state == BluetoothAdapter.STATE_ON && isPermissionGranted.value && !isScanning) {
+                            bluetoothViewModel.startPeriodicScan(activity)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Register and unregister the BroadcastReceiver
+    DisposableEffect(Unit) {
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        context.registerReceiver(bluetoothStateReceiver, filter)
+        onDispose {
+            context.unregisterReceiver(bluetoothStateReceiver)
+        }
+    }
+
+    // Start periodic Bluetooth scanning when permissions are granted and Bluetooth is enabled
+    DisposableEffect(isPermissionGranted.value, bluetoothAdapter?.isEnabled) {
+        if (isPermissionGranted.value && bluetoothAdapter?.isEnabled == true && !isScanning) {
             bluetoothViewModel.startPeriodicScan(activity)
         }
         onDispose {
@@ -193,16 +196,10 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
     }
 
     // Main UI container
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            // Apply system bars padding to avoid overlap with status and navigation bars
-            .padding(WindowInsets.systemBars.asPaddingValues())
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Top app bar
-            androidx.compose.material.TopAppBar(
+    Scaffold(
+        backgroundColor = backgroundColor,
+        topBar = {
+            TopAppBar(
                 backgroundColor = cardBackgroundColor,
                 elevation = 8.dp
             ) {
@@ -210,6 +207,17 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
+                    // Back button
+                    IconButton(
+                        onClick = { navController.navigate("intermediate_screen") },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = textColor
+                        )
+                    }
                     Text(
                         text = translatedText.appTitle,
                         fontFamily = helveticaFont,
@@ -218,7 +226,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                         style = MaterialTheme.typography.h6,
                         textAlign = TextAlign.Center
                     )
-
                     // Theme toggle button
                     IconButton(
                         onClick = { ThemeManager.toggleDarkMode(!isDarkMode) },
@@ -227,11 +234,40 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                         Icon(
                             imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = "Toggle Theme",
-                            tint = if (isDarkMode) Color.Yellow else Color(0xFF5D4037)
+                            tint = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF5D4037)
                         )
                     }
                 }
             }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("chat_screen") },
+                backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF),
+                contentColor = Color.White
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Chat,
+                    contentDescription = "Open Chatbot"
+                )
+            }
+        },
+        bottomBar = {
+//            Box {
+//                CustomBottomNavigation(
+//                    modifier = Modifier.align(Alignment.BottomCenter),
+//                    navController = navController,
+//                    isDarkMode = isDarkMode
+//                )
+//            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Main content list
@@ -239,7 +275,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
             ) {
                 // Nearby Devices section
                 item {
@@ -271,9 +306,15 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                 ) {
                                     // Refresh scan button
                                     IconButton(
-                                        onClick = {
+                                        onClick = @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT) {
                                             if (isPermissionGranted.value && !isScanning) {
-                                                bluetoothViewModel.startPeriodicScan(activity)
+                                                if (bluetoothAdapter?.isEnabled == true) {
+                                                    bluetoothViewModel.startPeriodicScan(activity)
+                                                } else {
+                                                    // Prompt to enable Bluetooth
+                                                    val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                                                    context.startActivity(enableBtIntent)
+                                                }
                                             }
                                         }
                                     ) {
@@ -320,6 +361,13 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     modifier = Modifier.fillMaxWidth(),
                                     color = textColor
                                 )
+                            } else if (bluetoothAdapter?.isEnabled != true) {
+                                Text(
+                                    text = "Please enable Bluetooth",
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = textColor
+                                )
                             } else if (bluetoothDevices.isEmpty()) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
@@ -336,7 +384,7 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     }
                                 }
                             } else {
-                                // Display devices (limited or all based on showAllDevices)
+                                // Display devices
                                 val devicesToShow = if (showAllDevices) bluetoothDevices else bluetoothDevices.take(4)
                                 devicesToShow.forEach { device ->
                                     BluetoothDeviceItem(
@@ -347,7 +395,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     )
                                     Divider(color = dividerColor)
                                 }
-                                // Show more/less toggle if more than 4 devices
                                 if (bluetoothDevices.size > 4) {
                                     Box(
                                         modifier = Modifier
@@ -377,19 +424,17 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
 
                 // Game Devices section
                 item {
-                    // List of allowed game device names
                     val allowedGameDevices = listOf(
                         "Scarlet Witch", "Black Widow", "Captain Marvel", "Wasp", "Hela",
                         "Hulk", "Thor", "Iron_Man", "Spider Man", "Captain America"
                     )
-                    // Filter devices to show only game devices
                     val gameDevices = bluetoothDevices.filter { it.name in allowedGameDevices }
                     val devicesToShow = if (showAllDevices) gameDevices else gameDevices.take(4)
 
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp), // Match Nearby Devices padding
+                            .padding(vertical = 16.dp),
                         elevation = 4.dp,
                         shape = RoundedCornerShape(16.dp),
                         backgroundColor = cardBackgroundColor
@@ -405,11 +450,15 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     style = MaterialTheme.typography.h6,
                                     color = textColor
                                 )
-                                // Refresh scan button for game devices
                                 IconButton(
-                                    onClick = {
+                                    onClick = @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT) {
                                         if (isPermissionGranted.value && !isScanning) {
-                                            bluetoothViewModel.startPeriodicScan(activity)
+                                            if (bluetoothAdapter?.isEnabled == true) {
+                                                bluetoothViewModel.startPeriodicScan(activity)
+                                            } else {
+                                                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                                                context.startActivity(enableBtIntent)
+                                            }
                                         }
                                     }
                                 ) {
@@ -422,10 +471,16 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                             }
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Handle permission and game device states
                             if (!isPermissionGranted.value) {
                                 Text(
                                     text = translatedText.bluetoothPermissionsRequired,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = textColor
+                                )
+                            } else if (bluetoothAdapter?.isEnabled != true) {
+                                Text(
+                                    text = "Please enable Bluetooth",
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth(),
                                     color = textColor
@@ -446,7 +501,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     }
                                 }
                             } else {
-                                // Display game devices (limited or all based on showAllDevices)
                                 devicesToShow.forEach { device ->
                                     BluetoothDeviceItem(
                                         device = device,
@@ -456,7 +510,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                                     )
                                     Divider(color = dividerColor)
                                 }
-                                // Show more/less toggle if more than 4 game devices
                                 if (gameDevices.size > 4) {
                                     Box(
                                         modifier = Modifier
@@ -481,15 +534,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                         }
                     }
                 }
-            }
-
-//            // Bottom navigation bar
-            Box {
-                CustomBottomNavigation(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    navController = navController,
-                    isDarkMode = isDarkMode
-                )
             }
         }
     }
@@ -777,148 +821,6 @@ fun LuxSensorPreview(
             color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3),
             textAlign = TextAlign.Center,
             maxLines = 2
-        )
-    }
-}
-
-// Composable for custom bottom navigation bar
-
-@Composable
-fun CustomBottomNavigation(
-    modifier: Modifier = Modifier,
-    navController: NavHostController,
-    isDarkMode: Boolean = false
-) {
-    val backgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
-    val contentColor = if (isDarkMode) Color.White else Color.Black
-    val selectedColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF2196F3)
-
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { /* Handle result if needed */ }
-    )
-
-    BottomNavigation(
-        modifier = modifier,
-        backgroundColor = backgroundColor,
-        contentColor = contentColor,
-        elevation = 8.dp
-    ) {
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.bluetooth),
-                    contentDescription = "Bluetooth",
-                    modifier = Modifier.size(24.dp),
-                    tint = selectedColor
-                )
-            },
-            selected = true,
-            onClick = { /* Navigate to Bluetooth */ }
-        )
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.gamepad),
-                    contentDescription = "Gameplay",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "game_loading") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "game_loading",
-            onClick = {
-                navController.navigate("game_loading")
-            }
-        )
-
-
-
-
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.robo_car_icon),
-                    contentDescription = "Robot Control",
-                    modifier = Modifier.size(32.dp),
-                    tint = if (currentRoute == "robot_control") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "robot_control",
-            onClick = {
-                val intent = Intent(context, RobotControlCompose::class.java)
-                launcher.launch(intent)
-            }
-        )
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.icons_leaf),
-                    contentDescription = "Optical Sensor",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "optical_sensor_screen") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "optical_sensor_screen",
-            onClick = {
-                if (currentRoute != "optical_sensor_screen") {
-                    navController.navigate("optical_sensor_screen") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            },
-            alwaysShowLabel = false
-        )
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.waterquality),
-                    contentDescription = "Water Quality",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "water_quality_screen") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "water_quality_screen",
-            onClick = {
-                if (currentRoute != "water_quality_screen") {
-                    navController.navigate("water_quality_screen") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            },
-            alwaysShowLabel = false
-        )
-
-        BottomNavigationItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.settings),
-                    contentDescription = "Settings",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (currentRoute == "settings_screen") selectedColor else contentColor
-                )
-            },
-            selected = currentRoute == "settings_screen",
-            onClick = {
-                if (currentRoute != "settings_screen") {
-                    navController.navigate("settings_screen") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            }
         )
     }
 }

@@ -562,147 +562,147 @@ fun generateMultiplePositions(count: Int, radius: Float): List<Offset> {
 }
 
 // Composable for scratch card effect
-@Composable
-fun ScratchCardScreen(
-    heroName: String, // Name of the hero to reveal
-    modifier: Modifier = Modifier,
-    onScratchCompleted: () -> Unit = {} // Callback when scratching is complete
-) {
-    // Load overlay image
-    val overlayImage = ImageBitmap.imageResource(id = R.drawable.scratch)
-    // Select base image based on hero name
-    val heroImageResId = remember(heroName) {
-        when (heroName) {
-            "Iron_Man" -> R.drawable.iron_man
-            "Hulk" -> R.drawable.hulk_
-            "Captain Marvel" -> R.drawable.captain_marvel
-            "Captain America" -> R.drawable.captain_america
-            "Scarlet Witch" -> R.drawable.scarlet_witch
-            "Black Widow" -> R.drawable.black_widow
-            "Wasp" -> R.drawable.wasp
-            "Hela" -> R.drawable.hela
-            "Thor" -> R.drawable.thor
-            "Spider Man" -> R.drawable.spider_man
-            else -> R.drawable.inner // Default fallback image
-        }
-    }
-
-    // Load base image
-    val baseImage = ImageBitmap.imageResource(id = heroImageResId)
-    // Track current scratch path
-    val currentPathState = remember { mutableStateOf(DraggedPath(path = Path(), width = 150f)) }
-    // Track percentage of area scratched
-    var scratchedAreaPercentage by remember { mutableFloatStateOf(0f) }
-    // Track whether completion callback has been called
-    var hasCalledCompletion by remember { mutableStateOf(false) }
-    // Canvas size in pixels
-    val canvasSizePx = with(LocalDensity.current) { 300.dp.toPx() }
-
-    // Animation state for hero reveal
-    var showHeroReveal by remember { mutableStateOf(false) }
-    // Animate scale for hero reveal
-    val animatedScale by animateFloatAsState(
-        targetValue = if (showHeroReveal) 1.2f else 1f,
-        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
-        label = "heroRevealScale"
-    )
-
-    // Trigger completion callback when 95% scratched
-    LaunchedEffect(scratchedAreaPercentage) {
-        if (scratchedAreaPercentage >= 95f && !hasCalledCompletion) {
-            hasCalledCompletion = true
-            onScratchCompleted()
-            showHeroReveal = true // Trigger hero reveal animation
-        }
-    }
-
-    // Simulate scratching animation
-    LaunchedEffect(Unit) {
-        val stepSize = canvasSizePx / 2 // Larger step size for efficiency
-        val totalArea = canvasSizePx * canvasSizePx
-        val scratchPath = currentPathState.value.path
-
-        // Create a simple scratch pattern
-        for (y in 0..canvasSizePx.toInt() step stepSize.toInt()) {
-            for (x in 0..canvasSizePx.toInt() step stepSize.toInt()) {
-                scratchPath.addOval(
-                    androidx.compose.ui.geometry.Rect(
-                        center = Offset(x.toFloat(), y.toFloat()),
-                        radius = stepSize * 0.8f
-                    )
-                )
-                scratchedAreaPercentage = ((y * canvasSizePx + x) / totalArea * 100f).coerceAtMost(100f)
-                delay(80) // Delay for smooth animation
-            }
-        }
-    }
-
-    // Scratch card container
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-    ) {
-        // Conditional rendering based on scratch progress
-        if (scratchedAreaPercentage < 95f) {
-            OptimizedScratchCanvas(
-                overlayImage = overlayImage,
-                baseImage = baseImage,
-                currentPath = currentPathState.value.path,
-                modifier = Modifier
-                    .size(300.dp)
-                    .align(Alignment.Center)
-            )
-        } else {
-            // Reveal hero image with animation
-            Image(
-                painter = painterResource(
-                    id = when (heroName) {
-                        "Iron_Man" -> R.drawable.iron_man
-                        "Hulk" -> R.drawable.hulk_
-                        "Captain Marvel" -> R.drawable.captain_marvel
-                        "Captain America" -> R.drawable.captain_america
-                        "Scarlet Witch" -> R.drawable.scarlet_witch
-                        "Black Widow" -> R.drawable.black_widow
-                        "Wasp" -> R.drawable.wasp
-                        "Hela" -> R.drawable.hela
-                        "Thor" -> R.drawable.thor
-                        "Spider Man" -> R.drawable.spider_man
-                        else -> R.drawable.inner
-                    }
-                ),
-                contentDescription = "Revealed Hero",
-                modifier = Modifier
-                    .size(300.dp)
-                    .graphicsLayer {
-                        scaleX = animatedScale // Apply animated scale
-                        scaleY = animatedScale
-                    }
-                    .align(Alignment.Center)
-            )
-        }
-
-        // Completion indicator
-        AnimatedVisibility(
-            visible = scratchedAreaPercentage >= 95f,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Text(
-                text = "Hero collected!",
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
-                    .background(
-                        Color(0x99000000), // Semi-transparent black
-                        shape = RoundedCornerShape(4.dp)
-                    )
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
-            )
-        }
-    }
-}
+//@Composable
+//fun ScratchCardScreen(
+//    heroName: String, // Name of the hero to reveal
+//    modifier: Modifier = Modifier,
+//    onScratchCompleted: () -> Unit = {} // Callback when scratching is complete
+//) {
+//    // Load overlay image
+//    val overlayImage = ImageBitmap.imageResource(id = R.drawable.scratch)
+//    // Select base image based on hero name
+//    val heroImageResId = remember(heroName) {
+//        when (heroName) {
+//            "Iron_Man" -> R.drawable.iron_man
+//            "Hulk" -> R.drawable.hulk_
+//            "Captain Marvel" -> R.drawable.captain_marvel
+//            "Captain America" -> R.drawable.captain_america
+//            "Scarlet Witch" -> R.drawable.scarlet_witch
+//            "Black Widow" -> R.drawable.black_widow
+//            "Wasp" -> R.drawable.wasp
+//            "Hela" -> R.drawable.hela
+//            "Thor" -> R.drawable.thor
+//            "Spider Man" -> R.drawable.spider_man
+//            else -> R.drawable.inner // Default fallback image
+//        }
+//    }
+//
+//    // Load base image
+//    val baseImage = ImageBitmap.imageResource(id = heroImageResId)
+//    // Track current scratch path
+//    val currentPathState = remember { mutableStateOf(DraggedPath(path = Path(), width = 150f)) }
+//    // Track percentage of area scratched
+//    var scratchedAreaPercentage by remember { mutableFloatStateOf(0f) }
+//    // Track whether completion callback has been called
+//    var hasCalledCompletion by remember { mutableStateOf(false) }
+//    // Canvas size in pixels
+//    val canvasSizePx = with(LocalDensity.current) { 300.dp.toPx() }
+//
+//    // Animation state for hero reveal
+//    var showHeroReveal by remember { mutableStateOf(false) }
+//    // Animate scale for hero reveal
+//    val animatedScale by animateFloatAsState(
+//        targetValue = if (showHeroReveal) 1.2f else 1f,
+//        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+//        label = "heroRevealScale"
+//    )
+//
+//    // Trigger completion callback when 95% scratched
+//    LaunchedEffect(scratchedAreaPercentage) {
+//        if (scratchedAreaPercentage >= 95f && !hasCalledCompletion) {
+//            hasCalledCompletion = true
+//            onScratchCompleted()
+//            showHeroReveal = true // Trigger hero reveal animation
+//        }
+//    }
+//
+//    // Simulate scratching animation
+//    LaunchedEffect(Unit) {
+//        val stepSize = canvasSizePx / 2 // Larger step size for efficiency
+//        val totalArea = canvasSizePx * canvasSizePx
+//        val scratchPath = currentPathState.value.path
+//
+//        // Create a simple scratch pattern
+//        for (y in 0..canvasSizePx.toInt() step stepSize.toInt()) {
+//            for (x in 0..canvasSizePx.toInt() step stepSize.toInt()) {
+//                scratchPath.addOval(
+//                    androidx.compose.ui.geometry.Rect(
+//                        center = Offset(x.toFloat(), y.toFloat()),
+//                        radius = stepSize * 0.8f
+//                    )
+//                )
+//                scratchedAreaPercentage = ((y * canvasSizePx + x) / totalArea * 100f).coerceAtMost(100f)
+//                delay(80) // Delay for smooth animation
+//            }
+//        }
+//    }
+//
+//    // Scratch card container
+//    Box(
+//        contentAlignment = Alignment.Center,
+//        modifier = modifier
+//    ) {
+//        // Conditional rendering based on scratch progress
+//        if (scratchedAreaPercentage < 95f) {
+//            OptimizedScratchCanvas(
+//                overlayImage = overlayImage,
+//                baseImage = baseImage,
+//                currentPath = currentPathState.value.path,
+//                modifier = Modifier
+//                    .size(300.dp)
+//                    .align(Alignment.Center)
+//            )
+//        } else {
+//            // Reveal hero image with animation
+//            Image(
+//                painter = painterResource(
+//                    id = when (heroName) {
+//                        "Iron_Man" -> R.drawable.iron_man
+//                        "Hulk" -> R.drawable.hulk_
+//                        "Captain Marvel" -> R.drawable.captain_marvel
+//                        "Captain America" -> R.drawable.captain_america
+//                        "Scarlet Witch" -> R.drawable.scarlet_witch
+//                        "Black Widow" -> R.drawable.black_widow
+//                        "Wasp" -> R.drawable.wasp
+//                        "Hela" -> R.drawable.hela
+//                        "Thor" -> R.drawable.thor
+//                        "Spider Man" -> R.drawable.spider_man
+//                        else -> R.drawable.inner
+//                    }
+//                ),
+//                contentDescription = "Revealed Hero",
+//                modifier = Modifier
+//                    .size(300.dp)
+//                    .graphicsLayer {
+//                        scaleX = animatedScale // Apply animated scale
+//                        scaleY = animatedScale
+//                    }
+//                    .align(Alignment.Center)
+//            )
+//        }
+//
+//        // Completion indicator
+//        AnimatedVisibility(
+//            visible = scratchedAreaPercentage >= 95f,
+//            enter = fadeIn(),
+//            exit = fadeOut()
+//        ) {
+//            Text(
+//                text = "Hero collected!",
+//                style = MaterialTheme.typography.titleLarge,
+//                color = Color.White,
+//                modifier = Modifier
+//                    .align(Alignment.BottomCenter)
+//                    .padding(bottom = 16.dp)
+//                    .background(
+//                        Color(0x99000000), // Semi-transparent black
+//                        shape = RoundedCornerShape(4.dp)
+//                    )
+//                    .padding(horizontal = 12.dp, vertical = 4.dp)
+//            )
+//        }
+//    }
+//}
 
 // Composable for optimized scratch canvas
 @Composable

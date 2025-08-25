@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.blesense.app-mergeDebugResources-85:/values-v24/values-v24.xml",
+            "outputFile": "com.blesense.app-mergeDebugResources-91:/values-v24/values-v24.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\2e02934df89c33196c840ab0bb78e7bb\\transformed\\appcompat-1.6.1\\res\\values-v24\\values-v24.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\6d33db0db7be185970e3a6eaf63fb0a4\\transformed\\appcompat-1.6.1\\res\\values-v24\\values-v24.xml",
                     "from": {
                         "startLines": "2,3",
                         "startColumns": "4,4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\d4bde58f3ee011a2374c1e13d8a40171\\transformed\\material-1.9.0\\res\\values-v24\\values-v24.xml",
+                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\8d03e57ad3e2f3d2c72124a562b93202\\transformed\\material-1.9.0\\res\\values-v24\\values-v24.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,9,12,15",
                         "startColumns": "4,4,4,4,4,4,4,4",

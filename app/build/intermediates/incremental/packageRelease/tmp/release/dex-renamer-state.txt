@@ -1,4 +1,4 @@
-#Tue Jul 29 16:46:50 IST 2025
+#Tue Aug 12 12:05:21 IST 2025
 base.0=C\:\\Users\\hp\\StudioProjects\\BLE_Sense_App09\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\classes.dex
 base.1=C\:\\Users\\hp\\StudioProjects\\BLE_Sense_App09\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\classes2.dex
 base.2=C\:\\Users\\hp\\StudioProjects\\BLE_Sense_App09\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\classes3.dex

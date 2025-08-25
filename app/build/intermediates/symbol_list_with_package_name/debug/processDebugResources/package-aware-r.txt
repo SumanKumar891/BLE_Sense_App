@@ -2890,6 +2890,9 @@ drawable abc_textfield_search_activated_mtrl_alpha
 drawable abc_textfield_search_default_mtrl_alpha
 drawable abc_textfield_search_material
 drawable abc_vector_test
+drawable admob_close_button_black_circle_white_cross
+drawable admob_close_button_white_circle_black_cross
+drawable admob_close_button_white_cross
 drawable arrow_back
 drawable avd_hide_password
 drawable avd_show_password
@@ -3783,9 +3786,11 @@ plurals mtrl_badge_content_description
 raw beep
 raw bgmusic
 raw firebase_common_keep
+raw keep_cronet_api
 raw nuclear_alarm
 raw wrong
 raw yayy
+string CronetProviderClassName
 string abc_action_bar_home_description
 string abc_action_bar_up_description
 string abc_action_menu_overflow_description
@@ -3835,6 +3840,7 @@ string character_counter_content_description
 string character_counter_overflowed_content_description
 string character_counter_pattern
 string clear_text_end_icon_content_description
+string close_button
 string close_drawer
 string close_sheet
 string common_google_play_services_enable_button
@@ -3972,6 +3978,12 @@ string material_timepicker_minute
 string material_timepicker_pm
 string material_timepicker_select_time
 string material_timepicker_text_input_mode_description
+string mraid_alert_accept
+string mraid_alert_decline
+string mraid_allow_calendar_event
+string mraid_allow_store_picture
+string mraid_create_calendar_event
+string mraid_save_image
 string mtrl_badge_numberless_content_description
 string mtrl_checkbox_button_icon_path_checked
 string mtrl_checkbox_button_icon_path_group_name
@@ -4034,6 +4046,9 @@ string mtrl_switch_track_decoration_path
 string mtrl_switch_track_path
 string mtrl_timepicker_cancel
 string mtrl_timepicker_confirm
+string native_body
+string native_headline
+string native_media_view
 string navigation_menu
 string not_selected
 string password_toggle_content_description
@@ -4059,6 +4074,7 @@ string status_bar_notification_info_overflow
 string switch_role
 string tab
 string template_percent
+string test_ad
 string tooltip_description
 string tooltip_label
 style AlertDialog_AppCompat

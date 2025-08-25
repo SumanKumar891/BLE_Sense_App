@@ -54,6 +54,7 @@ drawable ic_rotate
 drawable ic_switch
 drawable ic_thermometer
 drawable ic_turbo
+drawable icons_leaf
 drawable inner
 drawable iron_man
 drawable jack
@@ -78,7 +79,9 @@ drawable scarlet_witch
 drawable scratch
 drawable search
 drawable settings
+drawable soil3
 drawable soil_sensor
+drawable soil_sensor2
 drawable soundoff
 drawable soundon
 drawable spider_man
@@ -89,7 +92,7 @@ drawable visibility
 drawable visibility_off
 drawable visibility_on
 drawable wasp
-drawable water_quality
+drawable waterquality
 font fonts
 font helvetica
 font helvetica_bold

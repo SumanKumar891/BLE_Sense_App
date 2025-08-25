@@ -19,7 +19,7 @@ android {
 
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_KEY", "\"AIzaSyBr_EdKrLRXftUK9MN2TDTKctiEZD6-mOM\"")
+        buildConfigField("String", "API_KEY", "\"AIzaSyAu4GS_QgeEhfNyNw5qJtWPUaoTMHPo9ZE\"") //old translation services - AIzaSyBr_EdKrLRXftUK9MN2TDTKctiEZD6-mOM
         buildConfigField("boolean", "DUMMY", "true") // Force generation
     }
 
@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.metadata)
     implementation(libs.androidx.room.compiler)
+    implementation(libs.ads.mobile.sdk)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -114,6 +115,23 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
     implementation("org.jetbrains:annotations:23.0.0")
+    implementation("com.google.accompanist:accompanist-webview:0.32.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation("io.ktor:ktor-client-android:2.3.7")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+    implementation("com.google.accompanist:accompanist-webview:0.32.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation("com.google.accompanist:accompanist-webview:0.32.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation("androidx.compose.runtime:runtime:1.6.8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.compose.material:material:1.5.0")
+    implementation("androidx.compose.ui:ui:1.5.0")
+    implementation("androidx.compose.runtime:runtime:1.5.0")
+
 
 }
 configurations.all {
