@@ -19,7 +19,7 @@ android {
 
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_KEY", "\"AIzaSyAu4GS_QgeEhfNyNw5qJtWPUaoTMHPo9ZE\"") //old translation services - AIzaSyBr_EdKrLRXftUK9MN2TDTKctiEZD6-mOM
+        buildConfigField("String", "API_KEY", "\"AIzaSyAu4GS_QgeEhfNyNw5qJtWPUaoTMHPo9ZE\"") 
         buildConfigField("boolean", "DUMMY", "true") // Force generation
     }
 
