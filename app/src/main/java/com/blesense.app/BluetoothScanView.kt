@@ -1,7 +1,5 @@
-// Package declaration for the Android application
 package com.blesense.app
 
-// Import statements for Android Bluetooth, permissions, lifecycle, coroutines, and Firebase
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -16,19 +14,6 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.blesense.app.ReflectanceUploadWorker
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,88 +22,86 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-//import retrofit2.http.Query
-import com.google.firebase.firestore.Query
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
-// ViewModel class for handling Bluetooth scanning and sensor data processing
+// ViewModel for managing Bluetooth Low Energy (BLE) scanning and device data
 class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
-
-    // Firebase Firestore setup for storing reflectance readings
-    private val firestore = Firebase.firestore
-    private val reflectanceCollection = firestore.collection("reflectance_readings")
 
     // StateFlow to hold the list of discovered Bluetooth devices
     private val _devices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
     val devices: StateFlow<List<BluetoothDevice>> = _devices.asStateFlow()
 
-    // Scan callback for handling Bluetooth scan results
+    // Callback for BLE scan results
     private var scanCallback: ScanCallback? = null
 
     // StateFlow to track scanning status
     private val _isScanning = MutableStateFlow(false)
-    val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
 
-    // Coroutine Job for managing periodic scans
+    // StateFlow to track the latest packet ID for UI observation
+    private val _latestPacketId = MutableStateFlow(-1)
+    val latestPacketId: StateFlow<Int> = _latestPacketId.asStateFlow()
+
+    val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
+    val dataLoggerPacketHistory = MutableStateFlow<List<BluetoothScanViewModel.SensorData.DataLoggerData>>(emptyList())
+
+
+    // Coroutine job for periodic scanning
     private var scanJob: Job? = null
 
-    // Thread-safe storage for historical sensor data
+    // Thread-safe storage for historical sensor data per device
     private val deviceHistoricalData = ConcurrentHashMap<String, MutableList<HistoricalDataEntry>>()
 
-    // StateFlow to manage the current game mode
+    // StateFlow to track the current game mode
     private val _currentGameMode = MutableStateFlow<GameMode>(GameMode.NONE)
     private val stepCounterOffsets = ConcurrentHashMap<String, Int>()
     val currentGameMode: StateFlow<GameMode> = _currentGameMode.asStateFlow()
 
-    // Configure scan intervals
+    // Companion object for constants
     companion object {
-        private const val SCAN_PERIOD = 10000L // Duration of each scan: 10 seconds
-        private const val SCAN_INTERVAL = 30000L // Interval between scans: 30 seconds
-        private const val MAX_HISTORY_ENTRIES_PER_DEVICE = 1000 // Maximum historical entries per device to prevent memory issues
+        private const val SCAN_PERIOD = 10000L // Duration of each scan in milliseconds
+        private const val SCAN_INTERVAL = 30000L // Interval between scans in milliseconds
+        private const val MAX_HISTORY_ENTRIES_PER_DEVICE = 1000 // Maximum historical entries per device
     }
 
-    // Enum class to define available game modes
+    // Enum to represent different game modes
     enum class GameMode {
         NONE,
         HUNT_THE_HEROES,
         GUESS_THE_CHARACTER
     }
 
-    // Function to set the current game mode and clear devices
+    // Sets the current game mode and clears the device list
     fun setGameMode(mode: GameMode) {
         _currentGameMode.value = mode
-        // Clear devices when changing mode
         clearDevices()
     }
 
-    // Data class to store historical sensor data with timestamps
+    // Data class to store historical sensor data with timestamp
     data class HistoricalDataEntry(
         val timestamp: Long,
         val sensorData: SensorData?
     )
 
-    // Sealed class to represent different types of sensor data
+    // Sealed class for different types of sensor data
     sealed class SensorData {
         abstract val deviceId: String
 
-        // Data class for SHT40 (temperature and humidity) sensor data
+        // Data class for SHT40 sensor data (temperature and humidity)
         data class SHT40Data(
             override val deviceId: String,
             val temperature: String,
             val humidity: String
         ) : SensorData()
 
-        // Data class for Lux (light intensity) sensor data
+        // Data class for Lux sensor data
         data class LuxSensorData(
             override val deviceId: String,
             val lux: String,
             val rawData: String
         ) : SensorData()
 
-        // Data class for LIS2DH (accelerometer) sensor data
+        // Data class for LIS2DH accelerometer data
         data class LIS2DHData(
             override val deviceId: String,
             val x: String,
@@ -138,7 +121,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             val pH: String
         ) : SensorData()
 
-        // Data class for speed and distance (SDT) sensor data
+        // Data class for speed and distance sensor data
         data class SDTData(
             override val deviceId: String,
             val speed: String,
@@ -154,36 +137,60 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         // Data class for step counter sensor data
         data class StepCounterData(
             override val deviceId: String,
-            val steps: String
+            val steps: String,
+            val rawData: ByteArray? // Added raw data field
         ) : SensorData()
 
         // Data class for ammonia sensor data
         data class AmmoniaSensorData(
             override val deviceId: String,
-            val ammonia: String, // In ppm
+            val ammonia: String,
             val rawData: String
         ) : SensorData()
 
-        // Data class for optical sensor data
-        data class OpticalSensorData(
+        // Data class for data logger sensor data
+        data class DataLoggerData(
             override val deviceId: String,
-            val reflectanceValues: List<Float>, // List of 18 reflectance values (6 bytes each)
-            val rawData: String // Raw data for debugging
-        ) : SensorData()
+            val rawData: String,
+            val packetId: Int,
+            val payloadPackets: List<List<Int>>,
+            val isContinuousData: Boolean = false,
+            val continuousDataPoint: List<Int>? = null
+        ) : SensorData() {
+            // Returns all data points, either continuous or packet-based
+            val allDataPoints: List<List<Int>>
+                get() = if (isContinuousData && continuousDataPoint != null) {
+                    listOf(continuousDataPoint)
+                } else {
+                    payloadPackets
+                }
+
+            // Validates the data
+            val isValid: Boolean
+                get() = packetId >= 0 && allDataPoints.isNotEmpty()
+
+            // Formats raw data for display
+            val displayRawData: String
+                get() = if (isContinuousData) {
+                    "Continuous: ${continuousDataPoint?.joinToString() ?: "No data"}"
+                } else {
+                    "Large Packet ID: $packetId, Packets: ${payloadPackets.size}"
+                }
+        }
 
         // Data class for dissolved oxygen (DO) sensor data
         data class DOSensorData(
             override val deviceId: String,
-            val temperature: String,         // e.g., "24.78 °C"
-            val doPercentage: String,        // e.g., "90.45 %"
-            val doValue: String,             // e.g., "7.49 mg/L"
-            val temperatureFloat: Float,     // raw float value
+            val temperature: String,
+            val doPercentage: String,
+            val doValue: String,
+            val temperatureFloat: Float,
             val doPercentageFloat: Float,
             val doValueFloat: Float
         ) : SensorData()
     }
 
-    // Data class to represent a Bluetooth device
+    // Data class for representing a Bluetooth device
     data class BluetoothDevice(
         val name: String,
         val rssi: String,
@@ -192,7 +199,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         val sensorData: SensorData? = null
     )
 
-    // Start periodic Bluetooth scanning
+    // Starts periodic BLE scanning
     fun startPeriodicScan(activity: Activity) {
         if (_isScanning.value) return
 
@@ -201,18 +208,17 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             while (isActive) {
                 _isScanning.value = true
                 startScan(activity)
-                delay(SCAN_PERIOD) // Scan for 10 seconds
+                delay(SCAN_PERIOD)
                 stopScan()
                 _isScanning.value = false
-                delay(SCAN_INTERVAL) // Wait 30 seconds before next scan
+                delay(SCAN_INTERVAL)
             }
         }
     }
 
-    // Region: Scanner Management
-    // Start a single Bluetooth scan
+    // Starts a single BLE scan
     @SuppressLint("MissingPermission")
-    fun startScan(activity: Activity) {
+    fun startScan(activity: Activity?) {
         getBluetoothScanner()?.let { scanner ->
             val scanSettings = createScanSettings()
             scanCallback = createScanCallback()
@@ -220,7 +226,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-    // Stop the current Bluetooth scan
+    // Stops the current BLE scan
     @SuppressLint("MissingPermission")
     fun stopScan() {
         getBluetoothScanner()?.let { scanner ->
@@ -231,11 +237,11 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-    // Get the Bluetooth LE scanner
+    // Retrieves the Bluetooth LE scanner
     private fun getBluetoothScanner(): BluetoothLeScanner? =
         BluetoothAdapter.getDefaultAdapter()?.bluetoothLeScanner
 
-    // Create scan settings for Bluetooth LE scanning
+    // Creates scan settings for BLE scanning
     private fun createScanSettings(): ScanSettings =
         ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -243,22 +249,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             .setPhy(ScanSettings.PHY_LE_ALL_SUPPORTED)
             .build()
 
-    // Debug function to log optical sensor data
-    fun debugOpticalSensorData(deviceAddress: String) {
-        val device = _devices.value.find { it.address == deviceAddress }
-        if (device?.sensorData is SensorData.OpticalSensorData) {
-            val opticalData = device.sensorData as SensorData.OpticalSensorData
-            Log.d("OpticalDebug", "Device: ${device.name}")
-            Log.d("OpticalDebug", "Address: ${device.address}")
-            Log.d("OpticalDebug", "Device ID: ${opticalData.deviceId}")
-            Log.d("OpticalDebug", "Raw Data: ${opticalData.rawData}")
-            Log.d("OpticalDebug", "Reflectance Values (${opticalData.reflectanceValues.size}): ${opticalData.reflectanceValues}")
-        } else {
-            Log.d("OpticalDebug", "No optical sensor data found for device: $deviceAddress")
-        }
-    }
-
-    // Create a callback for handling Bluetooth scan results
+    // Creates a callback for handling BLE scan results
     private fun createScanCallback(): ScanCallback = object : ScanCallback() {
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -268,50 +259,42 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
                 result.device?.let { device ->
                     val deviceName = device.name ?: return
                     val deviceAddress = device.address ?: return
-                    Log.d("Scan", "Found device: $deviceName at $deviceAddress")
                     val deviceType = determineDeviceType(deviceName)
+                    val manufacturerData = result.scanRecord?.manufacturerSpecificData ?: return
+                    if (manufacturerData.size() == 0) return
 
                     // Parse sensor data based on device type
-                    val sensorData: BluetoothScanViewModel.SensorData? = when (deviceType) {
+                    val sensorData: SensorData? = when (deviceType) {
                         "Step Counter" -> {
-                            val data = result.scanRecord?.manufacturerSpecificData?.valueAt(0)
+                            val data = manufacturerData.valueAt(0)
                             parseStepCounterData(data, deviceAddress)
                         }
-
                         "Ammonia Sensor" -> {
-                            val data = result.scanRecord?.manufacturerSpecificData?.valueAt(0)
+                            val data = manufacturerData.valueAt(0)
                             parseAmmoniaSensorData(data, deviceAddress)
                         }
                         "Lux Sensor" -> {
-                            val manufacturerData = result.scanRecord?.manufacturerSpecificData
                             var sensorData: SensorData? = null
-
-                            manufacturerData?.let {
-                                for (i in 0 until it.size()) {
-                                    val key = it.keyAt(i)
-                                    val data = it.valueAt(i)
-                                    Log.d("LuxSensor", "Found manufacturer data with ID: $key, data: ${data?.joinToString { b -> "%02X".format(b) }}")
-                                    if (data != null) {
-                                        sensorData = parseLuxSensorData(data, deviceAddress)
-                                        break // found data, stop
-                                    }
+                            for (i in 0 until manufacturerData.size()) {
+                                val key = manufacturerData.keyAt(i)
+                                val data = manufacturerData.valueAt(i)
+                                if (data != null) {
+                                    sensorData = parseLuxSensorData(data, deviceAddress)
+                                    break
                                 }
-                                if (sensorData == null) {
-                                    Log.w("LuxSensor", "No manufacturer data available in list")
-                                }
-                            } ?: run {
-                                Log.w("LuxSensor", "manufacturerSpecificData is null for $deviceAddress")
                             }
-
                             sensorData
                         }
-
+                        "DataLogger" -> {
+                            val data = manufacturerData.valueAt(0)
+                            parseDataLoggerData(data, deviceAddress)
+                        }
                         else -> {
-                            // Includes Optical Soil Sensor
                             parseAdvertisingData(result, deviceType)
                         }
                     }
 
+                    // Create a Bluetooth device object
                     val bluetoothDevice = BluetoothDevice(
                         name = deviceName,
                         address = deviceAddress,
@@ -321,18 +304,13 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
                     )
 
                     updateDevice(bluetoothDevice)
-
-                    sensorData?.let {
-                        storeHistoricalData(deviceAddress, it)
-                    }
                 }
             } catch (e: SecurityException) {
-                e.printStackTrace()
+                // Handle security exception silently
             }
         }
     }
-
-    // Check if required Bluetooth permissions are granted
+    // Checks if the required permissions are granted
     private fun hasRequiredPermissions(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
@@ -344,135 +322,16 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-    // Store historical sensor data in memory and Firestore (for optical sensor data)
-    private fun storeHistoricalData(deviceAddress: String, sensorData: SensorData) {
-        // Add to in-memory storage
-        val deviceHistory = deviceHistoricalData.getOrPut(deviceAddress) { ArrayList() }
-        deviceHistory.add(HistoricalDataEntry(System.currentTimeMillis(), sensorData))
-
-        // Handle optical sensor data for Firestore upload
-        if (sensorData is SensorData.OpticalSensorData) {
-            // Immediate Firestore upload in the foreground
-            viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    reflectanceCollection.add(
-                        hashMapOf(
-                            "timestamp" to System.currentTimeMillis(),
-                            "deviceId" to sensorData.deviceId,
-                            "deviceAddress" to deviceAddress,
-                            "reflectanceValues" to sensorData.reflectanceValues,
-                            "rawData" to sensorData.rawData,
-                            "userId" to Firebase.auth.currentUser?.uid,
-                            "uploadSource" to "Foreground" // For debugging
-                        )
-                    ).await()
-                    Log.d("Firestore", "Immediate upload succeeded")
-                } catch (e: Exception) {
-                    Log.e("Firestore", "Immediate upload failed, enqueuing worker", e)
-                    // Fallback to WorkManager if immediate upload fails
-                    enqueueReflectanceWorker(deviceAddress, sensorData)
-                }
-            }
-
-            // Always enqueue worker for background persistence
-            enqueueReflectanceWorker(deviceAddress, sensorData)
-        }
-    }
-
-    // Enqueue a WorkManager task to upload optical sensor data
-    private fun enqueueReflectanceWorker(deviceAddress: String, sensorData: SensorData.OpticalSensorData) {
-        val workData = workDataOf(
-            "deviceAddress" to deviceAddress,
-            "deviceId" to sensorData.deviceId,
-            "reflectanceValues" to sensorData.reflectanceValues.toFloatArray(),
-            "rawData" to sensorData.rawData
-        )
-
-        val workRequest = OneTimeWorkRequestBuilder<ReflectanceUploadWorker>()
-            .setInputData(workData)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                10_000L, // Initial backoff of 10 seconds
-                TimeUnit.MILLISECONDS
-            )
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            "reflectance_upload_${System.currentTimeMillis()}",
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
-    }
-
-    // Load persisted data from Firestore for a specific device
-    fun loadPersistedData(deviceAddress: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val querySnapshot = reflectanceCollection
-                    .whereEqualTo("deviceAddress", deviceAddress)
-                    .whereEqualTo("userId", Firebase.auth.currentUser?.uid) // User-specific data
-                    .orderBy("timestamp", Query.Direction.DESCENDING)
-                    .get()
-                    .await()
-
-                querySnapshot.documents.forEach { doc ->
-                    val data = doc.toObject(ReflectanceData::class.java)
-                    data?.let {
-                        deviceHistoricalData.getOrPut(deviceAddress) { ArrayList() }.add(
-                            HistoricalDataEntry(
-                                it.timestamp,
-                                SensorData.OpticalSensorData(
-                                    deviceId = it.deviceId,
-                                    reflectanceValues = it.reflectanceValues,
-                                    rawData = it.rawData
-                                )
-                            )
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("Firestore", "Load failed", e)
-            }
-        }
-    }
-
-    // Data class for Firestore reflectance data
-    private data class ReflectanceData(
-        val timestamp: Long = 0,
-        val deviceId: String = "",
-        val deviceAddress: String = "",
-        val reflectanceValues: List<Float> = emptyList(),
-        val rawData: String = "",
-        val userId: String? = null
-    )
-
-    // Retrieve historical data for a specific device
+    // Retrieves historical data for a specific device
     fun getHistoricalDataForDevice(deviceAddress: String): List<HistoricalDataEntry> {
         return deviceHistoricalData[deviceAddress]?.toList() ?: emptyList()
     }
 
-    // Get the latest reflectance values for a specific device
-    fun getLatestReflectanceValuesForSelectedDevice(address: String): List<Float>? {
-        return (deviceHistoricalData[address]
-            ?.lastOrNull()
-            ?.sensorData as? SensorData.OpticalSensorData
-                )?.reflectanceValues
-    }
-
-    // Region: Data Parsing
-    // Parse advertising data based on device type
+    // Parses advertising data based on device type
     fun parseAdvertisingData(result: ScanResult, deviceType: String?): SensorData? {
         val manufacturerData = result.scanRecord?.manufacturerSpecificData ?: return null
         if (manufacturerData.size() == 0) return null
-
         val data = manufacturerData.valueAt(0) ?: return null
-
-        // Get the device address for step counter and ammonia sensor devices
         val deviceAddress = result.device?.address ?: return null
 
         return when (deviceType) {
@@ -483,48 +342,22 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
             "Metal Detector" -> parseMetalDetectorData(data)
             "Step Counter" -> parseStepCounterData(data, deviceAddress)
             "Ammonia Sensor" -> parseAmmoniaSensorData(data, deviceAddress)
-            "Optical Sensor" -> parseOpticalSensorData(data, deviceAddress)
             "Lux Sensor" -> parseLuxSensorData(data, deviceAddress)
             "DO Sensor" -> parseDOSensorData(data, deviceAddress)
+            "DataLogger" -> parseDataLoggerData(data, deviceAddress)
             else -> null
         }
     }
 
-    // Parse Lux sensor data
+    // Parses Lux sensor data from advertisement
     private fun parseLuxSensorData(data: ByteArray?, deviceAddress: String): SensorData? {
-        if (data == null) {
-            Log.d("parseLuxSensorData", "Null data array")
-            return null
-        }
-
-        if (data.isEmpty()) {
-            Log.d("parseLuxSensorData", "Empty data array")
-            return null
-        }
-
+        if (data == null || data.isEmpty()) return null
         val rawDataString = data.joinToString(" ") { "%02X".format(it) }
-        Log.d("parseLuxSensorData", "Raw data: $rawDataString")
-
-        // Check if we have at least 5 bytes
-        if (data.size < 5) {
-            Log.d("parseLuxSensorData", "Insufficient data length: ${data.size}, need at least 3 bytes")
-            return null
-        }
-
-        // Extract device ID from first byte
+        if (data.size < 5) return null
         val deviceId = data[0].toInt() and 0xFF
-
-        // Extract lux values from second and third bytes
         val highLux = data[1].toInt() and 0xFF
         val lowLux = data[2].toInt() and 0xFF
-
-        // Calculate lux value
         val luxValue = (highLux * 256) + lowLux
-
-        Log.d("parseLuxSensorData", "Device ID: $deviceId")
-        Log.d("parseLuxSensorData", "High Lux: $highLux, Low Lux: $lowLux")
-        Log.d("parseLuxSensorData", "Calculated Lux: $luxValue")
-
         return SensorData.LuxSensorData(
             deviceId = deviceId.toString(),
             lux = luxValue.toString(),
@@ -532,29 +365,80 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         )
     }
 
-    // Parse SHT40 (temperature and humidity) sensor data
+    // Parses DataLogger sensor data from advertisement
+    private fun parseDataLoggerData(data: ByteArray?, deviceAddress: String): SensorData.DataLoggerData? {
+        if (data == null) return null
+
+        val rawData = data.joinToString(" ") { byte -> "%02X".format(byte) }
+
+        // Required payload size (without manufacturer ID)
+        val requiredSize = 234
+        val fixedData = when {
+            data.size < requiredSize -> data + ByteArray(requiredSize - data.size) { 0 }
+            data.size > requiredSize -> data.copyOf(requiredSize)
+            else -> data
+        }
+
+        // Structure: [0-230: payload data] [231: device id] [232-233: footer]
+        val deviceId = fixedData[231].toInt() and 0xFF
+        val footer1 = fixedData[232].toInt() and 0xFF
+        val footer2 = fixedData[233].toInt() and 0xFF
+
+        _latestPacketId.value = deviceId
+
+        // Parse payload data (bytes 0 to 230, total 231 bytes)
+        val payloadEndIndex = 231
+        val payloadPackets = mutableListOf<List<Int>>()
+        var index = 0
+
+        // Parse triplets from payload section
+        while (index + 2 < payloadEndIndex) {
+            val x = fixedData[index++].toInt() and 0xFF
+            val y = fixedData[index++].toInt() and 0xFF
+            val z = fixedData[index++].toInt() and 0xFF
+            payloadPackets.add(listOf(x, y, z))
+        }
+
+        // Handle remaining bytes in payload
+        if (index < payloadEndIndex) {
+            val remainingBytes = mutableListOf<Int>()
+            while (index < payloadEndIndex) {
+                remainingBytes.add(fixedData[index++].toInt() and 0xFF)
+            }
+        }
+        val dataLoggerDataObj = SensorData.DataLoggerData(
+            deviceId =  "DataLogger_Large_$deviceId",
+            rawData = rawData,
+            packetId = deviceId,
+            payloadPackets = payloadPackets,
+            isContinuousData = false
+        )
+
+        if (dataLoggerDataObj.packetId >= 0 && dataLoggerDataObj.payloadPackets.isNotEmpty()) {
+            val newList = dataLoggerPacketHistory.value.toMutableList().apply { add(dataLoggerDataObj) }
+            dataLoggerPacketHistory.value = newList
+        }
+
+        return dataLoggerDataObj
+    }
+
+    // Parses SHT40 sensor data
     private fun parseSHT40Data(data: ByteArray): SensorData? {
         if (data.size < 5) return null
-
-        // Interpret integer parts as signed bytes (can be negative)
-        val tempInt = data[1].toInt() // signed
-        val tempFrac = data[2].toUByte().toInt() // unsigned fraction
-
-        val humInt = data[3].toInt() // signed
-        val humFrac = data[4].toUByte().toInt() // unsigned fraction
-
+        val tempInt = data[1].toInt()
+        val tempFrac = data[2].toUByte().toInt()
+        val humInt = data[3].toInt()
+        val humFrac = data[4].toUByte().toInt()
         val temperature = tempInt + tempFrac / 10000.0
         val humidity = humInt + humFrac / 10000.0
-
         return SensorData.SHT40Data(
-            deviceId = data[0].toUByte().toString(), // still unsigned
+            deviceId = data[0].toUByte().toString(),
             temperature = String.format("%.2f", temperature),
             humidity = String.format("%.2f", humidity)
         )
     }
 
-
-    // Parse LIS2DH (accelerometer) sensor data
+    // Parses LIS2DH accelerometer data
     private fun parseLIS2DHData(data: ByteArray): SensorData? {
         if (data.size < 7) return null
         return SensorData.LIS2DHData(
@@ -565,7 +449,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         )
     }
 
-    // Parse soil sensor data
+    // Parses soil sensor data
     private fun parseSoilSensorData(data: ByteArray): SensorData? {
         if (data.size < 11) return null
         return SensorData.SoilSensorData(
@@ -580,7 +464,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         )
     }
 
-    // Parse speed and distance (SDT) sensor data
+    // Parses speed and distance sensor data
     private fun parseSDTData(data: ByteArray): SensorData? {
         if (data.size < 6) return null
         return SensorData.SDTData(
@@ -590,7 +474,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         )
     }
 
-    // Parse metal detector sensor data
+    // Parses metal detector data
     private fun parseMetalDetectorData(data: ByteArray): SensorData? {
         if (data.size < 2) return null
         return SensorData.ObjectDetectorData(
@@ -599,51 +483,53 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         )
     }
 
-    // Parse step counter sensor data
+    // Parses step counter data
     private fun parseStepCounterData(data: ByteArray?, deviceAddress: String): SensorData? {
-        if (data == null || data.size < 5) return null
-        val deviceId = data[0].toUByte().toString()
-        val rawStepCount = (data[3].toUByte().toInt() shl 8) or data[4].toUByte().toInt()
-        val offset = stepCounterOffsets[deviceAddress] ?: 0
-        val adjustedStepCount = (rawStepCount - offset).coerceAtLeast(0)
-        return SensorData.StepCounterData(
-            deviceId = deviceId,
-            steps = adjustedStepCount.toString()
-        )
-    }
-
-    // Parse dissolved oxygen (DO) sensor data
-    private fun parseDOSensorData(data: ByteArray, deviceAddress: String): SensorData? {
-        Log.d("DOSensorParser", "parseDOSensorData called")
-        Log.d("DOSensorParser", "Data size: ${data.size}")
-        Log.d("DOSensorParser", "Raw data: ${data.joinToString(", ") { it.toUByte().toString() }}")
-
-        if (data.size < 8) {
-            Log.d("DOSensorParser", "Data size too small (<8). Returning null.")
+        // Validate data
+        if (data == null) {
             return null
         }
 
-        val deviceId = data[0].toUByte().toString() // 133
+        // Extract device ID (first byte, if available)
+        val deviceId = if (data.isNotEmpty()) {
+            data[0].toUByte().toString()
+        } else {
+            "Unknown"
+        }
 
-        // Parse temperature
+        // Calculate step count (bytes 3 and 4, if available)
+        val rawStepCount = if (data.size >= 5) {
+            (data[3].toUByte().toInt() shl 8) or data[4].toUByte().toInt()
+        } else {
+            0 // Default to 0 if not enough bytes
+        }
+
+        // Apply offset for step count adjustment
+        val offset = stepCounterOffsets[deviceAddress] ?: 0
+        val adjustedStepCount = (rawStepCount - offset).coerceAtLeast(0)
+
+        // Create and return StepCounterData object with full raw data
+        return SensorData.StepCounterData(
+            deviceId = deviceId,
+            steps = adjustedStepCount.toString(),
+            rawData = data.copyOf() // Store a copy of the full raw byte array
+        )
+    }
+
+    // Parses dissolved oxygen (DO) sensor data
+    private fun parseDOSensorData(data: ByteArray, deviceAddress: String): SensorData? {
+        if (data.size < 8) return null
+
+        val deviceId = data[0].toUByte().toString()
         val tempInt = data[1].toUByte().toInt()
         val tempFrac = data[2].toUByte().toInt()
         val temperature = tempInt + tempFrac / 100f
-
-        // Parse saturation percentage
         val satInt = data[3].toUByte().toInt()
         val satFrac = data[4].toUByte().toInt()
         val doPercentage = satInt + satFrac / 100f
-
-        // Parse DO concentration
         val doValInt = data[5].toUByte().toInt()
         val doValFrac = data[6].toUByte().toInt()
         val doValue = doValInt + doValFrac / 100f
-
-        Log.d(
-            "DOSensorParser",
-            "Parsed: deviceId=$deviceId, temp=$temperature°C, doPercentage=$doPercentage%, doValue=$doValue mg/L"
-        )
 
         return SensorData.DOSensorData(
             deviceId = deviceId,
@@ -656,131 +542,52 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         )
     }
 
-    // Parse ammonia sensor data
+    // Parses ammonia sensor data
     private fun parseAmmoniaSensorData(data: ByteArray?, deviceAddress: String): SensorData? {
-        if (data == null) {
-            Log.w("AmmoniaParser", "Null data received")
-            return null
-        }
-
-        // Convert raw data to hex string for logging
+        if (data == null || data.size < 6) return null
         val rawDataString = data.joinToString(" ") { byte -> String.format("%02X", byte) }
-        Log.d("AmmoniaParser", "Raw BLE Data: $rawDataString")
-
-        if (data.size < 6) {
-            Log.w("AmmoniaParser", "Invalid Data: Data size (${data.size}) is too short")
-            return null
-        }
-
         val deviceId = data[0].toUByte().toString()
         val ammoniaPpm = try {
             data[5].toUByte().toFloat()
         } catch (e: Exception) {
-            Log.e("AmmoniaParser", "Error parsing ammonia value", e)
             return null
         }
-
         val ammoniaValue = String.format(Locale.US, "%.1f", ammoniaPpm)
-
         return SensorData.AmmoniaSensorData(
             deviceId = deviceId,
             ammonia = "$ammoniaValue ppm",
-            rawData = rawDataString // Include raw data
+            rawData = rawDataString
         )
     }
 
-    // Parse optical sensor data
-    private fun parseOpticalSensorData(
-        data: ByteArray?,
-        deviceAddress: String
-    ): SensorData.OpticalSensorData? {
-        if (data == null) {
-            Log.w("OpticalParser", "Null data from $deviceAddress")
-            return null
-        }
-
-        val limitedData = data.take(108).toByteArray()
-        val rawDataString = limitedData.joinToString(" ") { "%02X".format(it) }
-        Log.d("OpticalParser", "Raw BLE Data (first 108 bytes): $rawDataString")
-
-        if (limitedData.size < 108) {
-            Log.w("OpticalParser", "Expected at least 108 bytes, got ${limitedData.size}")
-            return SensorData.OpticalSensorData(
-                deviceId = deviceAddress,
-                reflectanceValues = List(18) { 0f },
-                rawData = rawDataString
-            )
-        }
-
-        return try {
-            val reflectanceValues = (0 until 18).map { i ->
-                val startIndex = i * 6
-                val bytes = limitedData.sliceArray(startIndex until startIndex + 6)
-
-                var number = 0L
-                for (b in bytes) {
-                    number = (number shl 8) or b.toUByte().toLong()
-                }
-
-                var reflectance = number / 1_000_000f
-
-                if (number == 0L) {
-                    reflectance = if (i == 0 || i == 8) 0.05f else 0.01f
-                    Log.d("", "Original number==0 → set reflectance=$reflectance at index=$i")
-                }
-
-                reflectance
-            }
-
-            Log.d("OpticalParser", "Parsed reflectance values: $reflectanceValues")
-
-            val max = reflectanceValues.maxOrNull()?.takeIf { it > 0f } ?: 1f
-            Log.d("OpticalParser", "Max reflectance before normalization: $max")
-
-            val normalizedReflectance = reflectanceValues.mapIndexed { i, value ->
-                var normalized = value / max
-                if (normalized <= 0f) {
-                    normalized = 0.01f
-                    Log.d("OpticalParser", "Normalized reflectance[$i] was 0/negative → set to 0.01f")
-                }
-                if (normalized < 0.000001f) normalized = 0.000001f
-                normalized
-            }
-
-            Log.d("OpticalParser", "Final normalized reflectance: $normalizedReflectance")
-
-            SensorData.OpticalSensorData(
-                deviceId = deviceAddress,
-                reflectanceValues = normalizedReflectance,
-                rawData = rawDataString
-            )
-        } catch (e: Exception) {
-            Log.e("OpticalParser", "Parse error", e)
-            SensorData.OpticalSensorData(
-                deviceId = deviceAddress,
-                reflectanceValues = List(18) { 0f },
-                rawData = "ERROR: ${e.message} | Original: $rawDataString"
-            )
-        }
-    }
 
     // Reset the step counter for a specific device
     fun resetStepCounter(deviceAddress: String) {
         viewModelScope.launch {
+            // Find the device in the current device list
             val devices = _devices.value
             val device = devices.find { it.address == deviceAddress }
 
+            // Reset step counter if the device is a step counter
             if (device != null && device.sensorData is SensorData.StepCounterData) {
-                val currentSteps = (device.sensorData as SensorData.StepCounterData).steps.toIntOrNull() ?: 0
+                val stepData = device.sensorData as SensorData.StepCounterData
+                val currentSteps = stepData.steps.toIntOrNull() ?: 0
                 val currentOffset = stepCounterOffsets[deviceAddress] ?: 0
+
+                // Calculate new offset to reset steps to zero
                 val rawStepCount = currentSteps + currentOffset
                 stepCounterOffsets[deviceAddress] = rawStepCount
+
+                // Update device with reset step count while preserving raw data
                 val updatedDevice = device.copy(
                     sensorData = SensorData.StepCounterData(
                         deviceId = device.deviceId,
-                        steps = "0"
+                        steps = "0",
+                        rawData = stepData.rawData // Preserve existing raw data
                     )
                 )
+
+                // Update the device list
                 _devices.update { currentDevices ->
                     currentDevices.map {
                         if (it.address == deviceAddress) updatedDevice else it
@@ -790,8 +597,7 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-    // Region: Utility Functions
-    // Determine device type based on BLE device name
+    // Determines the device type based on its name
     private fun determineDeviceType(name: String?): String = when {
         name?.contains("SHT", ignoreCase = true) == true -> "SHT40"
         name?.contains("Lux_Data", ignoreCase = true) == true -> "Lux Sensor"
@@ -803,11 +609,13 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         name?.contains("NH", ignoreCase = true) == true -> "Ammonia Sensor"
         name?.contains("DO_Sensor", ignoreCase = true) == true -> "DO Sensor"
         name?.contains("Dissolved", ignoreCase = true) == true -> "DO Sensor"
-        name?.contains("Optical_Sensor", ignoreCase = true) == true -> "Optical Sensor"
+        name?.contains("DataLogger", ignoreCase = true) == true -> "DataLogger"
+        name?.contains("Data Logger", ignoreCase = true) == true -> "DataLogger"
+        name?.contains("DLOG", ignoreCase = true) == true -> "DataLogger"
         else -> "Unknown Device"
     }
 
-    // Update device information in the StateFlow
+    // Updates the device list with new or updated device data
     private fun updateDevice(newDevice: BluetoothDevice, sensorData: SensorData? = null) {
         _devices.update { devices ->
             val existingDeviceIndex = devices.indexOfFirst { it.address == newDevice.address }
@@ -830,20 +638,15 @@ class BluetoothScanViewModel<T>(private val context: Context) : ViewModel() {
         }
     }
 
-    // Clear all devices from the StateFlow
+    // Clears the list of discovered devices
     fun clearDevices() {
         _devices.value = emptyList()
     }
 
-    // Clean up resources when ViewModel is cleared
+    // Cleans up resources when the ViewModel is cleared
     override fun onCleared() {
         super.onCleared()
         scanJob?.cancel()
         stopScan()
-    }
-
-    // Format reflectance values for display
-    fun formatReflectanceValues(values: List<Float>): List<String> {
-        return values.map { String.format(Locale.US, "%.6f", it) }
     }
 }

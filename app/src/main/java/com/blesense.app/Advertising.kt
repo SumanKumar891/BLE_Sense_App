@@ -1,27 +1,20 @@
-// Main package declaration for the Android application
 package com.blesense.app
 
-// Import statements for Android, Compose, and Kotlin Coroutines
 import android.app.Activity
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +23,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,19 +31,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Red
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -65,9 +50,10 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToInt
 
-// Data class to hold translated text strings for UI elements, including ammonia sensor
+/**
+ * Data class to hold translated text for the Advertising Data screen.
+ */
 data class TranslatedAdvertisingText(
     val advertisingDataTitle: String = "Advertising Data",
     val deviceNameLabel: String = "Device Name",
@@ -96,63 +82,79 @@ data class TranslatedAdvertisingText(
     val warningMessage: String = "The %s has exceeded the threshold of %s!",
     val dismissButton: String = "Dismiss",
     val reflectanceValues: String = "Reflectance Values",
-    val rawData: String = "Raw Data",
-    val doTemperature: String = "DO Temp",
-    val doPercentage: String = "DO %",
-    val doValue: String = "DO Value"
+    val rawData: String = "Raw Data"
 )
 
-// Main composable function for the Advertising Data Screen
+/**
+ * Composable function to display the Advertising Data screen for a specific BLE device.
+ */
 @Composable
 fun AdvertisingDataScreen(
     deviceAddress: String,
     deviceName: String,
     navController: NavController,
     deviceId: String,
-    viewModel: BluetoothScanViewModel<Any?>,
+    viewModel: BluetoothScanViewModel<Any?>
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
+
     val viewModel: BluetoothScanViewModel<Any> = viewModel(
         factory = remember { BluetoothScanViewModelFactory(context) }
     )
 
-    LaunchedEffect(deviceAddress) {
-        viewModel.loadPersistedData(deviceAddress)
-    }
+    // Launch BLE scan when activity is available
     LaunchedEffect(activity) {
-        activity?.let {
-            viewModel.startScan(it)
+        activity?.let { viewModel.startScan(it) }
+    }
+
+    // Initialize MediaPlayer as a state holder
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    // Initialize MediaPlayer only once
+    LaunchedEffect(Unit) {
+        mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm)?.apply {
+            isLooping = true
         }
     }
-    var mediaPlayer by remember { mutableStateOf(MediaPlayer.create(context, R.raw.nuclear_alarm)) }
 
+    // Clean up MediaPlayer on disposal
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.reset()
+                player.release()
+            }
+            mediaPlayer = null
+        }
+    }
+
+    // Collect UI state from ViewModel and managers
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
     val devices by viewModel.devices.collectAsState()
+
     val currentDevice by remember(devices, deviceAddress) {
         derivedStateOf { devices.find { it.address == deviceAddress } }
     }
 
+    // State variables for threshold and alarm functionality
     var thresholdValue by remember { mutableStateOf("") }
     var isAlarmActive by remember { mutableStateOf(false) }
     var showAlertDialog by remember { mutableStateOf(false) }
     var parameterType by remember { mutableStateOf("Temperature") }
     var isThresholdSet by remember { mutableStateOf(false) }
+
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm).apply {
-            isLooping = true
-        }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaPlayer?.release()
-        }
+    // Animate alarm blinking effect
+    val isBlinking by remember(isAlarmActive) {
+        derivedStateOf { isAlarmActive }
     }
 
-    val isBlinking by remember(isAlarmActive) { derivedStateOf { isAlarmActive } }
     val blinkAlpha by animateFloatAsState(
         targetValue = if (isBlinking) 0.5f else 0f,
         animationSpec = infiniteRepeatable(
@@ -162,17 +164,18 @@ fun AdvertisingDataScreen(
         label = "blinkAlpha"
     )
 
+    // Derive ammonia value from sensor data
     val ammoniaValue by remember(currentDevice?.sensorData) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
-                is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> {
+                is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                     sensorData.ammonia.replace(" ppm", "").toFloatOrNull() ?: 0f
-                }
                 else -> 0f
             }
         }
     }
 
+    // Debounce ammonia value updates
     var displayedAmmoniaValue by remember { mutableStateOf(0f) }
     val debouncedAmmoniaValue by remember(ammoniaValue) {
         derivedStateOf { ammoniaValue }
@@ -182,17 +185,18 @@ fun AdvertisingDataScreen(
         displayedAmmoniaValue = debouncedAmmoniaValue
     }
 
+    // Derive lux value from sensor data
     val luxValue by remember(currentDevice?.sensorData) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
-                is BluetoothScanViewModel.SensorData.LuxSensorData -> {
+                is BluetoothScanViewModel.SensorData.LuxSensorData ->
                     sensorData.lux.toFloatOrNull() ?: 0f
-                }
                 else -> 0f
             }
         }
     }
 
+    // Handle threshold and alarm logic
     LaunchedEffect(currentDevice, thresholdValue, parameterType, isThresholdSet) {
         delay(500L)
         if (isThresholdSet) {
@@ -205,49 +209,41 @@ fun AdvertisingDataScreen(
                             "Humidity" -> sensorData.humidity.toFloatOrNull()
                             else -> null
                         }
-                        if (valueToCheck != null) {
-                            isAlarmActive = valueToCheck > threshold
-                        } else {
-                            isAlarmActive = false
-                        }
+                        isAlarmActive = valueToCheck != null && valueToCheck > threshold
                     }
                     is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> {
-                        if (parameterType == "Ammonia") {
-                            val ammoniaValue = sensorData.ammonia.replace(" ppm", "").toFloatOrNull() ?: 0f
-                            isAlarmActive = ammoniaValue != null && ammoniaValue > threshold
-                        } else {
-                            isAlarmActive = false
-                        }
+                        isAlarmActive = parameterType == "Ammonia" && ammoniaValue > threshold
                     }
-                    else -> {
-                        isAlarmActive = false
-                    }
+                    else -> isAlarmActive = false
                 }
+
                 if (isAlarmActive) {
                     showAlertDialog = true
-                    if (!mediaPlayer.isPlaying) {
-                        try {
-                            mediaPlayer.isLooping = true
-                            mediaPlayer.start()
-                        } catch (e: IllegalStateException) {
-                            mediaPlayer.reset()
-                            MediaPlayer.create(context, R.raw.nuclear_alarm)?.let {
-                                mediaPlayer.release()
-                                mediaPlayer = it
-                                mediaPlayer.isLooping = true
-                                mediaPlayer.start()
+                    mediaPlayer?.let { player ->
+                        if (!player.isPlaying) {
+                            try {
+                                player.start()
+                            } catch (e: IllegalStateException) {
+                                // Recreate MediaPlayer if in invalid state
+                                mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm)?.apply {
+                                    isLooping = true
+                                    start()
+                                }
                             }
                         }
                     }
                 } else {
-                    try {
-                        mediaPlayer.stop()
-                        mediaPlayer.prepare()
-                    } catch (e: IllegalStateException) {
-                        mediaPlayer.reset()
-                        MediaPlayer.create(context, R.raw.nuclear_alarm)?.let {
-                            mediaPlayer.release()
-                            mediaPlayer = it
+                    mediaPlayer?.let { player ->
+                        try {
+                            if (player.isPlaying) {
+                                player.stop()
+                                player.prepare()
+                            }
+                        } catch (e: IllegalStateException) {
+                            // Recreate MediaPlayer if in invalid state
+                            mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm)?.apply {
+                                isLooping = true
+                            }
                         }
                     }
                     showAlertDialog = false
@@ -255,84 +251,39 @@ fun AdvertisingDataScreen(
             } else {
                 isAlarmActive = false
                 showAlertDialog = false
-                try {
-                    mediaPlayer.stop()
-                    mediaPlayer.prepare()
-                } catch (e: IllegalStateException) {
-                    mediaPlayer.reset()
-                    MediaPlayer.create(context, R.raw.nuclear_alarm)?.let {
-                        mediaPlayer.release()
-                        mediaPlayer = it
+                mediaPlayer?.let { player ->
+                    try {
+                        if (player.isPlaying) {
+                            player.stop()
+                            player.prepare()
+                        }
+                    } catch (e: IllegalStateException) {
+                        mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm)?.apply {
+                            isLooping = true
+                        }
                     }
                 }
             }
         } else {
             isAlarmActive = false
             showAlertDialog = false
-            try {
-                mediaPlayer.stop()
-                mediaPlayer.prepare()
-            } catch (e: IllegalStateException) {
-                mediaPlayer.reset()
-                MediaPlayer.create(context, R.raw.nuclear_alarm)?.let {
-                    mediaPlayer.release()
-                    mediaPlayer = it
+            mediaPlayer?.let { player ->
+                try {
+                    if (player.isPlaying) {
+                        player.stop()
+                        player.prepare()
+                    }
+                } catch (e: IllegalStateException) {
+                    mediaPlayer = MediaPlayer.create(context, R.raw.nuclear_alarm)?.apply {
+                        isLooping = true
+                    }
                 }
             }
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaPlayer.release()
-        }
-    }
-
-    var translatedText by remember {
-        mutableStateOf(
-            TranslatedAdvertisingText(
-                advertisingDataTitle = TranslationCache.get("Advertising Data-$currentLanguage")
-                    ?: "Advertising Data",
-                deviceNameLabel = TranslationCache.get("Device Name-$currentLanguage")
-                    ?: "Device Name",
-                nodeIdLabel = TranslationCache.get("Node ID-$currentLanguage") ?: "Node ID",
-                downloadData = TranslationCache.get("DOWNLOAD DATA-$currentLanguage")
-                    ?: "DOWNLOAD DATA",
-                exportingData = TranslationCache.get("EXPORTING DATA...-$currentLanguage")
-                    ?: "EXPORTING DATA...",
-                temperature = TranslationCache.get("Temperature-$currentLanguage") ?: "Temperature",
-                humidity = TranslationCache.get("Humidity-$currentLanguage") ?: "Humidity",
-                xAxis = TranslationCache.get("X-Axis-$currentLanguage") ?: "X-Axis",
-                yAxis = TranslationCache.get("Y-Axis-$currentLanguage") ?: "Y-Axis",
-                zAxis = TranslationCache.get("Z-Axis-$currentLanguage") ?: "Z-Axis",
-                nitrogen = TranslationCache.get("Nitrogen-$currentLanguage") ?: "Nitrogen",
-                phosphorus = TranslationCache.get("Phosphorus-$currentLanguage") ?: "Phosphorus",
-                potassium = TranslationCache.get("Potassium-$currentLanguage") ?: "Potassium",
-                moisture = TranslationCache.get("Moisture-$currentLanguage") ?: "Moisture",
-                electricConductivity = TranslationCache.get("Electric Conductivity-$currentLanguage")
-                    ?: "Electric Conductivity",
-                pH = TranslationCache.get("pH-$currentLanguage") ?: "pH",
-                lightIntensity = TranslationCache.get("Light Intensity-$currentLanguage")
-                    ?: "Light Intensity",
-                speed = TranslationCache.get("Speed-$currentLanguage") ?: "Speed",
-                distance = TranslationCache.get("Distance-$currentLanguage") ?: "Distance",
-                objectDetected = TranslationCache.get("Object Detected-$currentLanguage")
-                    ?: "Object Detected",
-                steps = TranslationCache.get("Steps-$currentLanguage") ?: "Steps",
-                ammonia = TranslationCache.get("Ammonia-$currentLanguage") ?: "Ammonia",
-                resetSteps = TranslationCache.get("RESET STEPS-$currentLanguage") ?: "RESET STEPS",
-                warningTitle = TranslationCache.get("Warning-$currentLanguage") ?: "Warning",
-                warningMessage = TranslationCache.get("Threshold Exceeded-$currentLanguage")
-                    ?: "The %s has exceeded the threshold of %s!",
-                dismissButton = TranslationCache.get("Dismiss-$currentLanguage") ?: "Dismiss",
-                reflectanceValues = TranslationCache.get("Reflectance Values-$currentLanguage") ?: "Reflectance Values",
-                rawData = TranslationCache.get("Raw Data-$currentLanguage") ?: "Raw Data",
-                doTemperature = TranslationCache.get("DO Temp-$currentLanguage") ?: "DO Temp",
-                doPercentage = TranslationCache.get("DO %-$currentLanguage") ?: "DO %",
-                doValue = TranslationCache.get("DO Value-$currentLanguage") ?: "DO Value"
-            )
-        )
-    }
+    // Manage translated text based on language
+    var translatedText by remember { mutableStateOf(TranslatedAdvertisingText()) }
 
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
@@ -342,8 +293,9 @@ fun AdvertisingDataScreen(
             "Nitrogen", "Phosphorus", "Potassium", "Moisture", "Electric Conductivity",
             "pH", "Light Intensity", "Speed", "Distance", "Object Detected",
             "Steps", "Ammonia", "RESET STEPS", "Warning", "Threshold Exceeded",
-            "Dismiss", "DO Temp", "DO %", "DO Value"
+            "Dismiss", "Reflectance Values", "Raw Data"
         )
+
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
         translatedText = TranslatedAdvertisingText(
             advertisingDataTitle = translatedList[0],
@@ -372,39 +324,37 @@ fun AdvertisingDataScreen(
             warningTitle = translatedList[23],
             warningMessage = translatedList[24],
             dismissButton = translatedList[25],
-            doTemperature = translatedList[26],
-            doPercentage = translatedList[27],
-            doValue = translatedList[28]
+            reflectanceValues = translatedList[26],
+            rawData = translatedList[27]
         )
     }
 
-    var nutrientPredictions by remember { mutableStateOf<SoilNutrientModelHelper.NutrientPrediction?>(null) }
-
-    val displayData by remember(currentDevice?.sensorData, translatedText, nutrientPredictions) {
+    // Derive display data based on sensor type
+    val displayData by remember(currentDevice?.sensorData, translatedText) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
                 is BluetoothScanViewModel.SensorData.SHT40Data -> listOf(
+                    "Device ID" to sensorData.deviceId,
                     translatedText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
                     translatedText.humidity to "${sensorData.humidity.takeIf { it.isNotEmpty() } ?: "0"}%"
                 )
                 is BluetoothScanViewModel.SensorData.SDTData -> listOf(
+                    "Device ID" to sensorData.deviceId,
                     translatedText.speed to "${sensorData.speed.takeIf { it.isNotEmpty() } ?: "0"} m/s",
                     translatedText.distance to "${sensorData.distance.takeIf { it.isNotEmpty() } ?: "0"} m"
                 )
-                is BluetoothScanViewModel.SensorData.DOSensorData -> listOf(
-                    translatedText.doTemperature to "${sensorData.temperature}",
-                    translatedText.doPercentage to sensorData.doPercentage,
-                    translatedText.doValue to sensorData.doValue
-                )
                 is BluetoothScanViewModel.SensorData.LIS2DHData -> listOf(
+                    "Device ID" to sensorData.deviceId,
                     translatedText.xAxis to "${sensorData.x.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
                     translatedText.yAxis to "${sensorData.y.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
                     translatedText.zAxis to "${sensorData.z.takeIf { it.isNotEmpty() } ?: "0"} m/s²"
                 )
                 is BluetoothScanViewModel.SensorData.ObjectDetectorData -> listOf(
+                    "Device ID" to sensorData.deviceId,
                     translatedText.objectDetected to if (sensorData.detection) "Yes" else "No"
                 )
                 is BluetoothScanViewModel.SensorData.SoilSensorData -> listOf(
+                    "Device ID" to sensorData.deviceId,
                     translatedText.nitrogen to "${sensorData.nitrogen.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
                     translatedText.phosphorus to "${sensorData.phosphorus.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
                     translatedText.potassium to "${sensorData.potassium.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
@@ -414,77 +364,38 @@ fun AdvertisingDataScreen(
                     translatedText.pH to "${sensorData.pH.takeIf { it.isNotEmpty() } ?: "0"}"
                 )
                 is BluetoothScanViewModel.SensorData.StepCounterData -> listOf(
-                    translatedText.steps to "${sensorData.steps.takeIf { it.isNotEmpty() } ?: "0"}"
+                    "Device ID" to sensorData.deviceId,
+                    translatedText.steps to "${sensorData.steps.takeIf { it.isNotEmpty() } ?: "0"}",
+                    translatedText.rawData to (sensorData.rawData?.joinToString(" ") { "%02X".format(it) } ?: "N/A")
                 )
                 is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> listOf(
+                    "Device ID" to sensorData.deviceId,
                     translatedText.ammonia to sensorData.ammonia,
                     translatedText.rawData to sensorData.rawData
                 )
-                is BluetoothScanViewModel.SensorData.OpticalSensorData -> {
-                    val formattedValues = sensorData.reflectanceValues.mapIndexed { index, value ->
-                        "Channel ${index + 1}: ${"%.6f".format(value)}"
-                    }
-                    val baseData = listOf(
-                        translatedText.reflectanceValues to formattedValues.joinToString("\n"),
-                        translatedText.rawData to sensorData.rawData
-                    )
-                    nutrientPredictions?.let { predictions ->
-                        baseData + listOf(
-                            "Nutrient Predictions" to
-                                    "N: ${predictions.nitrogen} m/kg, " +
-                                    "P: ${predictions.phosphorus} mg/kg, " +
-                                    "K: ${predictions.potassium} mg/kg, " +
-                                    "OC: ${predictions.organicCarbon} %"
-                        )
-                    } ?: baseData
-                }
+                is BluetoothScanViewModel.SensorData.DataLoggerData -> listOf(
+                    "Device ID" to sensorData.deviceId,
+                    "Packet ID" to "${sensorData.packetId}",
+                    "Packet Count" to "${sensorData.payloadPackets.size}",
+                    translatedText.rawData to sensorData.rawData
+                )
                 else -> emptyList()
             }
         }
     }
 
-    LaunchedEffect(currentDevice?.sensorData) {
-        val device = currentDevice
-        if (device?.sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData) {
-            val rawReflectance = device.sensorData.reflectanceValues
-            Log.d("NutrientUI", "Raw reflectance from BLE: $rawReflectance")
-
-            val safeReflectance = rawReflectance.mapIndexed { idx, v ->
-                if (v <= 0f) {
-                    Log.d("NutrientUI", "Reflectance[$idx]=$v → replaced with 0.01f")
-                    0.01f
-                } else v
-            }
-            Log.d("NutrientUI", "Prepared reflectance to model: $safeReflectance")
-
-            if (safeReflectance.size == 18) {
-                try {
-                    val helper = SoilNutrientModelHelper(context)
-                    val predictions = withContext(Dispatchers.Default) {
-                        helper.predictNutrients(safeReflectance)
-                    }
-                    helper.close()
-                    Log.d("NutrientUI", "✅ Predicted nutrients: $predictions")
-                    nutrientPredictions = predictions
-                } catch (e: Exception) {
-                    Log.e("NutrientUI", "Prediction failed: ${e.message}", e)
-                    nutrientPredictions = null
-                }
-            } else {
-                Log.w("NutrientUI", "Invalid reflectance data size: ${safeReflectance.size}")
-            }
-        }
-    }
-
+    // Define background gradient based on theme
     val backgroundGradient = if (isDarkMode) {
         Brush.verticalGradient(listOf(Color(0xFF1E1E1E), Color(0xFF424242)))
     } else {
         Brush.verticalGradient(listOf(Color(0xFF0A74DA), Color(0xFFADD8E6)))
     }
+
     val cardBackground = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF2A9EE5)
     val textColor = if (isDarkMode) Color.White else Color.White
     val buttonColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF0A74DA)
 
+    // Clean up resources on navigation change
     DisposableEffect(navController) {
         onDispose {
             viewModel.stopScan()
@@ -522,7 +433,6 @@ fun AdvertisingDataScreen(
                 translatedText = translatedText,
                 textColor = textColor
             )
-
             Spacer(modifier = Modifier.height(16.dp))
 
             DeviceInfoSection(
@@ -534,7 +444,6 @@ fun AdvertisingDataScreen(
                 cardGradient = Brush.verticalGradient(listOf(cardBackground, cardBackground.copy(alpha = 0.6f))),
                 textColor = textColor
             )
-
             Spacer(modifier = Modifier.height(24.dp))
 
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.LuxSensorData) {
@@ -544,27 +453,17 @@ fun AdvertisingDataScreen(
                 )
             }
 
-            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
-                val doData = currentDevice!!.sensorData as BluetoothScanViewModel.SensorData.DOSensorData
-                DOSensorDisplay(
-                    temperature = doData.temperatureFloat,
-                    doPercentage = doData.doPercentageFloat,
-                    doValue = doData.doValueFloat
-                )
-            }
-
             ResponsiveDataCards(
                 data = displayData,
                 cardBackground = cardBackground,
                 translatedText = translatedText,
-                textColor = textColor,
-                nutrientPredictions = nutrientPredictions
+                textColor = textColor
             )
-
             Spacer(modifier = Modifier.height(32.dp))
 
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.SHT40Data ||
-                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData) {
+                currentDevice?.sensorData is BluetoothScanViewModel.SensorData.AmmoniaSensorData
+            ) {
                 ThresholdInputSection(
                     thresholdValue = thresholdValue,
                     onThresholdChange = { thresholdValue = it },
@@ -590,6 +489,14 @@ fun AdvertisingDataScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.DataLoggerData) {
+                val dataLoggerData = currentDevice!!.sensorData as BluetoothScanViewModel.SensorData.DataLoggerData
+                DataLoggerDisplay(
+                    rawData = dataLoggerData.rawData,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             DownloadButton(
                 viewModel = viewModel,
                 deviceAddress = deviceAddress,
@@ -605,12 +512,12 @@ fun AdvertisingDataScreen(
                         isAlarmActive = false
                         isThresholdSet = false
                         try {
-                            mediaPlayer.stop()
-                            mediaPlayer.prepare()
+                            mediaPlayer?.stop()
+                            mediaPlayer?.prepare()
                         } catch (e: IllegalStateException) {
-                            mediaPlayer.reset()
+                            mediaPlayer?.reset()
                             MediaPlayer.create(context, R.raw.nuclear_alarm)?.let {
-                                mediaPlayer.release()
+                                mediaPlayer?.release()
                                 mediaPlayer = it
                             }
                         }
@@ -631,12 +538,12 @@ fun AdvertisingDataScreen(
                                 isAlarmActive = false
                                 isThresholdSet = false
                                 try {
-                                    mediaPlayer.stop()
-                                    mediaPlayer.prepare()
+                                    mediaPlayer?.stop()
+                                    mediaPlayer?.prepare()
                                 } catch (e: IllegalStateException) {
-                                    mediaPlayer.reset()
+                                    mediaPlayer?.reset()
                                     MediaPlayer.create(context, R.raw.nuclear_alarm)?.let {
-                                        mediaPlayer.release()
+                                        mediaPlayer?.release()
                                         mediaPlayer = it
                                     }
                                 }
@@ -651,7 +558,9 @@ fun AdvertisingDataScreen(
     }
 }
 
-// Composable for displaying ammonia sensor data
+/**
+ * Composable to display ammonia sensor data with an animated ring visualization.
+ */
 @Composable
 fun AmmoniaSensorDisplay(
     ammoniaValue: Float,
@@ -663,7 +572,6 @@ fun AmmoniaSensorDisplay(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         AmmoniaRingAnimation(ammoniaValue = ammoniaValue)
-
         Text(
             text = "%.1f ppm".format(ammoniaValue),
             style = MaterialTheme.typography.displayMedium,
@@ -676,7 +584,9 @@ fun AmmoniaSensorDisplay(
     }
 }
 
-// Composable for ammonia ring animation
+/**
+ * Animated ring visualization for ammonia sensor data.
+ */
 @Composable
 fun AmmoniaRingAnimation(
     ammoniaValue: Float,
@@ -684,10 +594,7 @@ fun AmmoniaRingAnimation(
 ) {
     val animatedFill by animateFloatAsState(
         targetValue = (ammoniaValue / 100f).coerceIn(0f, 1f),
-        animationSpec = spring(
-            dampingRatio = 0.5f,
-            stiffness = 100f
-        ),
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 100f),
         label = "ammoniaFill"
     )
 
@@ -749,7 +656,9 @@ fun AmmoniaRingAnimation(
     }
 }
 
-// Composable for displaying lux sensor data
+/**
+ * Composable to display lux sensor data with an animated ring visualization.
+ */
 @Composable
 fun LuxSensorDisplay(
     luxValue: Float,
@@ -763,7 +672,6 @@ fun LuxSensorDisplay(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         LuxRingAnimation(luxValue = luxValue)
-
         Text(
             text = "%.0f LUX".format(luxValue),
             style = MaterialTheme.typography.displayMedium,
@@ -776,7 +684,9 @@ fun LuxSensorDisplay(
     }
 }
 
-// Composable for lux ring animation
+/**
+ * Animated ring visualization for lux sensor data.
+ */
 @Composable
 fun LuxRingAnimation(
     luxValue: Float,
@@ -784,10 +694,7 @@ fun LuxRingAnimation(
 ) {
     val animatedFill by animateFloatAsState(
         targetValue = (luxValue / 20000f).coerceIn(0f, 1f),
-        animationSpec = spring(
-            dampingRatio = 0.5f,
-            stiffness = 100f
-        ),
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 100f),
         label = "luxFill"
     )
 
@@ -849,7 +756,9 @@ fun LuxRingAnimation(
     }
 }
 
-// Composable for threshold input section
+/**
+ * Composable for inputting and confirming threshold values for sensor parameters.
+ */
 @Composable
 private fun ThresholdInputSection(
     thresholdValue: String,
@@ -875,6 +784,7 @@ private fun ThresholdInputSection(
                 is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> listOf("Ammonia")
                 else -> emptyList()
             }
+
             parameters.forEach { type ->
                 Button(
                     onClick = { onParameterChange(type) },
@@ -890,7 +800,9 @@ private fun ThresholdInputSection(
                 }
             }
         }
+
         Spacer(modifier = Modifier.height(8.dp))
+
         TextField(
             value = thresholdValue,
             onValueChange = { onThresholdChange(it) },
@@ -911,7 +823,9 @@ private fun ThresholdInputSection(
                 errorContainerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color.White
             )
         )
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Button(
             onClick = onConfirmThreshold,
             enabled = thresholdValue.isNotEmpty() && thresholdValue.toFloatOrNull() != null,
@@ -924,7 +838,9 @@ private fun ThresholdInputSection(
     }
 }
 
-// Composable for reset steps button
+/**
+ * Composable for resetting step counter data.
+ */
 @Composable
 private fun ResetStepsButton(
     viewModel: BluetoothScanViewModel<Any>,
@@ -936,9 +852,7 @@ private fun ResetStepsButton(
     val buttonTextColor = Color.White
 
     Button(
-        onClick = {
-            viewModel.resetStepCounter(deviceAddress)
-        },
+        onClick = { viewModel.resetStepCounter(deviceAddress) },
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
@@ -954,7 +868,9 @@ private fun ResetStepsButton(
     }
 }
 
-// Composable for header section with navigation
+/**
+ * Composable for the header section with navigation and graph icon.
+ */
 @Composable
 private fun HeaderSection(
     navController: NavController,
@@ -991,9 +907,7 @@ private fun HeaderSection(
         )
 
         IconButton(
-            onClick = {
-                navController.navigate("chart_screen/$deviceAddress")
-            }
+            onClick = { navController.navigate("chart_screen/$deviceAddress") }
         ) {
             Image(
                 painter = painterResource(id = R.drawable.graph),
@@ -1004,8 +918,9 @@ private fun HeaderSection(
     }
 }
 
-
-// Composable for device information cards
+/**
+ * Composable for displaying device information cards.
+ */
 @Composable
 private fun DeviceInfoSection(
     deviceName: String,
@@ -1031,7 +946,9 @@ private fun DeviceInfoSection(
     )
 }
 
-// Composable for individual info card
+/**
+ * Composable for individual info card display.
+ */
 @Composable
 private fun InfoCard(
     text: String,
@@ -1042,37 +959,45 @@ private fun InfoCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(49.dp),
+            .heightIn(min = 49.dp, max = 80.dp)
+            .padding(horizontal = 8.dp),
         shape = RoundedCornerShape(16.dp),
         color = cardBackground
     ) {
         Box(
             modifier = Modifier
                 .background(cardGradient)
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Text(
                 text = text,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = textColor
+                color = textColor,
+                maxLines = 2,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp)
             )
         }
     }
 }
 
-// Composable for download button to export data
+/**
+ * Composable for initiating data download as a CSV file.
+ */
 @Composable
 fun DownloadButton(
     viewModel: BluetoothScanViewModel<Any>,
     deviceAddress: String,
     deviceName: String,
     deviceId: String,
-    translatedText: TranslatedAdvertisingText,
+    translatedText: TranslatedAdvertisingText
 ) {
     val context = LocalContext.current
     var isExporting by remember { mutableStateOf(false) }
     var showToast by remember { mutableStateOf(false) }
+
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
 
     val createDocumentLauncher = rememberLauncherForActivityResult(
@@ -1089,8 +1014,6 @@ fun DownloadButton(
 
     if (showToast) {
         LaunchedEffect(Unit) {
-            // Assuming a toast function exists in the context or a similar mechanism
-            // Toast.makeText(context, "Data exported successfully", Toast.LENGTH_SHORT).show()
             showToast = false
         }
     }
@@ -1120,7 +1043,9 @@ fun DownloadButton(
     }
 }
 
-// Function to export sensor data to CSV
+/**
+ * Exports sensor data to a CSV file.
+ */
 private fun exportDataToCSV(
     context: Context,
     uri: Uri,
@@ -1135,70 +1060,68 @@ private fun exportDataToCSV(
             try {
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                     val historicalData = viewModel.getHistoricalDataForDevice(deviceAddress)
-                    if (historicalData.isEmpty()) {
-                        val devices = viewModel.devices.value
-                        val currentDevice = devices.find { it.address == deviceAddress }
-                        currentDevice?.sensorData?.let { sensorData ->
-                            val currentTime = System.currentTimeMillis()
-                            val entry = BluetoothScanViewModel.HistoricalDataEntry(
-                                timestamp = currentTime,
-                                sensorData = sensorData
-                            )
-                            historicalData.toMutableList().add(entry)
-                        }
-                    }
 
                     val headerBuilder = StringBuilder()
                     headerBuilder.append("Timestamp,Device Name,Device Address,Node ID,")
+
                     val sensorType = if (historicalData.isNotEmpty()) historicalData[0].sensorData else null
+
                     when (sensorType) {
-                        is BluetoothScanViewModel.SensorData.SHT40Data -> headerBuilder.append("Temperature (°C),Humidity (%)")
-                        is BluetoothScanViewModel.SensorData.LIS2DHData -> headerBuilder.append("X-Axis (m/s²),Y-Axis (m/s²),Z-Axis (m/s²)")
-                        is BluetoothScanViewModel.SensorData.SoilSensorData -> headerBuilder.append("Nitrogen (mg/kg),Phosphorus (mg/kg),Potassium (mg/kg),Moisture (%),Temperature (°C),Electric Conductivity (mS/cm),pH")
-                        is BluetoothScanViewModel.SensorData.LuxSensorData -> headerBuilder.append("Light Intensity (LUX)")
-                        is BluetoothScanViewModel.SensorData.SDTData -> headerBuilder.append("Speed (m/s),Distance (m)")
-                        is BluetoothScanViewModel.SensorData.DOSensorData -> headerBuilder.append("DO Temp (°C),DO % (%),DO Value (mg/L)")
-                        is BluetoothScanViewModel.SensorData.ObjectDetectorData -> headerBuilder.append("Object Detected")
-                        is BluetoothScanViewModel.SensorData.StepCounterData -> headerBuilder.append("Steps")
-                        is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> headerBuilder.append("Ammonia (ppm)")
-                        is BluetoothScanViewModel.SensorData.OpticalSensorData -> {
-                            val wavelengths = listOf(410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 960)
-                            wavelengths.forEach { wavelength ->
-                                headerBuilder.append("${wavelength}nm,")
-                            }
-                            headerBuilder.append("Raw Data")
-                        }
+                        is BluetoothScanViewModel.SensorData.SHT40Data ->
+                            headerBuilder.append("Temperature (°C),Humidity (%)")
+                        is BluetoothScanViewModel.SensorData.LIS2DHData ->
+                            headerBuilder.append("X-Axis (m/s²),Y-Axis (m/s²),Z-Axis (m/s²)")
+                        is BluetoothScanViewModel.SensorData.SoilSensorData ->
+                            headerBuilder.append("Nitrogen (mg/kg),Phosphorus (mg/kg),Potassium (mg/kg),Moisture (%),Temperature (°C),Electric Conductivity (mS/cm),pH")
+                        is BluetoothScanViewModel.SensorData.LuxSensorData ->
+                            headerBuilder.append("Light Intensity (LUX)")
+                        is BluetoothScanViewModel.SensorData.SDTData ->
+                            headerBuilder.append("Speed (m/s),Distance (m)")
+                        is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
+                            headerBuilder.append("Object Detected")
+                        is BluetoothScanViewModel.SensorData.StepCounterData ->
+                            headerBuilder.append("Steps")
+                        is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
+                            headerBuilder.append("Ammonia (ppm)")
+                        is BluetoothScanViewModel.SensorData.DataLoggerData ->
+                            headerBuilder.append("Packet ID,Packet Count,Raw Data")
                         else -> {}
                     }
+
                     headerBuilder.append("\n")
                     outputStream.write(headerBuilder.toString().toByteArray())
 
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+
                     historicalData.forEach { entry ->
                         val dataBuilder = StringBuilder()
                         dataBuilder.append("${dateFormat.format(Date(entry.timestamp))},$deviceName,$deviceAddress,$deviceId,")
+
                         when (val sensorData = entry.sensorData) {
-                            is BluetoothScanViewModel.SensorData.SHT40Data -> dataBuilder.append("${sensorData.temperature},${sensorData.humidity}")
-                            is BluetoothScanViewModel.SensorData.LIS2DHData -> dataBuilder.append("${sensorData.x},${sensorData.y},${sensorData.z}")
-                            is BluetoothScanViewModel.SensorData.SoilSensorData -> dataBuilder.append("${sensorData.nitrogen},${sensorData.phosphorus},${sensorData.potassium},${sensorData.moisture},${sensorData.temperature},${sensorData.ec},${sensorData.pH}")
-                            is BluetoothScanViewModel.SensorData.LuxSensorData -> dataBuilder.append("${sensorData.lux}")
-                            is BluetoothScanViewModel.SensorData.SDTData -> dataBuilder.append("${sensorData.speed},${sensorData.distance}")
-                            is BluetoothScanViewModel.SensorData.DOSensorData -> {
-                                dataBuilder.append("${sensorData.temperature.replace(" °C", "")},${sensorData.doPercentage.replace("%", "")},${sensorData.doValue.replace(" mg/L", "")}")
-                            }
-                            is BluetoothScanViewModel.SensorData.ObjectDetectorData -> dataBuilder.append("${sensorData.detection}")
-                            is BluetoothScanViewModel.SensorData.StepCounterData -> dataBuilder.append("${sensorData.steps}")
-                            is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> dataBuilder.append("${sensorData.ammonia}")
-                            is BluetoothScanViewModel.SensorData.OpticalSensorData -> {
-                                sensorData.reflectanceValues.forEach { value ->
-                                    dataBuilder.append("$value,")
-                                }
-                                dataBuilder.append("\"${sensorData.rawData}\"")
-                            }
-                            null -> {}
+                            is BluetoothScanViewModel.SensorData.SHT40Data ->
+                                dataBuilder.append("${sensorData.temperature},${sensorData.humidity}")
+                            is BluetoothScanViewModel.SensorData.LIS2DHData ->
+                                dataBuilder.append("${sensorData.x},${sensorData.y},${sensorData.z}")
+                            is BluetoothScanViewModel.SensorData.SoilSensorData ->
+                                dataBuilder.append("${sensorData.nitrogen},${sensorData.phosphorus},${sensorData.potassium},${sensorData.moisture},${sensorData.temperature},${sensorData.ec},${sensorData.pH}")
+                            is BluetoothScanViewModel.SensorData.LuxSensorData ->
+                                dataBuilder.append("${sensorData.lux}")
+                            is BluetoothScanViewModel.SensorData.SDTData ->
+                                dataBuilder.append("${sensorData.speed},${sensorData.distance}")
+                            is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
+                                dataBuilder.append("${sensorData.detection}")
+                            is BluetoothScanViewModel.SensorData.StepCounterData ->
+                                dataBuilder.append("${sensorData.steps}")
+                            is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
+                                dataBuilder.append("${sensorData.ammonia}")
+                            is BluetoothScanViewModel.SensorData.DataLoggerData ->
+                                dataBuilder.append("${sensorData.packetId},${sensorData.payloadPackets.size},\"${sensorData.rawData.replace("\"", "\"\"")}\"")
+                            else -> {}
                         }
+
                         dataBuilder.append("\n")
                         outputStream.write(dataBuilder.toString().toByteArray())
+
                         if (historicalData.indexOf(entry) % 100 == 0) outputStream.flush()
                     }
                 }
@@ -1213,478 +1136,67 @@ private fun exportDataToCSV(
     }
 }
 
-// Composable for displaying dissolved oxygen (DO) sensor data
+/**
+ * Composable to display DataLogger data with toggle between continuous and large data modes.
+ */
 @Composable
-fun DOSensorDisplay(
-    temperature: Float,
-    doPercentage: Float,
-    doValue: Float,
+fun DataLoggerDisplay(
+    rawData: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator(
-            progress = (temperature / 50f).coerceIn(0f, 1f),
-            modifier = Modifier.size(100.dp),
-            color = when {
-                temperature > 30 -> Color.Red
-                temperature > 20 -> Color.Yellow
-                else -> Color.Green
-            },
-            strokeWidth = 8.dp
-        )
-        Text("%.2f °C".format(temperature), style = MaterialTheme.typography.titleMedium)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(
-                    progress = (doPercentage / 100f).coerceIn(0f, 1f),
-                    modifier = Modifier.size(80.dp),
-                    color = when {
-                        doPercentage < 30 -> Color.Red
-                        doPercentage < 60 -> Color.Yellow
-                        else -> Color.Green
-                    }
-                )
-                Text("%.2f %%".format(doPercentage), style = MaterialTheme.typography.bodyLarge)
-                Text("Saturation", style = MaterialTheme.typography.labelSmall)
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(
-                    progress = (doValue / 20f).coerceIn(0f, 1f),
-                    modifier = Modifier.size(80.dp),
-                    color = when {
-                        doValue < 2 -> Color.Red
-                        doValue < 5 -> Color.Yellow
-                        else -> Color.Green
-                    }
-                )
-                Text("%.2f mg/L".format(doValue), style = MaterialTheme.typography.bodyLarge)
-                Text("Concentration", style = MaterialTheme.typography.labelSmall)
-            }
-        }
-    }
-}
-
-// Composable for visualizing optical sensor data
-@Composable
-fun OpticalSensorVisualization(
-    values: List<Float>,
-    modifier: Modifier = Modifier
-) {
-    val wavelengths = listOf(
-        410, 435, 460, 485, 510, 535, 560, 585, 610,
-        645, 680, 705, 730, 760, 810, 860, 900, 940
-    )
-
-    var selectedIndex by remember { mutableStateOf<Int?>(null) }
-
-    if (values.size != 18) {
-        Box(
-            modifier = modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Invalid data format. Expected 18 values, got ${values.size}",
-                color = Red
-            )
-        }
-        return
-    }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-                )
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Wavelength (nm)",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = "Reflectance",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End
-            )
-        }
-
-        values.forEachIndexed { index, value ->
-            val backgroundColor = if (index % 2 == 0) {
-                colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            } else {
-                colorScheme.surface.copy(alpha = 0.7f)
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = backgroundColor,
-                        shape = if (index == values.size - 1) {
-                            RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
-                        } else RectangleShape
-                    )
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "${wavelengths[index]} nm",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "%.6f".format(value),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.End
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Reflectance Spectrum",
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            text = "DataLogger Raw Data",
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
-        Spacer(modifier = Modifier.height(8.dp))
 
-        Box(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(8.dp)
-                .background(
-                    color = colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        val padding = 40f
-                        val graphWidth = size.width - padding * 2
-                        val relativeX = (offset.x - padding).coerceIn(0f, graphWidth)
-                        val index = ((relativeX / graphWidth) * (values.size - 1)).roundToInt()
-                        selectedIndex = index
-                    }
-                }
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(8.dp),
+            color = Color(0xFF2A9EE5).copy(alpha = 0.7f)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val maxValue = values.maxOrNull() ?: 1f
-                val minValue = values.minOrNull() ?: 0f
-                val valueRange = maxValue - minValue
-
-                val padding = 40f
-                val graphWidth = size.width - padding * 2
-                val graphHeight = size.height - padding * 2
-
-                val paint = Paint().apply {
-                    color = darkColorScheme().onSurface.copy(alpha = 0.2f)
-                    strokeWidth = 1f
-                }
-
-                for (i in 0..4) {
-                    val y = padding + graphHeight * (1 - i / 4f)
-                    drawLine(
-                        paint = paint,
-                        start = Offset(padding, y),
-                        end = Offset(size.width - padding, y)
-                    )
-
-                    drawContext.canvas.nativeCanvas.drawText(
-                        "%.2f".format(minValue + valueRange * i / 4f),
-                        padding - 35f,
-                        y + 5f,
-                        android.graphics.Paint().apply { textSize = 24f }
-                    )
-                }
-
-                wavelengths.forEachIndexed { index, wavelength ->
-                    val x = padding + graphWidth * index / (wavelengths.size - 1f)
-                    drawLine(
-                        paint = paint,
-                        start = Offset(x, padding),
-                        end = Offset(x, size.height - padding)
-                    )
-
-                    if (index % 2 == 0) {
-                        drawContext.canvas.nativeCanvas.drawText(
-                            wavelength.toString(),
-                            x - 15f,
-                            size.height - padding + 30f,
-                            android.graphics.Paint().apply {
-                                color = darkColorScheme().onSurface.toArgb()
-                                textSize = 24f
-                            }
-                        )
-                    }
-                }
-
-                val path = Path().apply {
-                    values.forEachIndexed { index, value ->
-                        val x = padding + graphWidth * index / (values.size - 1f)
-                        val y = padding + graphHeight * (1 - (value - minValue) / valueRange)
-                        if (index == 0) moveTo(x, y) else lineTo(x, y)
-                    }
-                }
-
-                drawPath(
-                    path = path,
-                    color = Color.Black,
-                    style = Stroke(width = 3f)
-                )
-                values.forEachIndexed { index, value ->
-                    val x = padding + graphWidth * index / (values.size - 1f)
-                    val y = padding + graphHeight * (1 - (value - minValue) / valueRange)
-                    drawCircle(
-                        color = Color.White,
-                        radius = 5f,
-                        center = Offset(x, y)
-                    )
-                }
-
-                selectedIndex?.let { index ->
-                    if (index in values.indices) {
-                        val value = values[index]
-                        val x = padding + graphWidth * index / (values.size - 1f)
-                        val y = padding + graphHeight * (1 - (value - minValue) / valueRange)
-                        drawCircle(
-                            color = Color.Red,
-                            radius = 10f,
-                            center = Offset(x, y)
-                        )
-                    }
-                }
-            }
-
-            selectedIndex?.let { index ->
-                if (index in values.indices) {
-                    val value = values[index]
-                    Text(
-                        text = "λ ${wavelengths[index]} nm: %.4f".format(value),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .background(Color.Black.copy(alpha = 0.6f), shape = RoundedCornerShape(4.dp))
-                            .padding(4.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            LegendItem(color = Red.copy(alpha = 0.7f), label = "Very High", range = "> 80%")
-            LegendItem(color = Color.Blue.copy(alpha = 0.7f), label = "High", range = "60-80%")
-            LegendItem(color = Color.Yellow.copy(alpha = 0.7f), label = "Medium", range = "40-60%")
-            LegendItem(color = Color.Green.copy(alpha = 0.7f), label = "Low", range = "20-40%")
-            LegendItem(color = Color.Blue.copy(alpha = 0.7f), label = "Very Low", range = "< 20%")
+            Text(
+                text = rawData,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                modifier = Modifier.padding(16.dp)
+            )
         }
     }
 }
 
-// Function to draw a line (placeholder)
-fun drawLine(paint: Paint, start: Offset, end: Offset) {
-    // Implementation not provided in original code
-}
-
-// Composable for legend items
-@Composable
-fun LegendItem(color: Color, label: String, range: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(16.dp)
-                .background(color)
-        )
-        Text(text = label, fontSize = 10.sp)
-        Text(text = range, fontSize = 8.sp)
-    }
-}
-
-// Composable for nutrient data card
-@Composable
-fun NutrientCard(
-    name: String,
-    value: Float,
-    unit: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-    isLoading: Boolean = false
-) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "loadingAnimation"
-    )
-
-    Card(
-        modifier = modifier
-            .padding(4.dp)
-            .height(120.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            color.copy(alpha = 0.8f),
-                            color.copy(alpha = 0.6f)
-                        )
-                    )
-                )
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = alpha)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color.White)
-                }
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    Text(
-                        text = "%.1f".format(value),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                    Text(
-                        text = unit,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// Composable for responsive data cards
+/**
+ * Composable for displaying responsive data cards based on sensor type.
+ */
 @Composable
 private fun ResponsiveDataCards(
     data: List<Pair<String, String>>,
     cardBackground: Color,
     translatedText: TranslatedAdvertisingText,
-    textColor: Color,
-    nutrientPredictions: SoilNutrientModelHelper.NutrientPrediction? = null
+    textColor: Color
 ) {
     val ammoniaData = data.find { it.first.contains("Ammonia", ignoreCase = true) }
-    val reflectanceData = data.find { it.first.contains("Reflectance", ignoreCase = true) }
     val rawData = data.find { it.first.contains("Raw Data", ignoreCase = true) }
-    val otherData = data.filterNot { it.first.contains("Ammonia", ignoreCase = true) || it.first.contains("Reflectance", ignoreCase = true) || it.first.contains("Raw Data", ignoreCase = true) }
+    val otherData = data.filterNot {
+        it.first.contains("Ammonia", ignoreCase = true) ||
+                it.first.contains("Reflectance", ignoreCase = true) ||
+                it.first.contains("Raw Data", ignoreCase = true)
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        nutrientPredictions?.let {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Nutrient Predictions",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = textColor,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    NutrientCard(
-                        name = "Nitrogen",
-                        value = nutrientPredictions.nitrogen,
-                        unit = "mg/kg",
-                        color = Color(0xFF4CAF50),
-                        modifier = Modifier.weight(1f)
-                    )
-                    NutrientCard(
-                        name = "Phosphorus",
-                        value = nutrientPredictions.phosphorus,
-                        unit = "mg/kg",
-                        color = Color(0xFF2196F3),
-                        modifier = Modifier.weight(1f)
-                    )
-                    NutrientCard(
-                        name = "Potassium",
-                        value = nutrientPredictions.potassium,
-                        unit = "mg/kg",
-                        color = Color(0xFFFF9800),
-                        modifier = Modifier.weight(1f)
-                    )
-                    NutrientCard(
-                        name = "Organic Carbon",
-                        value = nutrientPredictions.organicCarbon,
-                        unit = "%",
-                        color = Color(0xFF795548),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
         ammoniaData?.let { (label, value) ->
             Column(
                 modifier = Modifier.padding(vertical = 16.dp),
@@ -1697,43 +1209,9 @@ private fun ResponsiveDataCards(
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                AmmoniaRingAnimation(ammoniaValue = value.replace(" ppm", "").toFloatOrNull() ?: 0f)
-            }
-        }
-
-        reflectanceData?.let { (label, value) ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Optical Sensor Data",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = textColor,
-                    fontWeight = FontWeight.Bold
+                AmmoniaRingAnimation(
+                    ammoniaValue = value.replace(" ppm", "").toFloatOrNull() ?: 0f
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                val reflectanceValues = value.split("\n")
-                    .mapNotNull { line ->
-                        val regex = """Channel \d+: ([\d.]+)""".toRegex()
-                        regex.find(line)?.groupValues?.get(1)?.toFloatOrNull()
-                    }
-
-                if (reflectanceValues.size == 18) {
-                    OpticalSensorVisualization(
-                        values = reflectanceValues,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-                    Text(
-                        text = "Waiting for reflectance data...",
-                        color = textColor.copy(alpha = 0.7f)
-                    )
-                }
             }
         }
 
@@ -1770,68 +1248,58 @@ private fun ResponsiveDataCards(
         }
 
         when (otherData.size) {
-            0 -> {
-                Box(modifier = Modifier.height(100.dp))
+            0 -> Box(modifier = Modifier.height(100.dp))
+            1 -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                DataCard(
+                    label = otherData[0].first,
+                    value = otherData[0].second,
+                    cardBackground = cardBackground,
+                    translatedText = translatedText,
+                    textColor = textColor
+                )
             }
-            1 -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+            2 -> Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                otherData.forEach { (label, value) ->
                     DataCard(
-                        label = otherData[0].first,
-                        value = otherData[0].second,
+                        label = label,
+                        value = value,
                         cardBackground = cardBackground,
                         translatedText = translatedText,
                         textColor = textColor
                     )
                 }
             }
-            2 -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    otherData.forEach { (label, value) ->
-                        DataCard(
-                            label = label,
-                            value = value,
-                            cardBackground = cardBackground,
-                            translatedText = translatedText,
-                            textColor = textColor
-                        )
-                    }
-                }
-            }
-            else -> {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    otherData.chunked(2).forEach { rowItems ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            rowItems.forEach { (label, value) ->
-                                DataCard(
-                                    label = label,
-                                    value = value,
-                                    cardBackground = cardBackground,
-                                    translatedText = translatedText,
-                                    textColor = textColor
-                                )
-                            }
-                            if (rowItems.size == 1) {
-                                Spacer(modifier = Modifier.width(141.dp))
-                            }
+            else -> Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                otherData.chunked(2).forEach { rowItems ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        rowItems.forEach { (label, value) ->
+                            DataCard(
+                                label = label,
+                                value = value,
+                                cardBackground = cardBackground,
+                                translatedText = translatedText,
+                                textColor = textColor
+                            )
                         }
+                        if (rowItems.size == 1) Spacer(modifier = Modifier.width(141.dp))
                     }
                 }
             }
@@ -1839,7 +1307,9 @@ private fun ResponsiveDataCards(
     }
 }
 
-// Composable for individual data card
+/**
+ * Composable for individual data card with dynamic coloring based on value.
+ */
 @Composable
 fun DataCard(
     label: String,
@@ -1848,25 +1318,22 @@ fun DataCard(
     translatedText: TranslatedAdvertisingText,
     textColor: Color
 ) {
-    // Extract numeric value for temperature and humidity
     val numericValue = value.replace("[^0-9.]".toRegex(), "").toFloatOrNull() ?: 0f
 
-    // Determine dynamic background color based on label and value
     val dynamicColor = when {
         label == translatedText.temperature -> when {
-            numericValue <= 15f -> Color(0xFF2196F3) // Blue for Low (0°C - 15°C)
-            numericValue <= 30f -> Color(0xFF4CAF50) // Green for Medium (16°C - 30°C)
-            else -> Color(0xFFF44336) // Red for High (31°C - 45°C)
+            numericValue <= 15f -> Color(0xFF2196F3)
+            numericValue <= 30f -> Color(0xFF4CAF50)
+            else -> Color(0xFFF44336)
         }
         label == translatedText.humidity -> when {
-            numericValue <= 40f -> Color(0xFF2196F3) // Blue for Low (0% - 40%)
-            numericValue <= 70f -> Color(0xFF4CAF50) // Green for Medium (41% - 70%)
-            else -> Color(0xFFF44336) // Red for High (71% - 100%)
+            numericValue <= 40f -> Color(0xFF2196F3)
+            numericValue <= 70f -> Color(0xFF4CAF50)
+            else -> Color(0xFFF44336)
         }
-        else -> cardBackground // Default to original cardBackground for other data
+        else -> cardBackground
     }
 
-    // Create a gradient based on the dynamic color
     val cardGradient = Brush.verticalGradient(
         colors = listOf(
             dynamicColor.copy(alpha = 0.8f),

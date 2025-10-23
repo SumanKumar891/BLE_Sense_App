@@ -163,19 +163,6 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(20.dp)) // Space between texts
 
-            // Developer credit text with zoom animation
-//            BasicText(
-//                text = translatedText.developedBy, // Translated developer credit
-//                style = TextStyle(
-//                    fontSize = 18.sp, // Smaller font size
-//                    color = secondaryTextColor, // Theme-based secondary color
-//                    fontWeight = FontWeight.SemiBold, // Semi-bold text
-//                    textAlign = TextAlign.Center, // Center text
-//                    fontFamily = helveticaFont // Custom font
-//                ),
-//                modifier = Modifier
-//                    .graphicsLayer(scaleX = footerScale, scaleY = footerScale) // Apply zoom animation
-//            )
         }
     }
 }

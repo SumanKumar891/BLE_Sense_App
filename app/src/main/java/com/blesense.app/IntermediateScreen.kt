@@ -1,11 +1,8 @@
 package com.blesense.app
 
-import android.app.Activity
 import android.content.Intent
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -13,10 +10,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -36,21 +32,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.example.ble_jetpackcompose.OpticalSensorScreen
 
 @Composable
 fun IntermediateScreen(
     navController: NavHostController,
     isDarkMode: Boolean
 ) {
-    // Define theme-based colors
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5)
     val cardBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
     val textColor = if (isDarkMode) Color.White else Color.Black
@@ -77,7 +65,6 @@ fun IntermediateScreen(
                 ) {
                     Text(
                         text = "BLE Sense",
-                        fontFamily = helveticaFont,
                         fontWeight = FontWeight.Bold,
                         color = textColor,
                         style = MaterialTheme.typography.h5,
@@ -86,24 +73,10 @@ fun IntermediateScreen(
                 }
             }
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("chat_screen") },
-                backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF),
-                contentColor = Color.White
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ChatBubble,
-                    contentDescription = "Chatbot"
-                )
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
@@ -121,7 +94,7 @@ fun IntermediateScreen(
                 )
             }
 
-            // First row: Bluetooth and Gameplay
+            // Row 1: Bluetooth + Gameplay
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -151,7 +124,7 @@ fun IntermediateScreen(
                 }
             }
 
-            // Second row: Robot Control and Optical Sensor
+            // Row 2: Robot Control + Data Logger
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -172,35 +145,25 @@ fun IntermediateScreen(
                     )
 
                     NavigationIconBox(
-                        iconResId = R.drawable.icons_leaf,
-                        label = "Optical Sensor",
+                        iconResId = R.drawable.data_logger,
+                        label = "Data Logger",
                         textColor = textColor,
                         gradientStart = gradientStart,
                         gradientEnd = gradientEnd,
                         backgroundColor = cardBackgroundColor,
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate("optical_sensor_screen") }
+                        onClick = {
+                            navController.navigate("data_logger/auto_connect/DataLogger/DataLogger_1")
+                        }
                     )
                 }
             }
 
-            // Third row: Water Quality and Settings
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    NavigationIconBox(
-                        iconResId = R.drawable.waterquality,
-                        label = "Water Quality",
-                        textColor = textColor,
-                        gradientStart = gradientStart,
-                        gradientEnd = gradientEnd,
-                        backgroundColor = cardBackgroundColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate("water_quality_screen") }
-                    )
-
                     NavigationIconBox(
                         iconResId = R.drawable.settings,
                         label = "Settings",
@@ -211,6 +174,8 @@ fun IntermediateScreen(
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate("settings_screen") }
                     )
+
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
@@ -230,7 +195,6 @@ fun NavigationIconBox(
 ) {
     var isPressed by remember { mutableStateOf(false) }
 
-    // Enhanced animations
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = spring(
@@ -249,14 +213,12 @@ fun NavigationIconBox(
         label = "elevation"
     )
 
-    // Color animation for pressed state
     val cardColor by animateColorAsState(
         targetValue = if (isPressed) backgroundColor.copy(alpha = 0.8f) else backgroundColor,
         animationSpec = tween(durationMillis = 150),
         label = "cardColor"
     )
 
-    // Icon scale animation
     val iconScale by animateFloatAsState(
         targetValue = if (isPressed) 0.85f else 1f,
         animationSpec = spring(
@@ -295,7 +257,6 @@ fun NavigationIconBox(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(16.dp)
             ) {
-                // Enhanced icon container with gradient background and scale animation
                 Box(
                     modifier = Modifier
                         .size(60.dp)

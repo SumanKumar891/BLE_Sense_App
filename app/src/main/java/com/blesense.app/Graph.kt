@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import kotlinx.coroutines.delay
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -321,14 +324,14 @@ fun ChartScreen(
     val backgroundGradient = if (isDarkMode) {
         Brush.verticalGradient(listOf(Color(0xFF121212), Color(0xFF424242))) // Dark mode gradient
     } else {
-        Brush.verticalGradient(listOf(Color.White, Color.LightGray)) // Light mode gradient
+        Brush.verticalGradient(listOf(Color(0xFF0A74DA), Color(0xFFADD8E6))) // Light mode gradient
     }
     val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Card background
     val textColor = if (isDarkMode) Color.White else Color.Black // Primary text color
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.Gray // Secondary text color
+    val secondaryTextColor = if (isDarkMode) Color(0xFFFFFFFF) else Color(0xFF2A2626)// Secondary text color
     val accentColor = if (isDarkMode) Color(0xFFBB86FC) else Color(0xFF0A74DA) // Accent color
     val tabBackground = if (isDarkMode) Color(0xFF2A2A2A) else Color.Transparent // Tab background
-    val appBarBackground = if (isDarkMode) Color(0xFF121212) else Color.Transparent // App bar background
+    val appBarBackground = if (isDarkMode) Color(0xFF121212) else Color.White // App bar background
 
     // State variables for UI control
     val isReceivingData = remember { mutableStateOf(false) } // Track if data is being received
@@ -336,6 +339,7 @@ fun ChartScreen(
     var isSoilSensorClicked by remember { mutableStateOf(false) } // Track soil sensor card click
     var selectedTabIndex by remember { mutableStateOf(0) } // Track selected tab
     val tabTitles = listOf(translatedText.graphsTab, translatedText.soilDataTableTab) // Tab titles
+    val dataFlowState = remember { mutableStateOf("Waiting for data...") }    //Data flow monitoring state
 
     // Start Bluetooth scanning
     LaunchedEffect(Unit) {
@@ -363,9 +367,9 @@ fun ChartScreen(
         humidityData?.let { updateHistory(humidityHistory, it) }
         speedData?.let { updateHistory(speedHistory, it) }
         distanceData?.let { updateHistory(distanceHistory, it) }
-        xAxisData?.let { updateHistory(xAxisHistory, it) }
-        yAxisData?.let { updateHistory(yAxisHistory, it) }
-        zAxisData?.let { updateHistory(zAxisHistory, it) }
+//        xAxisData?.let { updateHistory(xAxisHistory, it) }
+//        yAxisData?.let { updateHistory(yAxisHistory, it) }
+//        zAxisData?.let { updateHistory(zAxisHistory, it) }
         val shouldAddTimestamp = soilMoistureData != null || soilTemperatureData != null ||
                 soilNitrogenData != null || soilPhosphorusData != null || soilPotassiumData != null ||
                 soilEcData != null || soilPhData != null
@@ -381,6 +385,25 @@ fun ChartScreen(
         soilEcData?.let { updateHistory(soilEcHistory, it) }
         soilPhData?.let { updateHistory(soilPhHistory, it) }
     }
+    LaunchedEffect(xAxisData, yAxisData, zAxisData) {
+        val currentTime = System.currentTimeMillis()
+        dataFlowState.value = "Data received at: ${SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(currentTime))}"
+
+        // Direct history update without intermediate points
+        xAxisData?.let {
+            if (xAxisHistory.size >= 50) xAxisHistory.removeAt(0)
+            xAxisHistory.add(it)
+        }
+        yAxisData?.let {
+            if (yAxisHistory.size >= 50) yAxisHistory.removeAt(0)
+            yAxisHistory.add(it)
+        }
+        zAxisData?.let {
+            if (zAxisHistory.size >= 50) zAxisHistory.removeAt(0)
+            zAxisHistory.add(it)
+        }
+    }
+
 
     // Main UI structure
     Scaffold(
@@ -398,17 +421,30 @@ fun ChartScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = textColor)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = if (isDarkMode) Color.White else Color.Black
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* Handle Export */ }) {
-                        Icon(Icons.Default.TableChart, contentDescription = "Export", tint = textColor)
+                        Icon(
+                            Icons.Default.TableChart,
+                            contentDescription = "Export",
+                            tint = if (isDarkMode) Color.White else Color.Black
+                        )
                     }
                     IconButton(onClick = { /* Handle Options */ }) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Options", tint = textColor)
+                        Icon(
+                            Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Options",
+                            tint = if (isDarkMode) Color.White else Color.Black
+                        )
                     }
                 },
+
                 backgroundColor = appBarBackground, // Theme-based app bar color
                 elevation = 0.dp
             )
@@ -451,19 +487,19 @@ fun ChartScreen(
                     ) {
                         // SHT40 sensor data (temperature and humidity)
                         if (sensorData is BluetoothScanViewModel.SensorData.SHT40Data) {
-                            item { SensorGraphCard(translatedText.temperatureLabel, temperatureData, temperatureHistory, Color(0xFFE53935), cardBackground, textColor, secondaryTextColor, translatedText) }
-                            item { SensorGraphCard(translatedText.humidityLabel, humidityData, humidityHistory, Color(0xFF1976D2), cardBackground, textColor, secondaryTextColor, translatedText) }
+                            item { SensorGraphCard(translatedText.temperatureLabel, temperatureData, temperatureHistory, Color(0xFFE53935), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
+                            item { SensorGraphCard(translatedText.humidityLabel, humidityData, humidityHistory, Color(0xFF1976D2), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
                         }
                         // SDT sensor data (speed and distance)
                         if (sensorData is BluetoothScanViewModel.SensorData.SDTData) {
-                            item { SensorGraphCard(translatedText.speedLabel, speedData, speedHistory, Color(0xFF43A047), cardBackground, textColor, secondaryTextColor, translatedText) }
-                            item { SensorGraphCard(translatedText.distanceLabel, distanceData, distanceHistory, Color(0xFFFFB300), cardBackground, textColor, secondaryTextColor, translatedText) }
+                            item { SensorGraphCard(translatedText.speedLabel, speedData, speedHistory, Color(0xFF43A047), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
+                            item { SensorGraphCard(translatedText.distanceLabel, distanceData, distanceHistory, Color(0xFFFFB300), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
                         }
                         // LIS2DH sensor data (accelerometer)
                         if (sensorData is BluetoothScanViewModel.SensorData.LIS2DHData) {
-                            item { SensorGraphCard(translatedText.xAxisLabel, xAxisData, xAxisHistory, Color(0xFFE91E63), cardBackground, textColor, secondaryTextColor, translatedText) }
-                            item { SensorGraphCard(translatedText.yAxisLabel, yAxisData, yAxisHistory, Color(0xFF9C27B0), cardBackground, textColor, secondaryTextColor, translatedText) }
-                            item { SensorGraphCard(translatedText.zAxisLabel, zAxisData, zAxisHistory, Color(0xFF009688), cardBackground, textColor, secondaryTextColor, translatedText) }
+                            item { SensorGraphCard(translatedText.xAxisLabel, xAxisData, xAxisHistory, Color(0xFFE91E63), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
+                            item { SensorGraphCard(translatedText.yAxisLabel, yAxisData, yAxisHistory, Color(0xFF9C27B0), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
+                            item { SensorGraphCard(translatedText.zAxisLabel, zAxisData, zAxisHistory, Color(0xFF009688), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
 
                             // 3D accelerometer visualization
                             item {
@@ -495,9 +531,9 @@ fun ChartScreen(
                                             color = accentColor,
                                             modifier = Modifier.padding(bottom = 8.dp)
                                         )
-                                        SensorGraphCard(translatedText.soilMoistureLabel, soilMoistureData, soilMoistureHistory, Color(0xFF6200EA), cardBackground, textColor, secondaryTextColor, translatedText)
+                                        SensorGraphCard(translatedText.soilMoistureLabel, soilMoistureData, soilMoistureHistory, Color(0xFF6200EA), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
                                         Spacer(modifier = Modifier.height(16.dp))
-                                        SensorGraphCard(translatedText.soilTemperatureLabel, soilTemperatureData, soilTemperatureHistory, Color(0xFFFF6D00), cardBackground, textColor, secondaryTextColor, translatedText)
+                                        SensorGraphCard(translatedText.soilTemperatureLabel, soilTemperatureData, soilTemperatureHistory, Color(0xFFFF6D00), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
                                         if (!isSoilSensorClicked) {
                                             Row(
                                                 modifier = Modifier
@@ -509,20 +545,38 @@ fun ChartScreen(
                                             }
                                         } else {
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilNitrogenLabel, soilNitrogenData, soilNitrogenHistory, Color(0xFF00897B), cardBackground, textColor, secondaryTextColor, translatedText)
+                                            SensorGraphCard(translatedText.soilNitrogenLabel, soilNitrogenData, soilNitrogenHistory, Color(0xFF00897B), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilPhosphorusLabel, soilPhosphorusData, soilPhosphorusHistory, Color(0xFFC2185B), cardBackground, textColor, secondaryTextColor, translatedText)
+                                            SensorGraphCard(translatedText.soilPhosphorusLabel, soilPhosphorusData, soilPhosphorusHistory, Color(0xFFC2185B), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilPotassiumLabel, soilPotassiumData, soilPotassiumHistory, Color(0xFF7B1FA2), cardBackground, textColor, secondaryTextColor, translatedText)
+                                            SensorGraphCard(translatedText.soilPotassiumLabel, soilPotassiumData, soilPotassiumHistory, Color(0xFF7B1FA2), cardBackground, textColor, secondaryTextColor, translatedText,isDarkMode)
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilEcLabel, soilEcData, soilEcHistory, Color(0xFFF57C00), cardBackground, textColor, secondaryTextColor, translatedText)
+                                            SensorGraphCard(translatedText.soilEcLabel, soilEcData, soilEcHistory, Color(0xFFF57C00), cardBackground, textColor, secondaryTextColor, translatedText,isDarkMode)
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilPhLabel, soilPhData, soilPhHistory, Color(0xFFD32F2F), cardBackground, textColor, secondaryTextColor, translatedText)
+                                            SensorGraphCard(translatedText.soilPhLabel, soilPhData, soilPhHistory, Color(0xFFD32F2F), cardBackground, textColor, secondaryTextColor, translatedText,isDarkMode)
                                         }
                                     }
                                 }
                             }
                         }
+
+                        // Data flow monitor
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                backgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE3F2FD)
+                            ) {
+                                Text(
+                                    text = dataFlowState.value,
+                                    color = if (isDarkMode) Color.White else Color.Black,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+
                         // Show message if no data is received
                         if (!isReceivingData.value) {
                             item {
@@ -596,7 +650,6 @@ fun ChartScreen(
         }
     }
 }
-
 // Composable for displaying a single sensor graph
 @Composable
 fun SensorGraphCard(
@@ -607,8 +660,19 @@ fun SensorGraphCard(
     cardBackground: Color, // Card background color
     textColor: Color, // Primary text color
     secondaryTextColor: Color, // Secondary text color
-    translatedText: TranslatedChartText // Translated text
+    translatedText: TranslatedChartText, // Translated text
+    isDarkMode: Boolean
 ) {
+    var touchPosition by remember { mutableStateOf<Offset?>(null) }
+    var touchedValue by remember { mutableStateOf<Float?>(null) }
+    // Auto-hide touched value after 1 second
+    LaunchedEffect(touchPosition) {
+        if (touchPosition != null) {
+            delay(1000) // 1 second delay
+            touchPosition = null
+            touchedValue = null
+        }
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -616,72 +680,287 @@ fun SensorGraphCard(
         elevation = 4.dp,
         backgroundColor = cardBackground
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        )  {
             Text(
                 title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = textColor
+                color = textColor,
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "${translatedText.currentLabel}: ${currentValue?.toString() ?: translatedText.naLabel}",
                 fontSize = 16.sp,
-                color = secondaryTextColor
+                color = secondaryTextColor,
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (history.isNotEmpty()) {
-                // Draw graph
-                Canvas(
+                var canvasSize by remember { mutableStateOf(Size.Zero) }
+
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
                 ) {
-                    val points = history.toList()
-                    if (points.isNotEmpty()) {
-                        val maxValue = points.maxOrNull() ?: 0f // Maximum value
-                        val minValue = (points.minOrNull() ?: 0f).coerceAtMost(maxValue - 1f) // Minimum value
-                        val range = (maxValue - minValue).coerceAtLeast(1f) // Value range
-                        val stepX = size.width / (points.size.coerceAtLeast(2) - 1) // X-axis step
-                        val heightPadding = size.height * 0.1f // Padding for graph
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                detectTapGestures { offset ->
+                                    touchPosition = offset
+                                }
+                            }
+                    ) {
+                        canvasSize = size // Store the size for calculations
+                        val points = history.toList()
+                        if (points.isNotEmpty()) {
+                            // Define graph area with margins for axis labels
+                            val leftMargin = 50f
+                            val rightMargin = 20f
+                            val topMargin = 20f
+                            val bottomMargin = 30f
 
-                        // Draw baseline
-                        drawLine(
-                            color = secondaryTextColor,
-                            start = Offset(0f, size.height - heightPadding),
-                            end = Offset(size.width, size.height - heightPadding),
-                            strokeWidth = 1f
-                        )
+                            val graphWidth = size.width - leftMargin - rightMargin
+                            val graphHeight = size.height - topMargin - bottomMargin
+                            val graphStartX = leftMargin
+                            val graphStartY = topMargin
+                            val graphEndX = graphStartX + graphWidth
+                            val graphEndY = graphStartY + graphHeight
 
-                        // Draw data points and lines
-                        for (i in 0 until points.size - 1) {
-                            val x1 = i * stepX
-                            val x2 = (i + 1) * stepX
-                            val y1 = heightPadding + (size.height - 2 * heightPadding) * (1 - (points[i] - minValue) / range)
-                            val y2 = heightPadding + (size.height - 2 * heightPadding) * (1 - (points[i + 1] - minValue) / range)
+                            // Fixed Y-range from -10 to 50 as requested
+                            val yMin = -10f
+                            val yMax = 50f
+                            val yRange = yMax - yMin
 
-                            drawLine(
-                                color = color,
-                                start = Offset(x1, y1),
-                                end = Offset(x2, y2),
-                                strokeWidth = 4f,
-                                pathEffect = PathEffect.cornerPathEffect(10f)
+                            val stepX = graphWidth / (points.size.coerceAtLeast(2) - 1).toFloat()
+
+                            // ==== ADD BACK GRID LINES LIKE CUBES ====
+                            // Draw light background for graph area
+                            drawRect(
+                                color = if (isDarkMode) Color(0x0AFFFFFF) else Color(0x0A000000),
+                                topLeft = Offset(graphStartX, graphStartY),
+                                size = Size(graphWidth, graphHeight)
                             )
-                            drawCircle(
-                                color = color,
-                                radius = 6f,
-                                center = Offset(x1, y1)
+
+                            // ==== GRAPH PAPER BACKGROUND ====
+                            // Draw graph paper background (dense grid)
+                            val gridColor = secondaryTextColor.copy(alpha = 0.15f)
+
+                            // Draw fine horizontal grid lines (every 2 units)
+                            for (yValue in yMin.toInt()..yMax.toInt() step 2) {
+                                val yPos = graphStartY + graphHeight * (1 - (yValue - yMin) / yRange)
+                                drawLine(
+                                    color = gridColor,
+                                    start = Offset(graphStartX, yPos),
+                                    end = Offset(graphEndX, yPos),
+                                    strokeWidth = 0.5f
+                                )
+                            }
+
+                            // Draw fine vertical grid lines (every 2 samples)
+                            for (i in 0..points.size step 2) {
+                                if (i < points.size) {
+                                    val xPos = graphStartX + i * stepX
+                                    drawLine(
+                                        color = gridColor,
+                                        start = Offset(xPos, graphStartY),
+                                        end = Offset(xPos, graphEndY),
+                                        strokeWidth = 0.5f
+                                    )
+                                }
+                            }
+
+                            // Draw main horizontal grid lines (every 10 units - bolder)
+                            val mainHorizontalGridValues = listOf(-10f, 0f, 10f, 20f, 30f, 40f, 50f)
+                            mainHorizontalGridValues.forEach { yValue ->
+                                val yPos = graphStartY + graphHeight * (1 - (yValue - yMin) / yRange)
+                                drawLine(
+                                    color = secondaryTextColor.copy(alpha = 0.3f),
+                                    start = Offset(graphStartX, yPos),
+                                    end = Offset(graphEndX, yPos),
+                                    strokeWidth = 1f
+                                )
+                            }
+
+                            // Draw main vertical grid lines (every 10 samples - bolder)
+                            for (i in 0..points.size step 10) {
+                                if (i < points.size) {
+                                    val xPos = graphStartX + i * stepX
+                                    drawLine(
+                                        color = secondaryTextColor.copy(alpha = 0.3f),
+                                        start = Offset(xPos, graphStartY),
+                                        end = Offset(xPos, graphEndY),
+                                        strokeWidth = 1f
+                                    )
+                                }
+                            }
+
+                            // Draw border around the graph area
+                            drawRect(
+                                color = secondaryTextColor.copy(alpha = 0.4f),
+                                topLeft = Offset(graphStartX, graphStartY),
+                                size = Size(graphWidth, graphHeight),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f)
                             )
+                            // ==== END OF GRID LINES ====
+
+                            // Draw Y-axis labels with 10-10 gap: -10, 0, 10, 20, 30, 40, 50
+                            val yAxisLabels = listOf(-10f, 0f, 10f, 20f, 30f, 40f, 50f)
+                            yAxisLabels.forEach { yValue ->
+                                val yPos = graphStartY + graphHeight * (1 - (yValue - yMin) / yRange)
+                                // Create paint for text
+                                val textPaint = android.graphics.Paint().apply {
+                                    this.color = android.graphics.Color.argb(
+                                        (secondaryTextColor.alpha * 255).toInt(),
+                                        (secondaryTextColor.red * 255).toInt(),
+                                        (secondaryTextColor.green * 255).toInt(),
+                                        (secondaryTextColor.blue * 255).toInt()
+                                    )
+                                    textSize = 20f
+                                    textAlign = android.graphics.Paint.Align.RIGHT
+                                }
+                                drawContext.canvas.nativeCanvas.drawText(
+                                    "%.0f".format(yValue),
+                                    graphStartX - 35f,
+                                    yPos + 5f,
+                                    textPaint
+                                )
+                            }
+
+                            // Draw X-axis labels at sample indices: 0, 10, 20, 30, 40
+                            val verticalGridValues = listOf(0, 10, 20, 30, 40)
+                            verticalGridValues.forEach { sampleIndex ->
+                                if (sampleIndex < points.size) {
+                                    val xPos = graphStartX + sampleIndex * stepX
+
+                                    // Create paint for X-axis labels
+                                    val xTextPaint = android.graphics.Paint().apply {
+                                        this.color = android.graphics.Color.argb(
+                                            (secondaryTextColor.alpha * 255).toInt(),
+                                            (secondaryTextColor.red * 255).toInt(),
+                                            (secondaryTextColor.green * 255).toInt(),
+                                            (secondaryTextColor.blue * 255).toInt()
+                                        )
+                                        textSize = 18f
+                                        textAlign = android.graphics.Paint.Align.CENTER
+                                    }
+
+                                    // Draw X-axis labels (sample numbers)
+                                    drawContext.canvas.nativeCanvas.drawText(
+                                        "%.0f".format(sampleIndex.toFloat()),
+                                        xPos,
+                                        graphEndY + 15f,
+                                        xTextPaint
+                                    )
+                                }
+                            }
+
+                            // Draw continuous data line
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                if (points.isNotEmpty()) {
+                                    val firstY = graphStartY + graphHeight * (1 - (points[0] - yMin) / yRange)
+                                    moveTo(graphStartX, firstY)
+
+                                    // Simple continuous line connecting all points
+                                    for (i in 1 until points.size) {
+                                        val x = graphStartX + i * stepX
+                                        val y = graphStartY + graphHeight * (1 - (points[i] - yMin) / yRange)
+                                        lineTo(x, y)
+                                    }
+                                }
+                            }
+
+                            // Draw the path
+                            drawPath(
+                                path = path,
+                                color = color,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 2.5f,
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                                )
+                            )
+
+                            // Draw circle at the current/last point to show latest value
+                            if (points.isNotEmpty()) {
+                                val lastIndex = points.size - 1
+                                val x = graphStartX + lastIndex * stepX
+                                val y = graphStartY + graphHeight * (1 - (points.last() - yMin) / yRange)
+                                drawCircle(
+                                    color = color,
+                                    radius = 4f,
+                                    center = Offset(x, y)
+                                )
+                            }
+
+                            // Draw touch indicator if user tapped on the graph
+                            touchPosition?.let { touchOffset ->
+                                // Calculate touched data point using stored canvasSize
+                                val graphWidth = canvasSize.width - leftMargin - rightMargin
+                                val stepX = graphWidth / (points.size.coerceAtLeast(2) - 1).toFloat()
+                                val touchedIndex = ((touchOffset.x - leftMargin) / stepX).toInt().coerceIn(0, points.size - 1)
+                                val touchedX = graphStartX + touchedIndex * stepX
+                                val touchedY = graphStartY + graphHeight * (1 - (points[touchedIndex] - yMin) / yRange)
+
+                                // Update touchedValue
+                                touchedValue = points[touchedIndex]
+
+                                // Draw vertical line at touched position
+                                drawLine(
+                                    color = color.copy(alpha = 0.5f),
+                                    start = Offset(touchedX, graphStartY),
+                                    end = Offset(touchedX, graphEndY),
+                                    strokeWidth = 1f,
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+                                )
+
+                                // Draw circle at touched data point
+                                drawCircle(
+                                    color = color,
+                                    radius = 6f,
+                                    center = Offset(touchedX, touchedY)
+                                )
+
+                                // Draw value text near the touched point
+                                val touchValuePaint = android.graphics.Paint().apply {
+                                    this.color = android.graphics.Color.argb(
+                                        (color.alpha * 255).toInt(),
+                                        (color.red * 255).toInt(),
+                                        (color.green * 255).toInt(),
+                                        (color.blue * 255).toInt()
+                                    )
+                                    textSize = 24f
+                                    textAlign = android.graphics.Paint.Align.CENTER
+                                }
+
+                                drawContext.canvas.nativeCanvas.drawText(
+                                    "%.2f".format(points[touchedIndex]),
+                                    touchedX,
+                                    touchedY - 15f,
+                                    touchValuePaint
+                                )
+                            }
                         }
-                        // Draw last point
-                        val lastX = (points.size - 1) * stepX
-                        val lastY = heightPadding + (size.height - 2 * heightPadding) * (1 - (points.last() - minValue) / range)
-                        drawCircle(
-                            color = color,
-                            radius = 6f,
-                            center = Offset(lastX, lastY)
-                        )
                     }
+                }
+
+                // Show touched value below the graph
+                if (touchedValue != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Touched value: ${"%.2f".format(touchedValue)}",
+                        fontSize = 14.sp,
+                        color = color,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             } else {
                 // Show waiting message if no data
@@ -697,9 +976,11 @@ fun SensorGraphCard(
 
 // Helper function to update history lists
 private fun updateHistory(history: MutableList<Float>, value: Float) {
-    if (history.size >= 20) history.removeAt(0) // Limit to 20 entries
-    history.add(value) // Add new value
+    // Simply add the new value and maintain buffer size
+    if (history.size >= 50) history.removeAt(0)
+    history.add(value)
 }
+
 
 // Composable for displaying soil sensor data in a table
 @Composable
@@ -781,8 +1062,19 @@ fun Accelerometer3DVisualization(
         elevation = 4.dp,
         backgroundColor = cardBackground
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("3D Orientation Visualizer", color = textColor, fontSize = 18.sp)
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "3D Orientation Visualizer",
+                color = textColor,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
 
             // Canvas for 3D visualization
             Canvas(
@@ -877,7 +1169,7 @@ fun Accelerometer3DVisualization(
                 // Draw X, Y, Z axes
                 drawLine(Color.Red, Offset(centerX, centerY), xEnd, 3f) // X
                 drawLine(Color.Green, Offset(centerX, centerY), yEnd, 3f) // Y
-                drawLine(Color.Blue, Offset(centerX, centerY), zEnd, 3f) // Z
+                drawLine(Color.Cyan, Offset(centerX, centerY), zEnd, 3f) // Z
 
                 // Draw axis labels using native canvas
                 drawContext.canvas.nativeCanvas.apply {
@@ -892,7 +1184,7 @@ fun Accelerometer3DVisualization(
                     labelPaint.color = android.graphics.Color.GREEN
                     drawText("Y", yEnd.x + 10f, yEnd.y, labelPaint)
 
-                    labelPaint.color = android.graphics.Color.BLUE
+                    labelPaint.color = android.graphics.Color.CYAN
                     drawText("Z", zEnd.x + 20f, zEnd.y + 30f, labelPaint)
                 }
 
@@ -912,7 +1204,8 @@ fun Accelerometer3DVisualization(
                 text = "X: %.2f, Y: %.2f, Z: %.2f".format(x, y, z),
                 color = textColor,
                 fontSize = 16.sp,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
+                textAlign = TextAlign.Center
             )
         }
     }

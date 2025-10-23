@@ -4,7 +4,7 @@
             "outputFile": "com.blesense.app-mergeReleaseResources-84:/values-v27/values-v27.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\AppData\\Local\\Android\\Sdk\\caches\\8.13\\transforms\\2a74b61f507a0857328e4bd6445e1a75\\transformed\\core-splashscreen-1.0.0\\res\\values-v27\\values-v27.xml",
+                    "source": "C:\\Users\\DELL\\.gradle\\caches\\8.13\\transforms\\b509b8f0289aaffc3c2dffe5d283235c\\transformed\\core-splashscreen-1.0.0\\res\\values-v27\\values-v27.xml",
                     "from": {
                         "startLines": "2,3,4,7",
                         "startColumns": "4,4,4,4",

@@ -15,6 +15,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -49,6 +50,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+// Add these imports at the top of your file
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -257,7 +264,7 @@ fun OptimizedRadarLayout(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing), // 4-second rotation
+            animation = tween(5000, easing = LinearEasing), // 5-second rotation (balanced)
             repeatMode = RepeatMode.Restart
         ), label = "radar_angle"
     )
@@ -309,7 +316,7 @@ fun OptimizedRadarLayout(
         // Draw device icons
         deviceList.forEach { (imageResId, position) ->
             val deviceName = getDeviceNameFromResId(imageResId)
-            val isActivated = rememberActivatedDevices.contains(deviceName)
+            val isActivated = activatedDevices.contains(deviceName)
             val rssi = rssiValues[deviceName]
 
             key(imageResId) {
@@ -411,6 +418,15 @@ fun DeviceIcon(
                         }
                 )
             }
+            if (isActivated) {
+                Text(
+                    text = getDeviceNameFromResId(imageResId),
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }
@@ -476,21 +492,20 @@ fun RotatingRadarLine(radarColor: Color, rotationAngle: Float) {
     }
 }
 
-// Composable for radar base circles
+// Composable for radar base circles - EXACTLY 3 CIRCLES (2 inner + 1 outer)
 @Composable
 fun RadarBase(radarColor: Color, centerCircleColor: Color) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         val boxSize = size.minDimension
         val radius = boxSize / 2
 
-        // Define radar circles with different radii and stroke widths
+        // 3 CIRCLES - 2 inner + 1 outer
         val circles = listOf(
-            radius * 0.33f to 2.dp,
-            radius * 0.66f to 4.dp,
-            radius to 6.dp
+            radius * 0.33f to 2.dp,  // First inner circle
+            radius * 0.66f to 4.dp,  // Second inner circle
+            radius to 5.dp           // Outer circle
         )
 
-        // Draw radar circles
         circles.forEach { (circleRadius, strokeWidth) ->
             drawCircle(
                 color = radarColor,
@@ -499,11 +514,11 @@ fun RadarBase(radarColor: Color, centerCircleColor: Color) {
             )
         }
 
-        // Draw center circle
+        // Center circle (छोटा सा)
         drawCircle(
             color = centerCircleColor,
-            radius = radius * 0.06f,
-            alpha = 1f
+            radius = radius * 0.04f,
+            alpha = 0.8f
         )
     }
 }
@@ -561,166 +576,144 @@ fun generateMultiplePositions(count: Int, radius: Float): List<Offset> {
     return positions
 }
 
-// Composable for scratch card effect
-//@Composable
-//fun ScratchCardScreen(
-//    heroName: String, // Name of the hero to reveal
-//    modifier: Modifier = Modifier,
-//    onScratchCompleted: () -> Unit = {} // Callback when scratching is complete
-//) {
-//    // Load overlay image
-//    val overlayImage = ImageBitmap.imageResource(id = R.drawable.scratch)
-//    // Select base image based on hero name
-//    val heroImageResId = remember(heroName) {
-//        when (heroName) {
-//            "Iron_Man" -> R.drawable.iron_man
-//            "Hulk" -> R.drawable.hulk_
-//            "Captain Marvel" -> R.drawable.captain_marvel
-//            "Captain America" -> R.drawable.captain_america
-//            "Scarlet Witch" -> R.drawable.scarlet_witch
-//            "Black Widow" -> R.drawable.black_widow
-//            "Wasp" -> R.drawable.wasp
-//            "Hela" -> R.drawable.hela
-//            "Thor" -> R.drawable.thor
-//            "Spider Man" -> R.drawable.spider_man
-//            else -> R.drawable.inner // Default fallback image
-//        }
-//    }
-//
-//    // Load base image
-//    val baseImage = ImageBitmap.imageResource(id = heroImageResId)
-//    // Track current scratch path
-//    val currentPathState = remember { mutableStateOf(DraggedPath(path = Path(), width = 150f)) }
-//    // Track percentage of area scratched
-//    var scratchedAreaPercentage by remember { mutableFloatStateOf(0f) }
-//    // Track whether completion callback has been called
-//    var hasCalledCompletion by remember { mutableStateOf(false) }
-//    // Canvas size in pixels
-//    val canvasSizePx = with(LocalDensity.current) { 300.dp.toPx() }
-//
-//    // Animation state for hero reveal
-//    var showHeroReveal by remember { mutableStateOf(false) }
-//    // Animate scale for hero reveal
-//    val animatedScale by animateFloatAsState(
-//        targetValue = if (showHeroReveal) 1.2f else 1f,
-//        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
-//        label = "heroRevealScale"
-//    )
-//
-//    // Trigger completion callback when 95% scratched
-//    LaunchedEffect(scratchedAreaPercentage) {
-//        if (scratchedAreaPercentage >= 95f && !hasCalledCompletion) {
-//            hasCalledCompletion = true
-//            onScratchCompleted()
-//            showHeroReveal = true // Trigger hero reveal animation
-//        }
-//    }
-//
-//    // Simulate scratching animation
-//    LaunchedEffect(Unit) {
-//        val stepSize = canvasSizePx / 2 // Larger step size for efficiency
-//        val totalArea = canvasSizePx * canvasSizePx
-//        val scratchPath = currentPathState.value.path
-//
-//        // Create a simple scratch pattern
-//        for (y in 0..canvasSizePx.toInt() step stepSize.toInt()) {
-//            for (x in 0..canvasSizePx.toInt() step stepSize.toInt()) {
-//                scratchPath.addOval(
-//                    androidx.compose.ui.geometry.Rect(
-//                        center = Offset(x.toFloat(), y.toFloat()),
-//                        radius = stepSize * 0.8f
-//                    )
-//                )
-//                scratchedAreaPercentage = ((y * canvasSizePx + x) / totalArea * 100f).coerceAtMost(100f)
-//                delay(80) // Delay for smooth animation
-//            }
-//        }
-//    }
-//
-//    // Scratch card container
-//    Box(
-//        contentAlignment = Alignment.Center,
-//        modifier = modifier
-//    ) {
-//        // Conditional rendering based on scratch progress
-//        if (scratchedAreaPercentage < 95f) {
-//            OptimizedScratchCanvas(
-//                overlayImage = overlayImage,
-//                baseImage = baseImage,
-//                currentPath = currentPathState.value.path,
-//                modifier = Modifier
-//                    .size(300.dp)
-//                    .align(Alignment.Center)
-//            )
-//        } else {
-//            // Reveal hero image with animation
-//            Image(
-//                painter = painterResource(
-//                    id = when (heroName) {
-//                        "Iron_Man" -> R.drawable.iron_man
-//                        "Hulk" -> R.drawable.hulk_
-//                        "Captain Marvel" -> R.drawable.captain_marvel
-//                        "Captain America" -> R.drawable.captain_america
-//                        "Scarlet Witch" -> R.drawable.scarlet_witch
-//                        "Black Widow" -> R.drawable.black_widow
-//                        "Wasp" -> R.drawable.wasp
-//                        "Hela" -> R.drawable.hela
-//                        "Thor" -> R.drawable.thor
-//                        "Spider Man" -> R.drawable.spider_man
-//                        else -> R.drawable.inner
-//                    }
-//                ),
-//                contentDescription = "Revealed Hero",
-//                modifier = Modifier
-//                    .size(300.dp)
-//                    .graphicsLayer {
-//                        scaleX = animatedScale // Apply animated scale
-//                        scaleY = animatedScale
-//                    }
-//                    .align(Alignment.Center)
-//            )
-//        }
-//
-//        // Completion indicator
-//        AnimatedVisibility(
-//            visible = scratchedAreaPercentage >= 95f,
-//            enter = fadeIn(),
-//            exit = fadeOut()
-//        ) {
-//            Text(
-//                text = "Hero collected!",
-//                style = MaterialTheme.typography.titleLarge,
-//                color = Color.White,
-//                modifier = Modifier
-//                    .align(Alignment.BottomCenter)
-//                    .padding(bottom = 16.dp)
-//                    .background(
-//                        Color(0x99000000), // Semi-transparent black
-//                        shape = RoundedCornerShape(4.dp)
-//                    )
-//                    .padding(horizontal = 12.dp, vertical = 4.dp)
-//            )
-//        }
-//    }
-//}
+// Composable for scratch card
+@Composable
+fun ScratchCardScreen(
+    heroName: String,
+    modifier: Modifier = Modifier,
+    onScratchCompleted: () -> Unit = {}
+) {
+    val overlayImage = ImageBitmap.imageResource(id = R.drawable.scratch)
+    // Select base image based on hero name
+    // Get resource ID outside of ImageBitmap.imageResource call
+    val heroImageResId = remember(heroName) {
+        when (heroName) {
+            "Iron_Man" -> R.drawable.iron_man
+            "Hulk" -> R.drawable.hulk_
+            "Captain Marvel" -> R.drawable.captain_marvel
+            "Captain America" -> R.drawable.captain_america
+            "Scarlet Witch" -> R.drawable.scarlet_witch
+            "Black Widow" -> R.drawable.black_widow
+            "Wasp" -> R.drawable.wasp
+            "Hela" -> R.drawable.hela
+            "Thor" -> R.drawable.thor
+            "Spider Man" -> R.drawable.spider_man
+            else -> R.drawable.inner // Default fallback image
+        }
+    }
 
-// Composable for optimized scratch canvas
+// Then use the resource ID with ImageBitmap.imageResource
+    val baseImage = ImageBitmap.imageResource(id = heroImageResId)
+    val currentPathState = remember { mutableStateOf(DraggedPath(path = Path(), width = 150f)) }
+    var scratchedAreaPercentage by remember { mutableFloatStateOf(0f) }
+    var hasCalledCompletion by remember { mutableStateOf(false) }
+    val canvasSizePx = with(LocalDensity.current) { 300.dp.toPx() }
+
+    // Animation state for hero reveal
+
+    var showHeroReveal by remember { mutableStateOf(false) }
+    val animatedScale by animateFloatAsState(
+        targetValue = if (showHeroReveal) 1.2f else 1f,
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+        label = "heroRevealScale"
+    )
+
+    // Trigger the completion callback when scratch reaches 95%
+    LaunchedEffect(scratchedAreaPercentage) {
+        if (scratchedAreaPercentage >= 85f && !hasCalledCompletion) {
+            hasCalledCompletion = true
+            onScratchCompleted()
+            showHeroReveal = true // Trigger hero reveal animation
+        }
+    }
+
+    // Optimize scratch animation by using larger steps and fewer operations
+    LaunchedEffect(Unit) {
+        val stepSize = canvasSizePx / 1.5f
+        val totalArea = canvasSizePx * canvasSizePx
+        val scratchPath = currentPathState.value.path
+
+        for (y in 0..canvasSizePx.toInt() step stepSize.toInt()) {
+            for (x in 0..canvasSizePx.toInt() step stepSize.toInt()) {
+                scratchPath.addOval(
+                    androidx.compose.ui.geometry.Rect(
+                        center = Offset(x.toFloat(), y.toFloat()),
+                        radius = stepSize * 0.9f
+                    )
+                )
+                scratchedAreaPercentage = ((y * canvasSizePx + x) / totalArea * 100f).coerceAtMost(100f)
+                delay(120)  // Increased delay to reduce load
+            }
+        }
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center, // Added to center vertically
+        modifier = modifier
+            .fillMaxSize() // Ensure it takes full screen size
+        //   .wrapContentSize(Alignment.Center) // Center the column content
+    ){
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(150.dp) // Match canvas size for proper centering
+        ) {
+            // Optimize by conditional rendering based on scratch state
+            if (scratchedAreaPercentage < 85f) {
+                OptimizedScratchCanvas(
+                    overlayImage = overlayImage,
+                    baseImage = baseImage,
+                    currentPath = currentPathState.value.path,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                // Reveal Hero Image with Animation
+                Image(
+                    painter = painterResource(id = heroImageResId),
+                    contentDescription = "Revealed Hero",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = animatedScale
+                            scaleY = animatedScale
+                        }
+                )
+            }
+        }
+
+        // Hero Name displayed below the card
+        AnimatedVisibility(
+            visible = scratchedAreaPercentage >= 60f,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                text = heroName.replace("_", " "), // Convert "Iron_Man" to "Iron Man"
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+        }
+    }
+}
+
 @Composable
 fun OptimizedScratchCanvas(
-    overlayImage: ImageBitmap, // Overlay image to scratch
-    baseImage: ImageBitmap, // Base image to reveal
-    currentPath: Path, // Current scratch path
+    overlayImage: ImageBitmap,
+    baseImage: ImageBitmap,
+    currentPath: Path,
     modifier: Modifier = Modifier
 ) {
     Canvas(
         modifier = modifier
-            .clipToBounds() // Clip content to canvas bounds
-            .background(Color(0xFFF7DCA7)) // Background color
+            .clipToBounds()
+            .background(Color(0xFFF7DCA7))
     ) {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
-        // Draw the overlay image
+        // Draw the overlay image to fit the entire canvas
         drawImage(
             image = overlayImage,
             dstSize = IntSize(
@@ -729,14 +722,14 @@ fun OptimizedScratchCanvas(
             )
         )
 
-        // Clip the base image to the scratched path
+        // Clip the base image to the current path
         clipPath(path = currentPath) {
-            // Scale base image to fit
+            // Calculate a smaller size for the base image
             val baseImageScaleFactor = 0.8f
             val baseImageWidth = (canvasWidth * baseImageScaleFactor).toInt()
             val baseImageHeight = (canvasHeight * baseImageScaleFactor).toInt()
 
-            // Center the base image
+            // Center the base image within the canvas
             val baseImageOffsetX = (canvasWidth - baseImageWidth) / 2
             val baseImageOffsetY = (canvasHeight - baseImageHeight) / 2
 
@@ -752,8 +745,8 @@ fun OptimizedScratchCanvas(
     }
 }
 
-// Data class for tracking scratch path
+
 data class DraggedPath(
-    val path: Path, // Scratch path
-    val width: Float = 50f // Default path width
+    val path: Path,
+    val width: Float = 50f
 )

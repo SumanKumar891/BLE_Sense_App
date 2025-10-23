@@ -1,8 +1,6 @@
 package com.blesense.app
 
-// Import necessary Android and Compose libraries for UI, authentication, and Google Sign-In
 import android.app.Activity
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,19 +31,18 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 
-// Enable experimental Material3 API
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    viewModel: AuthViewModel, // Authentication view model
-    onNavigateToLogin: () -> Unit, // Callback for navigating to login screen
-    onNavigateToHome: () -> Unit // Callback for navigating to home screen
+    viewModel: AuthViewModel,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToHome: () -> Unit
 ) {
-    // Observe theme and language state
+    // Theme and Language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
     val currentLanguage by LanguageManager.currentLanguage.collectAsState()
 
-    // Initialize translated text with cached values or defaults
+    // Translated text state
     var translatedText by remember {
         mutableStateOf(
             TranslatedRegisterScreenText(
@@ -64,7 +61,7 @@ fun RegisterScreen(
         )
     }
 
-    // Preload translations when language changes
+    // Preload translations on language change
     LaunchedEffect(currentLanguage) {
         val translator = GoogleTranslationService()
         val textsToTranslate = listOf(
@@ -73,7 +70,6 @@ fun RegisterScreen(
             "Login Now", "Creating Account"
         )
         val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        // Update translated text state
         translatedText = TranslatedRegisterScreenText(
             createAccount = translatedList[0],
             signUpToGetStarted = translatedList[1],
@@ -89,72 +85,59 @@ fun RegisterScreen(
         )
     }
 
-    // Define theme-based colors
-    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White // Screen background
-    val textColor = if (isDarkMode) Color.White else Color.Black // Primary text
-    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF8E8E93) // Secondary text
-    val textFieldBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color(0xFFFFFFFF) // Text field background
-    val buttonBackgroundColor = if (isDarkMode) Color(0xFFBB86FC) else Color(0xFF007AFF) // Button background
-    val buttonTextColor = if (isDarkMode) Color.Black else Color.White // Button text
-    val dividerColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray // Divider
-    val borderColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray // Border
+    // Theme-based colors
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White
+    val textColor = if (isDarkMode) Color.White else Color.Black
+    val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF8E8E93)
+    val textFieldBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color(0xFFFFFFFF)
+    val buttonBackgroundColor = if (isDarkMode) Color(0xFFBB86FC) else Color(0xFF007AFF)
+    val buttonTextColor = if (isDarkMode) Color.Black else Color.White
+    val dividerColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray
+    val borderColor = if (isDarkMode) Color(0xFFB0B0B0) else Color.LightGray
 
-    // State variables for form inputs and validation
-    var username by remember { mutableStateOf("") } // Username input
-    var email by remember { mutableStateOf("") } // Email input
-    var password by remember { mutableStateOf("") } // Password input
-    var confirmPassword by remember { mutableStateOf("") } // Confirm password input
-    var passwordVisible by remember { mutableStateOf(false) } // Password visibility toggle
-    var confirmPasswordVisible by remember { mutableStateOf(false) } // Confirm password visibility toggle
-    var isUsernameValid by remember { mutableStateOf(false) } // Username validation state
-    var isEmailValid by remember { mutableStateOf(false) } // Email validation state
-    var isPasswordValid by remember { mutableStateOf(false) } // Password validation state
-    var isConfirmPasswordValid by remember { mutableStateOf(false) } // Confirm password validation state
+    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var isUsernameValid by remember { mutableStateOf(false) }
+    var isEmailValid by remember { mutableStateOf(false) }
+    var isPasswordValid by remember { mutableStateOf(false) }
+    var isConfirmPasswordValid by remember { mutableStateOf(false) }
 
-    // Get current context
     val context = LocalContext.current
-    // Launcher for Google Sign-In
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            // Handle successful Google Sign-In
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
                 account.idToken?.let { viewModel.signInWithGoogle(it) }
             } catch (e: ApiException) {
-                // Log and handle Google Sign-In failure
-                Log.e("AuthViewModel", "Google Sign-In Failed", e)
-                viewModel.handleGoogleSignInError("Google Sign-In failed: ${e.statusCode} - ${e.message}")
+                viewModel.handleGoogleSignInError("Google Sign-In failed: ${e.message}")
             }
         } else {
-            // Log and handle Google Sign-In cancellation
-            Log.w("AuthViewModel", "Google Sign-In Cancelled: ${result.resultCode}")
             viewModel.handleGoogleSignInError("Google Sign-In was cancelled")
         }
     }
 
-    // Initialize Google Sign-In client
     val googleSignInClient = remember { GoogleSignInHelper.getGoogleSignInClient(context) }
     LaunchedEffect(Unit) {
         viewModel.setGoogleSignInClient(googleSignInClient)
     }
 
-    // Observe authentication state
     val authState by viewModel.authState.collectAsState()
 
-    // Validate username (minimum 4 characters, alphanumeric and underscore)
     fun validateUsername(value: String): Boolean {
         return value.length >= 4 && value.matches(Regex("^[a-zA-Z0-9_]+$"))
     }
 
-    // Validate email format
     fun validateEmail(value: String): Boolean {
         return value.matches(Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$"))
     }
 
-    // Validate password (minimum 8 characters, with uppercase, lowercase, digit, and special character)
     fun validatePassword(value: String): Boolean {
         return value.length >= 8 &&
                 Regex("[A-Z]").containsMatchIn(value) && // At least one uppercase
@@ -163,14 +146,14 @@ fun RegisterScreen(
                 Regex("[!@#\$%^&()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]").containsMatchIn(value) // At least one special char
     }
 
-    // Show toast if username exceeds 4 characters
+
+    // Show a toast if the username exceeds 3 characters
     LaunchedEffect(username) {
         if (username.length > 4) {
             Toast.makeText(context, "Username must be less than 8 chars, digits, and _ allowed", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Show toast if password exceeds 8 characters
     LaunchedEffect(password) {
         if (password.length > 8) {
             Toast.makeText(
@@ -181,38 +164,34 @@ fun RegisterScreen(
         }
     }
 
-    // Show loading dialog during authentication
+
     if (authState is AuthState.Loading) {
         AlertDialog(
-            onDismissRequest = { }, // Non-dismissable dialog
+            onDismissRequest = { },
             title = { Text(translatedText.creatingAccount, color = textColor) },
             text = {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
                     CircularProgressIndicator(color = buttonBackgroundColor)
                 }
             },
-            confirmButton = { }, // No confirm button
+            confirmButton = { },
             containerColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
         )
     }
 
-    // Handle authentication state changes
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                // Log success and navigate to home screen
                 println("User registered: ${(authState as AuthState.Success).user.email}")
                 onNavigateToHome()
             }
             is AuthState.Error -> {
-                // Log error
                 println("Error: ${(authState as AuthState.Error).message}")
             }
             else -> Unit
         }
     }
 
-    // Main UI layout
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -223,7 +202,6 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(60.dp))
-        // Title text
         Text(
             text = translatedText.createAccount,
             style = TextStyle(
@@ -234,7 +212,6 @@ fun RegisterScreen(
             ),
             textAlign = TextAlign.Center
         )
-        // Subtitle text
         Text(
             text = translatedText.signUpToGetStarted,
             style = TextStyle(
@@ -247,7 +224,6 @@ fun RegisterScreen(
         )
         Spacer(modifier = Modifier.height(60.dp))
 
-        // Username input field
         TextField(
             value = username,
             onValueChange = {
@@ -278,7 +254,6 @@ fun RegisterScreen(
             )
         )
 
-        // Email input field
         TextField(
             value = email,
             onValueChange = {
@@ -308,11 +283,9 @@ fun RegisterScreen(
                 color = textColor
             )
         )
-        // Track interaction for password field
         val interactionSource = remember { MutableInteractionSource() }
         val isFocused by interactionSource.collectIsFocusedAsState()
 
-        // Password input field
         TextField(
             value = password,
             onValueChange = {
@@ -341,7 +314,7 @@ fun RegisterScreen(
                 ) {
                     Icon(
                         painter = painterResource(
-                            id = if (passwordVisible) R.drawable.monkey else R.drawable.eyes
+                            id = if (passwordVisible) R.drawable.invisible else R.drawable.show
                         ),
                         contentDescription = if (passwordVisible) "Hide password" else "Show password",
                         tint = Color.Unspecified
@@ -366,7 +339,9 @@ fun RegisterScreen(
             )
         )
 
-        // Confirm password input field
+
+
+
         TextField(
             value = confirmPassword,
             onValueChange = {
@@ -388,7 +363,7 @@ fun RegisterScreen(
                 ) {
                     Icon(
                         painter = painterResource(
-                            id = if (confirmPasswordVisible) R.drawable.monkey else R.drawable.eyes
+                            id = if (confirmPasswordVisible) R.drawable.invisible else R.drawable.show
                         ),
                         contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
                         tint = Color.Unspecified
@@ -412,7 +387,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Create account button
         Button(
             onClick = {
                 if (isUsernameValid && isEmailValid && isPasswordValid && password == confirmPassword) {
@@ -442,7 +416,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Social login divider
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -470,7 +443,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Social login button (Google)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -485,7 +457,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Login prompt
         Row(
             modifier = Modifier.padding(bottom = 32.dp),
             horizontalArrangement = Arrangement.Center,
@@ -517,15 +488,15 @@ fun RegisterScreen(
 
 // Data class for translatable text
 data class TranslatedRegisterScreenText(
-    val createAccount: String, // Title for create account
-    val signUpToGetStarted: String, // Subtitle
-    val usernamePlaceholder: String, // Username field placeholder
-    val emailPlaceholder: String, // Email field placeholder
-    val passwordPlaceholder: String, // Password field placeholder
-    val confirmPasswordPlaceholder: String, // Confirm password field placeholder
-    val createAccountButton: String, // Create account button text
-    val orContinueWith: String, // Social login divider text
-    val alreadyHaveAccount: String, // Login prompt text
-    val loginNow: String, // Login button text
-    val creatingAccount: String // Loading dialog title
+    val createAccount: String,
+    val signUpToGetStarted: String,
+    val usernamePlaceholder: String,
+    val emailPlaceholder: String,
+    val passwordPlaceholder: String,
+    val confirmPasswordPlaceholder: String,
+    val createAccountButton: String,
+    val orContinueWith: String,
+    val alreadyHaveAccount: String,
+    val loginNow: String,
+    val creatingAccount:String
 )

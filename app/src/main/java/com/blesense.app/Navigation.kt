@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -16,43 +15,38 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.ble_jetpackcompose.OpticalSensorScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
     // Initialize AuthViewModel
     val authViewModel: AuthViewModel = viewModel()
+
     // Observe authentication state
     val authState by authViewModel.authState.collectAsState()
-    // Get current context
-    val context = LocalContext.current
-    // Get application context
-    val application = context.applicationContext as Application
-    // Get activity context
-    val activity = context as ComponentActivity
-    // Initialize BluetoothScanViewModel with factory
-    val bluetoothViewModel: BluetoothScanViewModel<Any?> by activity.viewModels { BluetoothScanViewModelFactory(application) }
 
-    // Initialize ThemeManager with system theme on app start
-//    LaunchedEffect(Unit) {
-//        ThemeManager.run { initializeWithSystemTheme(isSystemInDarkTheme()) }
-//    }
+    // Get context, application & activity
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val activity = context as ComponentActivity
+
+    // Initialize BluetoothScanViewModel
+    val bluetoothViewModel: BluetoothScanViewModel<Any?> by activity.viewModels {
+        BluetoothScanViewModelFactory(application)
+    }
 
     // Handle authentication state changes
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                // Navigate to intermediate screen on successful authentication
                 navController.navigate("intermediate_screen") {
                     popUpTo("first_screen") { inclusive = true }
                     popUpTo("splash_screen") { inclusive = true }
                 }
             }
             is AuthState.Error -> {
-                // Handle error if needed (e.g., show a toast)
+                // Optionally handle error
             }
             is AuthState.Idle -> {
-                // Navigate to first screen if not on splash or first screen
                 if (navController.currentDestination?.route !in listOf("first_screen", "splash_screen")) {
                     navController.navigate("first_screen") {
                         popUpTo(0) { inclusive = true }
@@ -63,12 +57,12 @@ fun AppNavigation(navController: NavHostController) {
         }
     }
 
-    // Define navigation graph
+    // Navigation graph
     NavHost(
         navController = navController,
         startDestination = if (authViewModel.isUserAuthenticated()) "intermediate_screen" else "splash_screen"
     ) {
-        // Splash screen route
+        // Splash screen
         composable("splash_screen") {
             SplashScreen(
                 onNavigateToLogin = {
@@ -81,7 +75,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // First screen route
+        // First screen
         composable("first_screen") {
             AnimatedFirstScreen(
                 onNavigateToLogin = {
@@ -96,7 +90,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Login screen route
+        // Login screen
         composable("login") {
             LoginScreen(
                 viewModel = authViewModel,
@@ -111,7 +105,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Register screen route
+        // Register screen
         composable("register") {
             RegisterScreen(
                 viewModel = authViewModel,
@@ -128,7 +122,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Intermediate screen route
+        // Intermediate screen
         composable("intermediate_screen") {
             IntermediateScreen(
                 navController = navController,
@@ -136,7 +130,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Home screen route
+        // Home screen
         composable("home_screen") {
             MainScreen(
                 navController = navController,
@@ -144,44 +138,33 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Chat screen route
-        composable("chat_screen") {
-            ChatScreen(navController = navController)
-        }
-
-        // Game activity screen route
+        // Game loading screen
         composable("game_loading") {
             BLEGamesScreen(navController = navController)
         }
 
+        // Game screen (fixed safe back handling)
         composable("game_screen") {
-            val activity = LocalContext.current as Activity
+            val act = LocalContext.current as? Activity
             GameActivityScreen(
-                activity = activity,
+                activity = act,
                 onBackToHome = {
-                    navController.navigate("intermediate_screen") {
-                        popUpTo("game_screen") { inclusive = true }
-                    }
+                    // ✅ Simple and safe navigation back
+                    navController.popBackStack()
+                }
+            )
+        }
+        // Robot control screen (safe back handling)
+        composable("robot_screen") {
+            val act = LocalContext.current as? Activity
+            RobotControlScreen(
+                onBackPressed = {
+                    act?.finish()
                 }
             )
         }
 
-        // Robot control screen route
-        composable("robot_screen") {
-            val activity = LocalContext.current as Activity
-            RobotControlScreen(
-                onBackPressed = { activity.finish() }
-            )
-        }
-
-        composable("optical_sensor_screen") {
-            OpticalSensorScreen(
-                navController = navController,
-                viewModel = bluetoothViewModel as BluetoothScanViewModel<Any>
-            )
-        }
-
-        // Settings screen route
+        // Settings screen
         composable("settings_screen") {
             ModernSettingsScreen(
                 viewModel = authViewModel,
@@ -194,7 +177,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Advertising data screen route
+        // Advertising data screen
         composable(
             route = "advertising/{deviceName}/{deviceAddress}/{sensorType}/{deviceId}",
             arguments = listOf(
@@ -218,7 +201,29 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Chart screen route
+        // Data logger screen
+        composable(
+            route = "data_logger/{deviceName}/{deviceAddress}/{deviceId}",
+            arguments = listOf(
+                navArgument("deviceName") { type = NavType.StringType },
+                navArgument("deviceAddress") { type = NavType.StringType },
+                navArgument("deviceId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val deviceName = backStackEntry.arguments?.getString("deviceName") ?: ""
+            val deviceAddress = backStackEntry.arguments?.getString("deviceAddress") ?: ""
+            val deviceId = backStackEntry.arguments?.getString("deviceId") ?: ""
+
+            DataLoggerScreen(
+                deviceAddress = deviceAddress,
+                deviceName = deviceName,
+                navController = navController,
+                deviceId = deviceId,
+                viewModel = bluetoothViewModel as BluetoothScanViewModel<Any>
+            )
+        }
+
+        // Chart screen
         composable(
             route = "chart_screen/{deviceAddress}",
             arguments = listOf(
@@ -231,7 +236,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Second chart screen route
+        // Chart screen 2
         composable(
             route = "chart_screen_2/{title}/{value}",
             arguments = listOf(
@@ -243,14 +248,6 @@ fun AppNavigation(navController: NavHostController) {
             val value = backStackEntry.arguments?.getString("value")
 
             ChartScreen2(navController = navController, title = title, value = value)
-        }
-
-        // Water quality screen route
-        composable("water_quality_screen") {
-            WaterQualityScreen(
-                navController = navController,
-                viewModel = bluetoothViewModel as BluetoothScanViewModel<Any>
-            )
         }
     }
 }

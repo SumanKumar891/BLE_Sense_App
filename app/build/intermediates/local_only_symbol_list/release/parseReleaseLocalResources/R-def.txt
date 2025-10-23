@@ -23,6 +23,7 @@ drawable bluetooth
 drawable captain_america
 drawable captain_marvel
 drawable close_box
+drawable data_logger
 drawable error
 drawable eyes
 drawable eyes_visibility
@@ -54,8 +55,11 @@ drawable ic_rotate
 drawable ic_switch
 drawable ic_thermometer
 drawable ic_turbo
+drawable ic_visibility
+drawable ic_visibility_off
 drawable icons_leaf
 drawable inner
+drawable invisible
 drawable iron_man
 drawable jack
 drawable jjack
@@ -79,9 +83,8 @@ drawable scarlet_witch
 drawable scratch
 drawable search
 drawable settings
+drawable show
 drawable soil3
-drawable soil_sensor
-drawable soil_sensor2
 drawable soundoff
 drawable soundon
 drawable spider_man
@@ -118,3 +121,4 @@ style Theme.BLEJetpackCompose.Splash
 xml backup_rules
 xml data_extraction_rules
 xml network_security_config
+xml provider_paths

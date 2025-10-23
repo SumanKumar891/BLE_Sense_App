@@ -5,7 +5,7 @@
     targetSdkVersion="35"
     mergedManifest="build\intermediates\merged_manifest\release\processReleaseMainManifest\AndroidManifest.xml"
     manifestMergeReport="build\outputs\logs\manifest-merger-release-report.txt"
-    proguardFiles="build\intermediates\default_proguard_files\global\proguard-android-optimize.txt-8.11.1;proguard-rules.pro"
+    proguardFiles="build\intermediates\default_proguard_files\global\proguard-android-optimize.txt-8.12.0;proguard-rules.pro"
     partialResultsDir="build\intermediates\lint_vital_partial_results\release\lintVitalAnalyzeRelease\out">
   <buildFeatures
       namespacing="REQUIRED"/>
@@ -26,6 +26,6 @@
       applicationId="com.blesense.app"
       generatedSourceFolders="build\generated\ap_generated_sources\release\out;build\generated\source\buildConfig\release"
       generatedResourceFolders="build\generated\res\processReleaseGoogleServices;build\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\hp\AppData\Local\Android\Sdk\caches\8.13\transforms\0f8f16141fdb7abd042a23a9efa381e7\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\DELL\.gradle\caches\8.13\transforms\8ddf164766baef5fce1c2d75ebff676d\transformed\D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

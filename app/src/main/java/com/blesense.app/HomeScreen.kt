@@ -1,3 +1,5 @@
+//homescreen with large data values
+
 package com.blesense.app
 
 import android.Manifest
@@ -10,9 +12,8 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,10 +41,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
+import com.blesense.app.BluetoothScanViewModel.SensorData.DataLoggerData
+
 
 // Data class for translatable text in MainScreen
 data class TranslatedMainScreenText(
@@ -84,10 +87,11 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
     var expanded by remember { mutableStateOf(false) }
     // List of supported sensor types
     val sensorTypes = listOf(
-        "SHT40", "LIS2DH", "Weather", "Lux Sensor",
+        "SHT40", "LIS2DH", "Weather", "Lux Sensor","Soil Sensor",
         "Speed Distance", "Metal Detector", "Step Counter",
-        "Ammonia Sensor", "Optical Sensor", "DO Sensor"
+        "Ammonia Sensor", "DataLogger"
     )
+
     // Track selected sensor type
     var selectedSensor by remember { mutableStateOf(sensorTypes[0]) }
     // Toggle to show all devices or a limited number
@@ -240,27 +244,6 @@ fun MainScreen(navController: NavHostController, bluetoothViewModel: BluetoothSc
                 }
             }
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("chat_screen") },
-                backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF),
-                contentColor = Color.White
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Chat,
-                    contentDescription = "Open Chatbot"
-                )
-            }
-        },
-        bottomBar = {
-//            Box {
-//                CustomBottomNavigation(
-//                    modifier = Modifier.align(Alignment.BottomCenter),
-//                    navController = navController,
-//                    isDarkMode = isDarkMode
-//                )
-//            }
-        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -565,19 +548,17 @@ private fun checkPermission(context: Context, permission: String): Boolean {
 // Composable for individual Bluetooth device item
 @Composable
 fun BluetoothDeviceItem(
-    device: BluetoothScanViewModel.BluetoothDevice, // Device data
-    navController: NavHostController, // Navigation controller
-    selectedSensor: String, // Selected sensor type
-    isDarkMode: Boolean, // Dark mode state
-    showPreview: Boolean = false // Whether to show sensor preview
+    device: BluetoothScanViewModel.BluetoothDevice,
+    navController: NavHostController,
+    selectedSensor: String,
+    isDarkMode: Boolean,
+    showPreview: Boolean = false
 ) {
-    // Define theme-based colors
     val textColor = if (isDarkMode) Color.White else Color.Black
     val secondaryTextColor = if (isDarkMode) Color(0xFFB0B0B0) else Color(0xFF757575)
     val iconBackgroundColor = if (isDarkMode) Color(0xFF0D47A1) else Color(0xFFE3F2FD)
     val iconTintColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF2196F3)
 
-    // Device item row, clickable to navigate to details
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -589,7 +570,6 @@ fun BluetoothDeviceItem(
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Device icon
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -606,49 +586,57 @@ fun BluetoothDeviceItem(
 
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            // Device name
             Text(
                 text = device.name,
                 style = MaterialTheme.typography.subtitle1,
                 color = textColor
             )
-            // Device address
             Text(
                 text = "Address: ${device.address}",
                 style = MaterialTheme.typography.caption,
                 color = secondaryTextColor
             )
-            // Signal strength
             Text(
                 text = "Signal Strength: ${device.rssi} dBm",
                 style = MaterialTheme.typography.caption,
                 color = secondaryTextColor
             )
 
-            // Display sensor data based on selected sensor type
             device.sensorData?.let { sensorData ->
-                // Show preview for DO Sensor if enabled
-                if (showPreview && sensorData is BluetoothScanViewModel.SensorData.DOSensorData) {
-                    DOSensorPreview(
-                        temperature = sensorData.temperature,
-                        doPercentage = sensorData.doPercentage,
-                        doValue = sensorData.doValue,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    )
-                }
-                // Show preview for Optical Sensor if enabled
-                if (showPreview && sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData) {
-                    OpticalSensorPreview(
-                        values = sensorData.reflectanceValues,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    )
+                if (showPreview) {
+                    when (sensorData) {
+                        is BluetoothScanViewModel.SensorData.DOSensorData -> {
+                            DOSensorPreview(
+                                temperature = sensorData.temperature,
+                                doPercentage = sensorData.doPercentage,
+                                doValue = sensorData.doValue,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+                        is BluetoothScanViewModel.SensorData.DataLoggerData -> {
+                            DataLoggerPreview(
+                                rawData = "Packet ID: ${sensorData.packetId}, Packets: ${sensorData.payloadPackets.size}",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+                        is BluetoothScanViewModel.SensorData.StepCounterData -> {
+                            val rawDataString = sensorData.rawData?.joinToString(" ") { "%02X".format(it) } ?: "N/A"
+                            StepCounterPreview(
+                                steps = sensorData.steps,
+                                rawData = rawDataString,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+                        else -> {} // No preview for other sensor types
+                    }
                 }
 
-                // Display sensor data text based on sensor type
                 Text(
                     text = when {
                         selectedSensor.isEmpty() -> when (sensorData) {
@@ -664,12 +652,16 @@ fun BluetoothDeviceItem(
                                 "Ammonia: ${sensorData.ammonia}"
                             is BluetoothScanViewModel.SensorData.DOSensorData ->
                                 "Temp: ${sensorData.temperature}, DO: ${sensorData.doPercentage}, ${sensorData.doValue}"
-                            is BluetoothScanViewModel.SensorData.OpticalSensorData ->
-                                "Reflectance: ${sensorData.reflectanceValues.take(3).joinToString(", ") { "%.2f".format(it) }}" +
-                                        (if (sensorData.reflectanceValues.size > 3) " +${sensorData.reflectanceValues.size - 3} more" else "")
                             is BluetoothScanViewModel.SensorData.LuxSensorData ->
                                 "Device ID: ${sensorData.deviceId}, Raw: ${sensorData.rawData}"
-                            else -> "No data available"
+                            is BluetoothScanViewModel.SensorData.SoilSensorData ->
+                                "Temp: ${sensorData.temperature}°C, Moisture: ${sensorData.moisture}%"
+                            is BluetoothScanViewModel.SensorData.StepCounterData -> {
+                                val rawDataString = sensorData.rawData?.joinToString(" ") { "%02X".format(it) } ?: "N/A"
+                                "Steps: ${sensorData.steps}, Raw: $rawDataString"
+                            }
+                            is BluetoothScanViewModel.SensorData.DataLoggerData ->
+                                "Packet ID: ${sensorData.packetId}, Packets: ${sensorData.payloadPackets.size}"
                         }
                         selectedSensor == "SHT40" && sensorData is BluetoothScanViewModel.SensorData.SHT40Data ->
                             "Temp: ${sensorData.temperature}°C, Humidity: ${sensorData.humidity}%"
@@ -683,11 +675,18 @@ fun BluetoothDeviceItem(
                             "Ammonia: ${sensorData.ammonia}"
                         selectedSensor == "DO Sensor" && sensorData is BluetoothScanViewModel.SensorData.DOSensorData ->
                             "Temp: ${sensorData.temperature}, DO: ${sensorData.doPercentage}, ${sensorData.doValue}"
-                        selectedSensor == "Optical Sensor" && sensorData is BluetoothScanViewModel.SensorData.OpticalSensorData ->
-                            "Reflectance: ${sensorData.reflectanceValues.take(3).joinToString(", ") { "%.2f".format(it) }}" +
-                                    (if (sensorData.reflectanceValues.size > 3) " +${sensorData.reflectanceValues.size - 3} more" else "")
                         selectedSensor == "Lux Sensor" && sensorData is BluetoothScanViewModel.SensorData.LuxSensorData ->
                             "Device ID: ${sensorData.deviceId}, Raw: ${sensorData.rawData}"
+                        selectedSensor == "Soil Sensor" && sensorData is BluetoothScanViewModel.SensorData.SoilSensorData ->
+                            "N: ${sensorData.nitrogen}, P: ${sensorData.phosphorus}, K: ${sensorData.potassium}\n" +
+                                    "Moisture: ${sensorData.moisture}%, Temp: ${sensorData.temperature}°C\n" +
+                                    "EC: ${sensorData.ec}, pH: ${sensorData.pH}"
+                        selectedSensor == "Step Counter" && sensorData is BluetoothScanViewModel.SensorData.StepCounterData -> {
+                            val rawDataString = sensorData.rawData?.joinToString(" ") { "%02X".format(it) } ?: "N/A"
+                            "Steps: ${sensorData.steps}, Raw: $rawDataString"
+                        }
+                        selectedSensor == "DataLogger" && sensorData is BluetoothScanViewModel.SensorData.DataLoggerData ->
+                            "Packet ID: ${sensorData.packetId}, Packets: ${sensorData.payloadPackets.size}"
                         else -> "Incompatible sensor type"
                     },
                     style = MaterialTheme.typography.caption,
@@ -695,7 +694,7 @@ fun BluetoothDeviceItem(
                     maxLines = 2
                 )
             } ?: Text(
-                text = "No sensor data",
+                text = "No sensor data available",
                 style = MaterialTheme.typography.caption,
                 color = if (isDarkMode) Color(0xFF64B5F6) else MaterialTheme.colors.primary
             )
@@ -756,49 +755,6 @@ fun DOSensorPreview(
     }
 }
 
-// Composable for Optical Sensor data preview
-@Composable
-fun OpticalSensorPreview(
-    values: List<Float>, // Reflectance values
-    modifier: Modifier = Modifier
-) {
-    // Exit if insufficient data
-    if (values.size < 18) return // Need all 18 values
-
-    Box(
-        modifier = modifier
-            .height(60.dp)
-            .fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        // Draw bar chart for reflectance values
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val barWidth = size.width / 20f
-            val maxValue = values.maxOrNull() ?: 1f
-
-            // Draw simple bar chart preview
-            for (i in 0 until 18) {
-                val value = values[i]
-                val normalizedValue = (value / maxValue).coerceIn(0f, 1f)
-                val barHeight = size.height * normalizedValue
-
-                val x = i * (size.width / 18) + 2.dp.toPx()
-
-                drawRect(
-                    color = Color(
-                        red = 0.2f,
-                        green = 0.7f * normalizedValue + 0.3f,
-                        blue = 0.2f,
-                        alpha = 0.8f
-                    ),
-                    topLeft = Offset(x, size.height - barHeight),
-                    size = Size(barWidth - 4.dp.toPx(), barHeight)
-                )
-            }
-        }
-    }
-}
-
 // Composable for Lux Sensor data preview
 @Composable
 fun LuxSensorPreview(
@@ -822,5 +778,69 @@ fun LuxSensorPreview(
             textAlign = TextAlign.Center,
             maxLines = 2
         )
+    }
+}
+
+@Composable
+fun DataLoggerPreview(
+    rawData: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(80.dp) // Increased height to show more data
+            .fillMaxWidth()
+            .background(
+                if (isSystemInDarkTheme()) Color(0xFF1E1E1E) else Color.White,
+                RoundedCornerShape(8.dp)
+            )
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = rawData,
+            style = MaterialTheme.typography.caption,
+            color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3),
+            textAlign = TextAlign.Center,
+            maxLines = 3, // Allow more lines for raw data
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+@Composable
+fun StepCounterPreview(
+    steps: String,
+    rawData: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(60.dp)
+            .fillMaxWidth()
+            .background(
+                if (isSystemInDarkTheme()) Color(0xFF1E1E1E) else Color.White,
+                RoundedCornerShape(8.dp)
+            )
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Steps: $steps",
+                style = MaterialTheme.typography.caption,
+                color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3),
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "Raw: $rawData",
+                style = MaterialTheme.typography.caption,
+                color = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF2196F3),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
