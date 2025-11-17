@@ -19,7 +19,11 @@ android {
 
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+<<<<<<< HEAD
         buildConfigField("String", "API_KEY", "\"AIzaSyAu4GS_QgeEhfNyNw5qJtWPUaoTMHPo9ZE\"")
+=======
+        buildConfigField("String", "API_KEY", "\"AIzaSyAu4GS_QgeEhfNyNw5qJtWPUaoTMHPZE\"") 
+>>>>>>> bc7544a86aa8d870e3f06efdfa092d5672853863
         buildConfigField("boolean", "DUMMY", "true") // Force generation
     }
 
