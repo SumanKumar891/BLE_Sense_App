@@ -34,27 +34,23 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.util.Locale
 import kotlin.random.Random
 
 // Singleton object to manage app-wide theme state
 object ThemeManager {
-    private val _isDarkMode = MutableStateFlow(false) // Default to light mode until initialized
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode // Public StateFlow for dark mode status
+    private val _isDarkMode = MutableStateFlow(false)
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode
 
-    private var isInitialized = false // Track initialization status
+    private var isInitialized = false
 
-    // Toggle dark mode and mark as initialized
     fun toggleDarkMode(value: Boolean) {
         _isDarkMode.value = value
         isInitialized = true
     }
 
-    // Initialize with system theme if not already set
     fun initializeWithSystemTheme(isSystemDark: Boolean) {
         if (!isInitialized) {
             _isDarkMode.value = isSystemDark
@@ -63,52 +59,15 @@ object ThemeManager {
     }
 }
 
-// Singleton object to manage language state
-object LanguageManager {
-    // State flow to track current language
-    val _currentLanguage = MutableStateFlow(Locale.ENGLISH.language)
-    val currentLanguage: StateFlow<String> = _currentLanguage // Public StateFlow for current language
-
-    // List of supported Indian languages with their codes and names
-    val supportedLanguages = listOf(
-        LanguageOption("en", "English"),
-        LanguageOption("hi", "हिन्दी (Hindi)"),
-        LanguageOption("ta", "தமிழ் (Tamil)"),
-        LanguageOption("te", "తెలుగు (Telugu)"),
-        LanguageOption("bn", "বাংলা (Bengali)"),
-        LanguageOption("mr", "मराठी (Marathi)"),
-        LanguageOption("gu", "ગુજરાતી (Gujarati)"),
-        LanguageOption("kn", "ಕನ್ನಡ (Kannada)"),
-        LanguageOption("ml", "മലയാളം (Malayalam)"),
-        LanguageOption("pa", "ਪੰਜਾਬੀ (Punjabi)"),
-        LanguageOption("or", "ଓଡ଼ିଆ (Odia)")
-    )
-
-    // Set the current language
-    fun setLanguage(languageCode: String) {
-        _currentLanguage.value = languageCode
-    }
-
-    // Get the display name for a language code
-    fun getLanguageName(languageCode: String): String {
-        return supportedLanguages.find { it.code == languageCode }?.name ?: "English"
-    }
-}
-
-// Data class for language options
-data class LanguageOption(val code: String, val name: String)
-
 // Main settings screen composable
 @Composable
 fun ModernSettingsScreen(
-    viewModel: AuthViewModel = viewModel(), // Authentication ViewModel
-    onSignOut: () -> Unit, // Callback for sign-out
-    navController: NavHostController // Navigation controller
+    viewModel: AuthViewModel = viewModel(),
+    onSignOut: () -> Unit,
+    navController: NavHostController
 ) {
-    val isDarkMode by ThemeManager.isDarkMode.collectAsState() // Observe dark mode state
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState() // Observe current language
+    val isDarkMode by ThemeManager.isDarkMode.collectAsState()
 
-    // Define colors based on theme
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF2F2F7)
     val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
     val textColor = if (isDarkMode) Color.White else Color.Black
@@ -116,9 +75,8 @@ fun ModernSettingsScreen(
     val dividerColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
     val iconTint = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
 
-    val currentUser = viewModel.checkCurrentUser() // Get current user
+    val currentUser = viewModel.checkCurrentUser()
 
-    // Main scaffold for settings screen
     Scaffold(
         backgroundColor = backgroundColor,
         topBar = {
@@ -173,7 +131,7 @@ fun ModernSettingsScreen(
                 },
                 profilePictureUrl = currentUser?.photoUrl?.toString(),
                 onLogout = {
-                    viewModel.signOut(context) // Sign out with context
+                    viewModel.signOut(context)
                     onSignOut()
                 }
             )
@@ -193,6 +151,7 @@ fun ModernSettingsScreen(
                 },
                 navController = navController
             )
+
             // Privacy policy button
             PrivacyPolicyButton()
         }
@@ -207,7 +166,7 @@ fun PrivacyPolicyButton() {
     Button(
         onClick = {
             val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://sumankumar891.github.io/privacy_policy_blesense/"))
-            context.startActivity(urlIntent) // Open privacy policy URL
+            context.startActivity(urlIntent)
         },
         modifier = Modifier
             .fillMaxWidth()
@@ -217,7 +176,7 @@ fun PrivacyPolicyButton() {
     }
 }
 
-// Helper function to generate a random color for the avatar (fallback)
+// Helper function to generate a random color for the avatar
 fun generateRandomColor(): Color {
     val random = Random
     return Color(
@@ -249,7 +208,6 @@ fun UserProfileCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Profile Image (Google picture or fallback)
             if (profilePictureUrl != null) {
                 AsyncImage(
                     model = profilePictureUrl,
@@ -329,7 +287,6 @@ fun SettingsOptionsList(
 ) {
     val settingsOptions = listOf(
         SettingsItem(Icons.Outlined.DarkMode, "Dark Mode", SettingsItemType.SWITCH),
-        SettingsItem(Icons.Outlined.Language, "Language", SettingsItemType.DETAIL),
         SettingsItem(Icons.AutoMirrored.Outlined.Help, "Help", SettingsItemType.DETAIL),
         SettingsItem(Icons.Outlined.AccountCircle, "Accounts", SettingsItemType.DETAIL),
         SettingsItem(Icons.Outlined.Info, "About BLE", SettingsItemType.DETAIL),
@@ -387,14 +344,11 @@ fun SettingsItemRow(
     onSwitchChange: ((Boolean) -> Unit)? = null,
     navController: NavHostController,
 ) {
-    var switchState by remember { mutableStateOf(initialSwitchState) } // Track switch state
-    var showLanguageDialog by remember { mutableStateOf(false) } // Language dialog visibility
-    var showAboutDialog by remember { mutableStateOf(false) } // About dialog visibility
-    var showHelpDialog by remember { mutableStateOf(false) } // Help dialog visibility
-    var showAccountsDialog by remember { mutableStateOf(false) } // Accounts dialog visibility
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState() // Current language
+    var switchState by remember { mutableStateOf(initialSwitchState) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
+    var showAccountsDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val isLanguageItem = item.icon == Icons.Outlined.Language
     val isAboutItem = item.icon == Icons.Outlined.Info
     val isHelpItem = item.icon == Icons.AutoMirrored.Outlined.Help
     val isAccountsItem = item.icon == Icons.Outlined.AccountCircle
@@ -404,7 +358,6 @@ fun SettingsItemRow(
             .fillMaxWidth()
             .clickable(enabled = item.type == SettingsItemType.DETAIL) {
                 when {
-                    isLanguageItem -> showLanguageDialog = true
                     isAboutItem -> showAboutDialog = true
                     isHelpItem -> showHelpDialog = true
                     isAccountsItem -> showAccountsDialog = true
@@ -449,15 +402,6 @@ fun SettingsItemRow(
                 )
             }
             SettingsItemType.DETAIL -> {
-                if (isLanguageItem) {
-                    Text(
-                        text = LanguageManager.getLanguageName(currentLanguage),
-                        fontFamily = helveticaFont,
-                        style = MaterialTheme.typography.body2.copy(
-                            color = secondaryTextColor
-                        )
-                    )
-                }
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Outlined.ChevronRight,
@@ -468,67 +412,9 @@ fun SettingsItemRow(
         }
     }
 
-    // Language selection dialog
-    if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = {
-                Text(
-                    text = "Select Language",
-                    fontFamily = helveticaFont,
-                    style = MaterialTheme.typography.h6,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            text = {
-                LazyColumn {
-                    items(LanguageManager.supportedLanguages) { language ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    LanguageManager.setLanguage(language.code)
-                                    showLanguageDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = language.name,
-                                fontFamily = helveticaFont,
-                                style = MaterialTheme.typography.body1,
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (language.code == currentLanguage) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Check,
-                                    contentDescription = "Selected",
-                                    tint = iconTint
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Cancel")
-                }
-            },
-            backgroundColor = if (initialSwitchState) Color(0xFF1E1E1E) else Color.White,
-            contentColor = if (initialSwitchState) Color.White else Color.Black,
-            modifier = Modifier
-                .widthIn(max = 400.dp)
-                .heightIn(max = 500.dp)
-        )
-    }
-
     // About BLE dialog
     if (showAboutDialog) {
-        Dialog(
-            onDismissRequest = { showAboutDialog = false }
-        ) {
+        Dialog(onDismissRequest = { showAboutDialog = false }) {
             Surface(
                 modifier = Modifier
                     .widthIn(max = 400.dp)
@@ -561,14 +447,10 @@ fun SettingsItemRow(
                             Text(
                                 text = "Bluetooth Low Energy",
                                 fontFamily = helveticaFont,
-                                style = MaterialTheme.typography.subtitle1.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
+                                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold),
                                 textAlign = TextAlign.Center,
                                 color = if (initialSwitchState) Color.White else Color.Black,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                             )
 
                             Text(
@@ -585,9 +467,7 @@ fun SettingsItemRow(
                             Text(
                                 text = "Key Features:",
                                 fontFamily = helveticaFont,
-                                style = MaterialTheme.typography.subtitle2.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
+                                style = MaterialTheme.typography.subtitle2.copy(fontWeight = FontWeight.Bold),
                                 color = if (initialSwitchState) Color.White else Color.Black,
                                 modifier = Modifier.padding(top = 12.dp, bottom = 8.dp, start = 8.dp)
                             )
@@ -625,14 +505,9 @@ fun SettingsItemRow(
 
                     TextButton(
                         onClick = { showAboutDialog = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)
                     ) {
-                        Text(
-                            text = "Close",
-                            color = iconTint
-                        )
+                        Text("Close", color = iconTint)
                     }
                 }
             }
@@ -655,9 +530,7 @@ fun SettingsItemRow(
 
     // Help dialog
     if (showHelpDialog) {
-        Dialog(
-            onDismissRequest = { showHelpDialog = false }
-        ) {
+        Dialog(onDismissRequest = { showHelpDialog = false }) {
             Surface(
                 modifier = Modifier
                     .widthIn(max = 400.dp)
@@ -675,9 +548,7 @@ fun SettingsItemRow(
                         imageVector = Icons.AutoMirrored.Outlined.Help,
                         contentDescription = "Help",
                         tint = iconTint,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .padding(bottom = 16.dp)
+                        modifier = Modifier.size(48.dp).padding(bottom = 16.dp)
                     )
 
                     Text(
@@ -703,9 +574,7 @@ fun SettingsItemRow(
                             }
                             showHelpDialog = false
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
                         Text(
                             text = "Contact Developer",
@@ -717,16 +586,9 @@ fun SettingsItemRow(
 
                     TextButton(
                         onClick = { showHelpDialog = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     ) {
-                        Text(
-                            text = "Close",
-                            color = iconTint,
-                            fontFamily = helveticaFont,
-                            style = MaterialTheme.typography.button
-                        )
+                        Text("Close", color = iconTint, fontFamily = helveticaFont, style = MaterialTheme.typography.button)
                     }
                 }
             }
@@ -744,29 +606,20 @@ fun AccountsDialog(
     viewModel: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val users = UserRepository.users // Get list of saved users
-    var showDeleteConfirmation by remember { mutableStateOf(false) } // Delete confirmation dialog visibility
-    var accountToDelete by remember { mutableStateOf<UserData?>(null) } // Account to delete
+    val users = UserRepository.users
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var accountToDelete by remember { mutableStateOf<UserData?>(null) }
 
-    // Show confirmation dialog for account deletion
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = {
                 showDeleteConfirmation = false
                 accountToDelete = null
             },
-            title = {
-                Text(
-                    text = "Delete Account",
-                    color = if (isDarkMode) Color.White else Color.Black
-                )
-            },
+            title = { Text("Delete Account", color = if (isDarkMode) Color.White else Color.Black) },
             text = {
                 Column {
-                    Text(
-                        text = "Are you sure you want to delete this account?",
-                        color = if (isDarkMode) Color.White else Color.Black
-                    )
+                    Text("Are you sure you want to delete this account?", color = if (isDarkMode) Color.White else Color.Black)
                     Spacer(modifier = Modifier.height(8.dp))
                     if (accountToDelete?.id == currentUserId) {
                         Text(
@@ -782,10 +635,9 @@ fun AccountsDialog(
                     onClick = {
                         accountToDelete?.let { user ->
                             if (user.id == currentUserId) {
-                                // Close the dialog first
                                 showDeleteConfirmation = false
                                 accountToDelete = null
-                                onDismiss() // Close the accounts dialog
+                                onDismiss()
 
                                 viewModel.deleteAccountAndSignInAsGuest { success, message ->
                                     if (success) {
@@ -803,38 +655,26 @@ fun AccountsDialog(
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
-                ) {
-                    Text("Delete")
-                }
+                ) { Text("Delete") }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showDeleteConfirmation = false
                     accountToDelete = null
-                }) {
-                    Text("Cancel")
-                }
+                }) { Text("Cancel") }
             },
             backgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White,
             contentColor = if (isDarkMode) Color.White else Color.Black
         )
     }
 
-    Dialog(
-        onDismissRequest = onDismiss
-    ) {
+    Dialog(onDismissRequest = onDismiss) {
         Surface(
-            modifier = Modifier
-                .widthIn(max = 400.dp)
-                .padding(16.dp),
+            modifier = Modifier.widthIn(max = 400.dp).padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             color = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Text(
                     text = "Saved Accounts",
                     style = MaterialTheme.typography.h6,
@@ -849,11 +689,7 @@ fun AccountsDialog(
                         modifier = Modifier.padding(16.dp)
                     )
                 } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    ) {
+                    LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                         items(users) { user ->
                             SavedAccountItem(
                                 user = user,
@@ -864,35 +700,25 @@ fun AccountsDialog(
                                     showDeleteConfirmation = true
                                 }
                             )
-                            Divider(
-                                color = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0),
-                                thickness = 1.dp
-                            )
+                            Divider(color = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE0E0E0), thickness = 1.dp)
                         }
                     }
                 }
+
                 Button(
                     onClick = {
-                        val urlIntent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://sumankumar891.github.io/Delete_account_BLESense/")
-                        )
+                        val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://sumankumar891.github.io/Delete_account_BLESense/"))
                         context.startActivity(urlIntent)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
                     Text("Account Deletion Request")
                 }
+
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF)
-                    )
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF))
                 ) {
                     Text("Close", color = Color.White)
                 }
@@ -910,27 +736,19 @@ fun SavedAccountItem(
     onDeleteAccount: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Profile picture or avatar
         if (user.profilePictureUrl != null) {
             AsyncImage(
                 model = user.profilePictureUrl,
                 contentDescription = "Profile",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape),
+                modifier = Modifier.size(40.dp).clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
         } else {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(generateRandomColor()),
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(generateRandomColor()),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -943,9 +761,7 @@ fun SavedAccountItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = user.name,
                 color = if (isDarkMode) Color.White else Color.Black,
@@ -958,11 +774,7 @@ fun SavedAccountItem(
             )
         }
 
-        // Delete button for each account
-        IconButton(
-            onClick = onDeleteAccount,
-            modifier = Modifier.size(24.dp)
-        ) {
+        IconButton(onClick = onDeleteAccount, modifier = Modifier.size(24.dp)) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = "Delete account",
@@ -979,7 +791,6 @@ data class SettingsItem(
     val type: SettingsItemType
 )
 
-// Enum for settings item types
 enum class SettingsItemType {
     SWITCH,
     DETAIL

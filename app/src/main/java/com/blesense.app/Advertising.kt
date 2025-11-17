@@ -52,9 +52,9 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Data class to hold translated text for the Advertising Data screen.
+ * Data class to hold text for the Advertising Data screen.
  */
-data class TranslatedAdvertisingText(
+data class AdvertisingText(
     val advertisingDataTitle: String = "Advertising Data",
     val deviceNameLabel: String = "Device Name",
     val nodeIdLabel: String = "Node ID",
@@ -81,7 +81,6 @@ data class TranslatedAdvertisingText(
     val warningTitle: String = "Warning",
     val warningMessage: String = "The %s has exceeded the threshold of %s!",
     val dismissButton: String = "Dismiss",
-    val reflectanceValues: String = "Reflectance Values",
     val rawData: String = "Raw Data"
 )
 
@@ -134,7 +133,6 @@ fun AdvertisingDataScreen(
 
     // Collect UI state from ViewModel and managers
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState()
     val devices by viewModel.devices.collectAsState()
 
     val currentDevice by remember(devices, deviceAddress) {
@@ -282,102 +280,49 @@ fun AdvertisingDataScreen(
         }
     }
 
-    // Manage translated text based on language
-    var translatedText by remember { mutableStateOf(TranslatedAdvertisingText()) }
-
-    LaunchedEffect(currentLanguage) {
-        val translator = GoogleTranslationService()
-        val textsToTranslate = listOf(
-            "Advertising Data", "Device Name", "Node ID", "DOWNLOAD DATA", "EXPORTING DATA...",
-            "Temperature", "Humidity", "X-Axis", "Y-Axis", "Z-Axis",
-            "Nitrogen", "Phosphorus", "Potassium", "Moisture", "Electric Conductivity",
-            "pH", "Light Intensity", "Speed", "Distance", "Object Detected",
-            "Steps", "Ammonia", "RESET STEPS", "Warning", "Threshold Exceeded",
-            "Dismiss", "Reflectance Values", "Raw Data"
-        )
-
-        val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        translatedText = TranslatedAdvertisingText(
-            advertisingDataTitle = translatedList[0],
-            deviceNameLabel = translatedList[1],
-            nodeIdLabel = translatedList[2],
-            downloadData = translatedList[3],
-            exportingData = translatedList[4],
-            temperature = translatedList[5],
-            humidity = translatedList[6],
-            xAxis = translatedList[7],
-            yAxis = translatedList[8],
-            zAxis = translatedList[9],
-            nitrogen = translatedList[10],
-            phosphorus = translatedList[11],
-            potassium = translatedList[12],
-            moisture = translatedList[13],
-            electricConductivity = translatedList[14],
-            pH = translatedList[15],
-            lightIntensity = translatedList[16],
-            speed = translatedList[17],
-            distance = translatedList[18],
-            objectDetected = translatedList[19],
-            steps = translatedList[20],
-            ammonia = translatedList[21],
-            resetSteps = translatedList[22],
-            warningTitle = translatedList[23],
-            warningMessage = translatedList[24],
-            dismissButton = translatedList[25],
-            reflectanceValues = translatedList[26],
-            rawData = translatedList[27]
-        )
-    }
+    // Use fixed English text
+    val advertisingText = AdvertisingText()
 
     // Derive display data based on sensor type
-    val displayData by remember(currentDevice?.sensorData, translatedText) {
+    val displayData by remember(currentDevice?.sensorData, advertisingText) {
         derivedStateOf {
             when (val sensorData = currentDevice?.sensorData) {
                 is BluetoothScanViewModel.SensorData.SHT40Data -> listOf(
                     "Device ID" to sensorData.deviceId,
-                    translatedText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
-                    translatedText.humidity to "${sensorData.humidity.takeIf { it.isNotEmpty() } ?: "0"}%"
+                    advertisingText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
+                    advertisingText.humidity to "${sensorData.humidity.takeIf { it.isNotEmpty() } ?: "0"}%"
                 )
                 is BluetoothScanViewModel.SensorData.SDTData -> listOf(
                     "Device ID" to sensorData.deviceId,
-                    translatedText.speed to "${sensorData.speed.takeIf { it.isNotEmpty() } ?: "0"} m/s",
-                    translatedText.distance to "${sensorData.distance.takeIf { it.isNotEmpty() } ?: "0"} m"
+                    advertisingText.speed to "${sensorData.speed.takeIf { it.isNotEmpty() } ?: "0"} m/s",
+                    advertisingText.distance to "${sensorData.distance.takeIf { it.isNotEmpty() } ?: "0"} m"
                 )
                 is BluetoothScanViewModel.SensorData.LIS2DHData -> listOf(
                     "Device ID" to sensorData.deviceId,
-                    translatedText.xAxis to "${sensorData.x.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
-                    translatedText.yAxis to "${sensorData.y.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
-                    translatedText.zAxis to "${sensorData.z.takeIf { it.isNotEmpty() } ?: "0"} m/s²"
-                )
-                is BluetoothScanViewModel.SensorData.ObjectDetectorData -> listOf(
-                    "Device ID" to sensorData.deviceId,
-                    translatedText.objectDetected to if (sensorData.detection) "Yes" else "No"
+                    advertisingText.xAxis to "${sensorData.x.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
+                    advertisingText.yAxis to "${sensorData.y.takeIf { it.isNotEmpty() } ?: "0"} m/s²",
+                    advertisingText.zAxis to "${sensorData.z.takeIf { it.isNotEmpty() } ?: "0"} m/s²"
                 )
                 is BluetoothScanViewModel.SensorData.SoilSensorData -> listOf(
                     "Device ID" to sensorData.deviceId,
-                    translatedText.nitrogen to "${sensorData.nitrogen.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
-                    translatedText.phosphorus to "${sensorData.phosphorus.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
-                    translatedText.potassium to "${sensorData.potassium.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
-                    translatedText.moisture to "${sensorData.moisture.takeIf { it.isNotEmpty() } ?: "0"}%",
-                    translatedText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
-                    translatedText.electricConductivity to "${sensorData.ec.takeIf { it.isNotEmpty() } ?: "0"} mS/cm",
-                    translatedText.pH to "${sensorData.pH.takeIf { it.isNotEmpty() } ?: "0"}"
-                )
-                is BluetoothScanViewModel.SensorData.StepCounterData -> listOf(
-                    "Device ID" to sensorData.deviceId,
-                    translatedText.steps to "${sensorData.steps.takeIf { it.isNotEmpty() } ?: "0"}",
-                    translatedText.rawData to (sensorData.rawData?.joinToString(" ") { "%02X".format(it) } ?: "N/A")
+                    advertisingText.nitrogen to "${sensorData.nitrogen.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
+                    advertisingText.phosphorus to "${sensorData.phosphorus.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
+                    advertisingText.potassium to "${sensorData.potassium.takeIf { it.isNotEmpty() } ?: "0"} mg/kg",
+                    advertisingText.moisture to "${sensorData.moisture.takeIf { it.isNotEmpty() } ?: "0"}%",
+                    advertisingText.temperature to "${sensorData.temperature.takeIf { it.isNotEmpty() } ?: "0"}°C",
+                    advertisingText.electricConductivity to "${sensorData.ec.takeIf { it.isNotEmpty() } ?: "0"} mS/cm",
+                    advertisingText.pH to "${sensorData.pH.takeIf { it.isNotEmpty() } ?: "0"}"
                 )
                 is BluetoothScanViewModel.SensorData.AmmoniaSensorData -> listOf(
                     "Device ID" to sensorData.deviceId,
-                    translatedText.ammonia to sensorData.ammonia,
-                    translatedText.rawData to sensorData.rawData
+                    advertisingText.ammonia to sensorData.ammonia,
+                    advertisingText.rawData to sensorData.rawData
                 )
                 is BluetoothScanViewModel.SensorData.DataLoggerData -> listOf(
                     "Device ID" to sensorData.deviceId,
                     "Packet ID" to "${sensorData.packetId}",
                     "Packet Count" to "${sensorData.payloadPackets.size}",
-                    translatedText.rawData to sensorData.rawData
+                    advertisingText.rawData to sensorData.rawData
                 )
                 else -> emptyList()
             }
@@ -430,7 +375,7 @@ fun AdvertisingDataScreen(
                 navController = navController,
                 viewModel = viewModel,
                 deviceAddress = deviceAddress,
-                translatedText = translatedText,
+                advertisingText = advertisingText,
                 textColor = textColor
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -439,7 +384,7 @@ fun AdvertisingDataScreen(
                 deviceName = deviceName,
                 deviceAddress = deviceAddress,
                 deviceId = deviceId,
-                translatedText = translatedText,
+                advertisingText = advertisingText,
                 cardBackground = cardBackground,
                 cardGradient = Brush.verticalGradient(listOf(cardBackground, cardBackground.copy(alpha = 0.6f))),
                 textColor = textColor
@@ -456,7 +401,7 @@ fun AdvertisingDataScreen(
             ResponsiveDataCards(
                 data = displayData,
                 cardBackground = cardBackground,
-                translatedText = translatedText,
+                advertisingText = advertisingText,
                 textColor = textColor
             )
             Spacer(modifier = Modifier.height(32.dp))
@@ -480,15 +425,6 @@ fun AdvertisingDataScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.StepCounterData) {
-                ResetStepsButton(
-                    viewModel = viewModel,
-                    deviceAddress = deviceAddress,
-                    translatedText = translatedText
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
             if (currentDevice?.sensorData is BluetoothScanViewModel.SensorData.DataLoggerData) {
                 val dataLoggerData = currentDevice!!.sensorData as BluetoothScanViewModel.SensorData.DataLoggerData
                 DataLoggerDisplay(
@@ -502,7 +438,7 @@ fun AdvertisingDataScreen(
                 deviceAddress = deviceAddress,
                 deviceName = deviceName,
                 deviceId = deviceId,
-                translatedText = translatedText
+                advertisingText = advertisingText
             )
 
             if (showAlertDialog) {
@@ -522,10 +458,10 @@ fun AdvertisingDataScreen(
                             }
                         }
                     },
-                    title = { Text(translatedText.warningTitle) },
+                    title = { Text(advertisingText.warningTitle) },
                     text = {
                         Text(
-                            text = translatedText.warningMessage.format(
+                            text = advertisingText.warningMessage.format(
                                 parameterType,
                                 thresholdValue
                             )
@@ -549,7 +485,7 @@ fun AdvertisingDataScreen(
                                 }
                             }
                         ) {
-                            Text(translatedText.dismissButton)
+                            Text(advertisingText.dismissButton)
                         }
                     }
                 )
@@ -839,36 +775,6 @@ private fun ThresholdInputSection(
 }
 
 /**
- * Composable for resetting step counter data.
- */
-@Composable
-private fun ResetStepsButton(
-    viewModel: BluetoothScanViewModel<Any>,
-    deviceAddress: String,
-    translatedText: TranslatedAdvertisingText
-) {
-    val isDarkMode by ThemeManager.isDarkMode.collectAsState()
-    val buttonBackgroundColor = if (isDarkMode) Color(0xFFFF5252) else Color(0xFFE53935)
-    val buttonTextColor = Color.White
-
-    Button(
-        onClick = { viewModel.resetStepCounter(deviceAddress) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = buttonBackgroundColor)
-    ) {
-        Text(
-            text = translatedText.resetSteps,
-            color = buttonTextColor,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-/**
  * Composable for the header section with navigation and graph icon.
  */
 @Composable
@@ -876,7 +782,7 @@ private fun HeaderSection(
     navController: NavController,
     viewModel: BluetoothScanViewModel<Any>,
     deviceAddress: String,
-    translatedText: TranslatedAdvertisingText,
+    advertisingText: AdvertisingText,
     textColor: Color
 ) {
     Row(
@@ -898,7 +804,7 @@ private fun HeaderSection(
         }
 
         Text(
-            text = translatedText.advertisingDataTitle,
+            text = advertisingText.advertisingDataTitle,
             fontFamily = helveticaFont,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
@@ -926,20 +832,20 @@ private fun DeviceInfoSection(
     deviceName: String,
     deviceAddress: String,
     deviceId: String,
-    translatedText: TranslatedAdvertisingText,
+    advertisingText: AdvertisingText,
     cardBackground: Color,
     cardGradient: Brush,
     textColor: Color
 ) {
     InfoCard(
-        text = "${translatedText.deviceNameLabel}: $deviceName ($deviceAddress)",
+        text = "${advertisingText.deviceNameLabel}: $deviceName ($deviceAddress)",
         cardBackground = cardBackground,
         cardGradient = cardGradient,
         textColor = textColor
     )
     Spacer(modifier = Modifier.height(8.dp))
     InfoCard(
-        text = "${translatedText.nodeIdLabel}: $deviceId",
+        text = "${advertisingText.nodeIdLabel}: $deviceId",
         cardBackground = cardBackground,
         cardGradient = cardGradient,
         textColor = textColor
@@ -992,7 +898,7 @@ fun DownloadButton(
     deviceAddress: String,
     deviceName: String,
     deviceId: String,
-    translatedText: TranslatedAdvertisingText
+    advertisingText: AdvertisingText
 ) {
     val context = LocalContext.current
     var isExporting by remember { mutableStateOf(false) }
@@ -1035,7 +941,7 @@ fun DownloadButton(
         colors = ButtonDefaults.buttonColors(containerColor = buttonBackgroundColor)
     ) {
         Text(
-            text = if (isExporting) translatedText.exportingData else translatedText.downloadData,
+            text = if (isExporting) advertisingText.exportingData else advertisingText.downloadData,
             color = buttonTextColor,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
@@ -1077,10 +983,6 @@ private fun exportDataToCSV(
                             headerBuilder.append("Light Intensity (LUX)")
                         is BluetoothScanViewModel.SensorData.SDTData ->
                             headerBuilder.append("Speed (m/s),Distance (m)")
-                        is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
-                            headerBuilder.append("Object Detected")
-                        is BluetoothScanViewModel.SensorData.StepCounterData ->
-                            headerBuilder.append("Steps")
                         is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                             headerBuilder.append("Ammonia (ppm)")
                         is BluetoothScanViewModel.SensorData.DataLoggerData ->
@@ -1108,10 +1010,6 @@ private fun exportDataToCSV(
                                 dataBuilder.append("${sensorData.lux}")
                             is BluetoothScanViewModel.SensorData.SDTData ->
                                 dataBuilder.append("${sensorData.speed},${sensorData.distance}")
-                            is BluetoothScanViewModel.SensorData.ObjectDetectorData ->
-                                dataBuilder.append("${sensorData.detection}")
-                            is BluetoothScanViewModel.SensorData.StepCounterData ->
-                                dataBuilder.append("${sensorData.steps}")
                             is BluetoothScanViewModel.SensorData.AmmoniaSensorData ->
                                 dataBuilder.append("${sensorData.ammonia}")
                             is BluetoothScanViewModel.SensorData.DataLoggerData ->
@@ -1182,7 +1080,7 @@ fun DataLoggerDisplay(
 private fun ResponsiveDataCards(
     data: List<Pair<String, String>>,
     cardBackground: Color,
-    translatedText: TranslatedAdvertisingText,
+    advertisingText: AdvertisingText,
     textColor: Color
 ) {
     val ammoniaData = data.find { it.first.contains("Ammonia", ignoreCase = true) }
@@ -1259,7 +1157,7 @@ private fun ResponsiveDataCards(
                     label = otherData[0].first,
                     value = otherData[0].second,
                     cardBackground = cardBackground,
-                    translatedText = translatedText,
+                    advertisingText = advertisingText,
                     textColor = textColor
                 )
             }
@@ -1274,7 +1172,7 @@ private fun ResponsiveDataCards(
                         label = label,
                         value = value,
                         cardBackground = cardBackground,
-                        translatedText = translatedText,
+                        advertisingText = advertisingText,
                         textColor = textColor
                     )
                 }
@@ -1295,7 +1193,7 @@ private fun ResponsiveDataCards(
                                 label = label,
                                 value = value,
                                 cardBackground = cardBackground,
-                                translatedText = translatedText,
+                                advertisingText = advertisingText,
                                 textColor = textColor
                             )
                         }
@@ -1315,18 +1213,18 @@ fun DataCard(
     label: String,
     value: String,
     cardBackground: Color,
-    translatedText: TranslatedAdvertisingText,
+    advertisingText: AdvertisingText,
     textColor: Color
 ) {
     val numericValue = value.replace("[^0-9.]".toRegex(), "").toFloatOrNull() ?: 0f
 
     val dynamicColor = when {
-        label == translatedText.temperature -> when {
+        label == advertisingText.temperature -> when {
             numericValue <= 15f -> Color(0xFF2196F3)
             numericValue <= 30f -> Color(0xFF4CAF50)
             else -> Color(0xFFF44336)
         }
-        label == translatedText.humidity -> when {
+        label == advertisingText.humidity -> when {
             numericValue <= 40f -> Color(0xFF2196F3)
             numericValue <= 70f -> Color(0xFF4CAF50)
             else -> Color(0xFFF44336)

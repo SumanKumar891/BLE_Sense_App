@@ -73,6 +73,19 @@ fun IntermediateScreen(
                 }
             }
         },
+//        floatingActionButton = {
+//            FloatingActionButton(
+//                onClick = { navController.navigate("chat_screen") },
+//                backgroundColor = if (isDarkMode) Color(0xFF64B5F6) else Color(0xFF007AFF),
+//                contentColor = Color.White
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Filled.ChatBubble,
+//                    contentDescription = "Chatbot"
+//                )
+//            }
+//        },
+        floatingActionButtonPosition = FabPosition.End
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -94,7 +107,7 @@ fun IntermediateScreen(
                 )
             }
 
-            // Row 1: Bluetooth + Gameplay
+            // Row 1: Bluetooth + Data Logger
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -112,19 +125,21 @@ fun IntermediateScreen(
                     )
 
                     NavigationIconBox(
-                        iconResId = R.drawable.gamepad,
-                        label = "Gameplay",
+                        iconResId = R.drawable.data_logger,
+                        label = "Data Logger",
                         textColor = textColor,
                         gradientStart = gradientStart,
                         gradientEnd = gradientEnd,
                         backgroundColor = cardBackgroundColor,
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate("game_loading") }
+                        onClick = {
+                            navController.navigate("data_logger/auto_connect/DataLogger/DataLogger_1")
+                        }
                     )
                 }
             }
 
-            // Row 2: Robot Control + Data Logger
+            // Row 2: Robot Control + Setting
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -145,26 +160,6 @@ fun IntermediateScreen(
                     )
 
                     NavigationIconBox(
-                        iconResId = R.drawable.data_logger,
-                        label = "Data Logger",
-                        textColor = textColor,
-                        gradientStart = gradientStart,
-                        gradientEnd = gradientEnd,
-                        backgroundColor = cardBackgroundColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate("data_logger/auto_connect/DataLogger/DataLogger_1")
-                        }
-                    )
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    NavigationIconBox(
                         iconResId = R.drawable.settings,
                         label = "Settings",
                         textColor = textColor,
@@ -174,8 +169,6 @@ fun IntermediateScreen(
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate("settings_screen") }
                     )
-
-                    Spacer(Modifier.weight(1f))
                 }
             }
         }

@@ -1,46 +1,21 @@
 package com.blesense.app
 
-// Import necessary libraries for Compose, Android, and navigation
 import android.app.Activity
 import android.app.Application
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
-import kotlinx.coroutines.delay
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Tab
-import androidx.compose.material.TabRow
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.TableChart
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -59,590 +34,364 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-// Data class for 3D point coordinates with rotation functions
+/* -------------------------------------------------------------
+   3-D helpers (unchanged)
+   ------------------------------------------------------------- */
 data class Point3D(val x: Float, val y: Float, val z: Float) {
-    // Rotate point around X-axis
-    fun rotateX(angle: Double): Point3D = Point3D(
+    fun rotateX(a: Double) = Point3D(
         x,
-        (y * cos(angle) - z * sin(angle)).toFloat(),
-        (y * sin(angle) + z * cos(angle)).toFloat()
+        (y * cos(a) - z * sin(a)).toFloat(),
+        (y * sin(a) + z * cos(a)).toFloat()
     )
-
-    // Rotate point around Y-axis
-    fun rotateY(angle: Double): Point3D = Point3D(
-        (x * cos(angle) + z * sin(angle)).toFloat(),
+    fun rotateY(a: Double) = Point3D(
+        (x * cos(a) + z * sin(a)).toFloat(),
         y,
-        (-x * sin(angle) + z * cos(angle)).toFloat()
+        (-x * sin(a) + z * cos(a)).toFloat()
     )
-
-    // Rotate point around Z-axis
-    fun rotateZ(angle: Double): Point3D = Point3D(
-        (x * cos(angle) - y * sin(angle)).toFloat(),
-        (x * sin(angle) + y * cos(angle)).toFloat(),
+    fun rotateZ(a: Double) = Point3D(
+        (x * cos(a) - y * sin(a)).toFloat(),
+        (x * sin(a) + y * cos(a)).toFloat(),
         z
     )
 }
 
-// Draw a 3D cube with specified rotations
-private fun DrawScope.draw3DCube(rotX: Float, rotY: Float, rotZ: Float, canvasSize: Size) {
-    val centerX = canvasSize.width / 2 // Center X of canvas
-    val centerY = canvasSize.height / 2 // Center Y of canvas
-    val cubeSize = 80f // Cube size
-
-    // Define all 8 vertices of the cube
-    val vertices = listOf(
-        Point3D(-cubeSize/2, -cubeSize/2, -cubeSize/2), // 0
-        Point3D(cubeSize/2, -cubeSize/2, -cubeSize/2),  // 1
-        Point3D(cubeSize/2, cubeSize/2, -cubeSize/2),   // 2
-        Point3D(-cubeSize/2, cubeSize/2, -cubeSize/2),  // 3
-        Point3D(-cubeSize/2, -cubeSize/2, cubeSize/2),  // 4
-        Point3D(cubeSize/2, -cubeSize/2, cubeSize/2),   // 5
-        Point3D(cubeSize/2, cubeSize/2, cubeSize/2),    // 6
-        Point3D(-cubeSize/2, cubeSize/2, cubeSize/2)    // 7
-    )
-
-    // Apply rotations and project to 2D
-    val projectedVertices = vertices.map { vertex ->
-        val rotated = vertex
-            .rotateX(Math.toRadians(rotX.toDouble())) // Rotate around X
-            .rotateY(Math.toRadians(rotY.toDouble())) // Rotate around Y
-            .rotateZ(Math.toRadians(rotZ.toDouble())) // Rotate around Z
-
-        // Simple perspective projection
-        val scale = 200f / (200f + rotated.z)
-        Offset(
-            centerX + rotated.x * scale,
-            centerY + rotated.y * scale
-        )
-    }
-
-    // Draw cube edges
-    drawCubeEdges(projectedVertices)
-}
-
-// Draw edges and vertices of the cube
-private fun DrawScope.drawCubeEdges(vertices: List<Offset>) {
-    // Define edges by connecting vertices (12 edges in a cube)
-    val edges = listOf(
-        0 to 1, 1 to 2, 2 to 3, 3 to 0, // Front face
-        4 to 5, 5 to 6, 6 to 7, 7 to 4, // Back face
-        0 to 4, 1 to 5, 2 to 6, 3 to 7  // Connecting edges
-    )
-
-    // Draw each edge
-    edges.forEach { (startIdx, endIdx) ->
-        if (startIdx < vertices.size && endIdx < vertices.size) {
-            drawLine(
-                color = Color.White,
-                start = vertices[startIdx],
-                end = vertices[endIdx],
-                strokeWidth = 3f
-            )
-        }
-    }
-
-    // Draw small circles at each vertex
-    vertices.forEach { vertex ->
-        drawCircle(
-            color = Color.Red,
-            radius = 5f,
-            center = vertex
-        )
-    }
-}
-
-// Data class for translatable text in ChartScreen
-data class TranslatedChartText(
-    val graphsTitle: String = "Graphs",
-    val temperatureLabel: String = "Temperature (°C)",
-    val humidityLabel: String = "Humidity (%)",
-    val speedLabel: String = "Speed (m/s)",
-    val distanceLabel: String = "Distance (m)",
-    val xAxisLabel: String = "X Axis (g)",
-    val yAxisLabel: String = "Y Axis (g)",
-    val zAxisLabel: String = "Z Axis (g)",
-    val soilSensorDataTitle: String = "Soil Sensor Data (Click for detailed view)",
-    val soilMoistureLabel: String = "Soil Moisture (%)",
-    val soilTemperatureLabel: String = "Soil Temperature (°C)",
-    val soilNitrogenLabel: String = "Soil Nitrogen (ppm)",
-    val soilPhosphorusLabel: String = "Soil Phosphorus (ppm)",
-    val soilPotassiumLabel: String = "Soil Potassium (ppm)",
-    val soilEcLabel: String = "Soil EC (µS/cm)",
-    val soilPhLabel: String = "Soil pH",
-    val clickToViewAll: String = "Click to view all soil parameters and table view",
-    val waitingForData: String = "Waiting for data...",
-    val waitingForSensorData: String = "Waiting for sensor data...",
-    val ensureDeviceConnected: String = "Make sure the device is connected and sending data",
-    val currentLabel: String = "Current",
-    val naLabel: String = "N/A",
-    val graphsTab: String = "Graphs",
-    val soilDataTableTab: String = "Soil Data Table",
-    val backToAllSensors: String = "Back to All Sensors"
-)
-
-// Composable for displaying sensor data charts and tables
+/* -------------------------------------------------------------
+   Main screen – English only, no translation
+   ------------------------------------------------------------- */
 @Composable
-fun ChartScreen(
-    navController: NavController, // Navigation controller
-    deviceAddress: String? = null // Optional device address
-) {
-    // Get application context
-    val context = LocalContext.current
-    val application = context.applicationContext as Application
-    // Create ViewModel factory
-    val factory = remember { BluetoothScanViewModelFactory(application) }
-    // Initialize ViewModel
-    val viewModel: BluetoothScanViewModel<Any?> = viewModel(factory = factory)
+fun ChartScreen(navController: NavController, deviceAddress: String? = null) {
+    val ctx = LocalContext.current
+    val app = ctx.applicationContext as Application
+    val factory = remember { BluetoothScanViewModelFactory(app) }
+    val vm: BluetoothScanViewModel<Any?> = viewModel(factory = factory)
 
-    // Observe theme and language state
-    val isDarkMode by ThemeManager.isDarkMode.collectAsState()
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState()
+    val dark by ThemeManager.isDarkMode.collectAsState()
 
-    // Collect sensor data for the specified device
     val sensorData by remember(deviceAddress) {
-        viewModel.devices
-            .map { devices -> devices.find { it.address == deviceAddress }?.sensorData }
+        vm.devices.map { it.find { d -> d.address == deviceAddress }?.sensorData }
     }.collectAsState(initial = null)
 
-    // Extract sensor data values
-    val temperatureData = (sensorData as? BluetoothScanViewModel.SensorData.SHT40Data)?.temperature?.toFloatOrNull()
-    val humidityData = (sensorData as? BluetoothScanViewModel.SensorData.SHT40Data)?.humidity?.toFloatOrNull()
-    val speedData = (sensorData as? BluetoothScanViewModel.SensorData.SDTData)?.speed?.toFloatOrNull()
-    val distanceData = (sensorData as? BluetoothScanViewModel.SensorData.SDTData)?.distance?.toFloatOrNull()
-    val xAxisData = (sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData)?.x?.toFloatOrNull()
-    val yAxisData = (sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData)?.y?.toFloatOrNull()
-    val zAxisData = (sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData)?.z?.toFloatOrNull()
-    val soilMoistureData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.moisture?.toFloatOrNull()
-    val soilTemperatureData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.temperature?.toFloatOrNull()
-    val soilNitrogenData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.nitrogen?.toFloatOrNull()
-    val soilPhosphorusData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.phosphorus?.toFloatOrNull()
-    val soilPotassiumData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.potassium?.toFloatOrNull()
-    val soilEcData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.ec?.toFloatOrNull()
-    val soilPhData = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.pH?.toFloatOrNull()
+    // ---- raw sensor values -------------------------------------------------
+    val temp   = (sensorData as? BluetoothScanViewModel.SensorData.SHT40Data)?.temperature?.toFloatOrNull()
+    val hum    = (sensorData as? BluetoothScanViewModel.SensorData.SHT40Data)?.humidity?.toFloatOrNull()
+    val speed  = (sensorData as? BluetoothScanViewModel.SensorData.SDTData)?.speed?.toFloatOrNull()
+    val dist   = (sensorData as? BluetoothScanViewModel.SensorData.SDTData)?.distance?.toFloatOrNull()
+    val accX   = (sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData)?.x?.toFloatOrNull()
+    val accY   = (sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData)?.y?.toFloatOrNull()
+    val accZ   = (sensorData as? BluetoothScanViewModel.SensorData.LIS2DHData)?.z?.toFloatOrNull()
+    val soilM  = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.moisture?.toFloatOrNull()
+    val soilT  = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.temperature?.toFloatOrNull()
+    val soilN  = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.nitrogen?.toFloatOrNull()
+    val soilP  = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.phosphorus?.toFloatOrNull()
+    val soilK  = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.potassium?.toFloatOrNull()
+    val soilEC = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.ec?.toFloatOrNull()
+    val soilPH = (sensorData as? BluetoothScanViewModel.SensorData.SoilSensorData)?.pH?.toFloatOrNull()
 
-    // Historical data lists to store sensor values
-    val temperatureHistory = remember { mutableStateListOf<Float>() }
-    val humidityHistory = remember { mutableStateListOf<Float>() }
-    val speedHistory = remember { mutableStateListOf<Float>() }
-    val distanceHistory = remember { mutableStateListOf<Float>() }
-    val xAxisHistory = remember { mutableStateListOf<Float>() }
-    val yAxisHistory = remember { mutableStateListOf<Float>() }
-    val zAxisHistory = remember { mutableStateListOf<Float>() }
-    val soilMoistureHistory = remember { mutableStateListOf<Float>() }
-    val soilTemperatureHistory = remember { mutableStateListOf<Float>() }
-    val soilNitrogenHistory = remember { mutableStateListOf<Float>() }
-    val soilPhosphorusHistory = remember { mutableStateListOf<Float>() }
-    val soilPotassiumHistory = remember { mutableStateListOf<Float>() }
-    val soilEcHistory = remember { mutableStateListOf<Float>() }
-    val soilPhHistory = remember { mutableStateListOf<Float>() }
-    val soilDataTimestamps = remember { mutableStateListOf<String>() }
-    val dateFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
+    // ---- history buffers ---------------------------------------------------
+    val tempH   = remember { mutableStateListOf<Float>() }
+    val humH    = remember { mutableStateListOf<Float>() }
+    val speedH  = remember { mutableStateListOf<Float>() }
+    val distH   = remember { mutableStateListOf<Float>() }
+    val accXH   = remember { mutableStateListOf<Float>() }
+    val accYH   = remember { mutableStateListOf<Float>() }
+    val accZH   = remember { mutableStateListOf<Float>() }
+    val soilMH  = remember { mutableStateListOf<Float>() }
+    val soilTH  = remember { mutableStateListOf<Float>() }
+    val soilNH  = remember { mutableStateListOf<Float>() }
+    val soilPHist = remember { mutableStateListOf<Float>() }
+    val soilKHist = remember { mutableStateListOf<Float>() }
+    val soilECHist = remember { mutableStateListOf<Float>() }
+    val soilPHHist = remember { mutableStateListOf<Float>() }
+    val timestamps = remember { mutableStateListOf<String>() }
+    val fmt = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
 
-    // Initialize translated text with cached values or defaults
-    var translatedText by remember {
-        mutableStateOf(
-            TranslatedChartText(
-                graphsTitle = TranslationCache.get("Graphs-$currentLanguage") ?: "Graphs",
-                temperatureLabel = TranslationCache.get("Temperature (°C)-$currentLanguage") ?: "Temperature (°C)",
-                humidityLabel = TranslationCache.get("Humidity (%)-$currentLanguage") ?: "Humidity (%)",
-                speedLabel = TranslationCache.get("Speed (m/s)-$currentLanguage") ?: "Speed (m/s)",
-                distanceLabel = TranslationCache.get("Distance (m)-$currentLanguage") ?: "Distance (m)",
-                xAxisLabel = TranslationCache.get("X Axis (g)-$currentLanguage") ?: "X Axis (g)",
-                yAxisLabel = TranslationCache.get("Y Axis (g)-$currentLanguage") ?: "Y Axis (g)",
-                zAxisLabel = TranslationCache.get("Z Axis (g)-$currentLanguage") ?: "Z Axis (g)",
-                soilSensorDataTitle = TranslationCache.get("Soil Sensor Data (Click for detailed view)-$currentLanguage") ?: "Soil Sensor Data (Click for detailed view)",
-                soilMoistureLabel = TranslationCache.get("Soil Moisture (%)-$currentLanguage") ?: "Soil Moisture (%)",
-                soilTemperatureLabel = TranslationCache.get("Soil Temperature (°C)-$currentLanguage") ?: "Soil Temperature (°C)",
-                soilNitrogenLabel = TranslationCache.get("Soil Nitrogen (ppm)-$currentLanguage") ?: "Soil Nitrogen (ppm)",
-                soilPhosphorusLabel = TranslationCache.get("Soil Phosphorus (ppm)-$currentLanguage") ?: "Soil Phosphorus (ppm)",
-                soilPotassiumLabel = TranslationCache.get("Soil Potassium (ppm)-$currentLanguage") ?: "Soil Potassium (ppm)",
-                soilEcLabel = TranslationCache.get("Soil EC (µS/cm)-$currentLanguage") ?: "Soil EC (µS/cm)",
-                soilPhLabel = TranslationCache.get("Soil pH-$currentLanguage") ?: "Soil pH",
-                clickToViewAll = TranslationCache.get("Click to view all soil parameters and table view-$currentLanguage") ?: "Click to view all soil parameters and table view",
-                waitingForData = TranslationCache.get("Waiting for data...-$currentLanguage") ?: "Waiting for data...",
-                waitingForSensorData = TranslationCache.get("Waiting for sensor data...-$currentLanguage") ?: "Waiting for sensor data...",
-                ensureDeviceConnected = TranslationCache.get("Make sure the device is connected and sending data-$currentLanguage") ?: "Make sure the device is connected and sending data",
-                currentLabel = TranslationCache.get("Current-$currentLanguage") ?: "Current",
-                naLabel = TranslationCache.get("N/A-$currentLanguage") ?: "N/A",
-                graphsTab = TranslationCache.get("Graphs-$currentLanguage") ?: "Graphs",
-                soilDataTableTab = TranslationCache.get("Soil Data Table-$currentLanguage") ?: "Soil Data Table",
-                backToAllSensors = TranslationCache.get("Back to All Sensors-$currentLanguage") ?: "Back to All Sensors"
-            )
-        )
-    }
+    // ---- hard-coded English strings ----------------------------------------
+    val titleGraphs            = "Graphs"
+    val tempLabel              = "Temperature (°C)"
+    val humLabel               = "Humidity (%)"
+    val speedLabel             = "Speed (m/s)"
+    val distLabel              = "Distance (m)"
+    val xLabel                 = "X Axis (g)"
+    val yLabel                 = "Y Axis (g)"
+    val zLabel                 = "Z Axis (g)"
+    val soilTitle              = "Soil Sensor Data (Click for detailed view)"
+    val soilMoistLabel         = "Soil Moisture (%)"
+    val soilTempLabel          = "Soil Temperature (°C)"
+    val soilNLabel             = "Soil Nitrogen (ppm)"
+    val soilPLabel             = "Soil Phosphorus (ppm)"
+    val soilKLabel             = "Soil Potassium (ppm)"
+    val soilECLabel            = "Soil EC (µS/cm)"
+    val soilPHLabel            = "Soil pH"
+    val clickAll               = "Click to view all soil parameters and table view"
+    val waitingData            = "Waiting for data..."          // <-- FIXED
+    val waitingSensor          = "Waiting for sensor data..."
+    val ensureConnected        = "Make sure the device is connected and sending data"
+    val currentTxt             = "Current"
+    val naTxt                  = "N/A"
+    val tabGraphs              = "Graphs"
+    val tabSoilTable           = "Soil Data Table"
+    val backToSensors          = "Back to All Sensors"
 
-    // Preload translations when language changes
-    LaunchedEffect(currentLanguage) {
-        val translator = GoogleTranslationService()
-        val textsToTranslate = listOf(
-            "Graphs", "Temperature (°C)", "Humidity (%)", "Speed (m/s)", "Distance (m)",
-            "X Axis (g)", "Y Axis (g)", "Z Axis (g)", "Soil Sensor Data (Click for detailed view)",
-            "Soil Moisture (%)", "Soil Temperature (°C)", "Soil Nitrogen (ppm)", "Soil Phosphorus (ppm)",
-            "Soil Potassium (ppm)", "Soil EC (µS/cm)", "Soil pH",
-            "Click to view all soil parameters and table view", "Waiting for data...",
-            "Waiting for sensor data...", "Make sure the device is connected and sending data",
-            "Current", "N/A", "Graphs", "Soil Data Table", "Back to All Sensors"
-        )
-        val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        // Update translated text state
-        translatedText = TranslatedChartText(
-            graphsTitle = translatedList[0],
-            temperatureLabel = translatedList[1],
-            humidityLabel = translatedList[2],
-            speedLabel = translatedList[3],
-            distanceLabel = translatedList[4],
-            xAxisLabel = translatedList[5],
-            yAxisLabel = translatedList[6],
-            zAxisLabel = translatedList[7],
-            soilSensorDataTitle = translatedList[8],
-            soilMoistureLabel = translatedList[9],
-            soilTemperatureLabel = translatedList[10],
-            soilNitrogenLabel = translatedList[11],
-            soilPhosphorusLabel = translatedList[12],
-            soilPotassiumLabel = translatedList[13],
-            soilEcLabel = translatedList[14],
-            soilPhLabel = translatedList[15],
-            clickToViewAll = translatedList[16],
-            waitingForData = translatedList[17],
-            waitingForSensorData = translatedList[18],
-            ensureDeviceConnected = translatedList[19],
-            currentLabel = translatedList[20],
-            naLabel = translatedList[21],
-            graphsTab = translatedList[22],
-            soilDataTableTab = translatedList[23],
-            backToAllSensors = translatedList[24]
-        )
-    }
-
-    // Define theme-based colors
-    val backgroundGradient = if (isDarkMode) {
-        Brush.verticalGradient(listOf(Color(0xFF121212), Color(0xFF424242))) // Dark mode gradient
+    // ---- theme colours ------------------------------------------------------
+    val bgGrad = if (dark) {
+        Brush.verticalGradient(listOf(Color(0xFF121212), Color(0xFF424242)))
     } else {
-        Brush.verticalGradient(listOf(Color(0xFF0A74DA), Color(0xFFADD8E6))) // Light mode gradient
+        Brush.verticalGradient(listOf(Color(0xFF0A74DA), Color(0xFFADD8E6)))
     }
-    val cardBackground = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Card background
-    val textColor = if (isDarkMode) Color.White else Color.Black // Primary text color
-    val secondaryTextColor = if (isDarkMode) Color(0xFFFFFFFF) else Color(0xFF2A2626)// Secondary text color
-    val accentColor = if (isDarkMode) Color(0xFFBB86FC) else Color(0xFF0A74DA) // Accent color
-    val tabBackground = if (isDarkMode) Color(0xFF2A2A2A) else Color.Transparent // Tab background
-    val appBarBackground = if (isDarkMode) Color(0xFF121212) else Color.White // App bar background
+    val cardBg   = if (dark) Color(0xFF1E1E1E) else Color.White
+    val txt      = if (dark) Color.White else Color.Black
+    val txt2     = if (dark) Color(0xFFFFFFFF) else Color(0xFF2A2626)
+    val accent   = if (dark) Color(0xFFBB86FC) else Color(0xFF0A74DA)
+    val tabBg    = if (dark) Color(0xFF2A2A2A) else Color.Transparent
+    val appBarBg = if (dark) Color(0xFF121212) else Color.White
 
-    // State variables for UI control
-    val isReceivingData = remember { mutableStateOf(false) } // Track if data is being received
-    val hasSoilSensorData = remember { mutableStateOf(false) } // Track if soil sensor data exists
-    var isSoilSensorClicked by remember { mutableStateOf(false) } // Track soil sensor card click
-    var selectedTabIndex by remember { mutableStateOf(0) } // Track selected tab
-    val tabTitles = listOf(translatedText.graphsTab, translatedText.soilDataTableTab) // Tab titles
-    val dataFlowState = remember { mutableStateOf("Waiting for data...") }    //Data flow monitoring state
+    // ---- UI state -----------------------------------------------------------
+    val receiving   = remember { mutableStateOf(false) }
+    val hasSoil     = remember { mutableStateOf(false) }
+    var soilClicked by remember { mutableStateOf(false) }
+    var tabIdx      by remember { mutableStateOf(0) }
+    val tabs        = listOf(tabGraphs, tabSoilTable)
+    val flowState   = remember { mutableStateOf("Waiting for data...") }
 
-    // Start Bluetooth scanning
-    LaunchedEffect(Unit) {
-        viewModel.startScan(context as Activity)
-    }
+    // ---- start scanning -----------------------------------------------------
+    LaunchedEffect(Unit) { vm.startScan(ctx as Activity) }
 
-    // Update data receiving state
+    // ---- data-received flags ------------------------------------------------
     LaunchedEffect(sensorData) {
-        if (temperatureData != null || humidityData != null || speedData != null ||
-            distanceData != null || xAxisData != null || yAxisData != null || zAxisData != null ||
-            soilMoistureData != null || soilTemperatureData != null || soilNitrogenData != null ||
-            soilPhosphorusData != null || soilPotassiumData != null || soilEcData != null || soilPhData != null) {
-            isReceivingData.value = true
-        }
-        if (soilMoistureData != null || soilTemperatureData != null || soilNitrogenData != null ||
-            soilPhosphorusData != null || soilPotassiumData != null || soilEcData != null || soilPhData != null) {
-            hasSoilSensorData.value = true
-        }
+        receiving.value = temp != null || hum != null || speed != null || dist != null ||
+                accX != null || accY != null || accZ != null ||
+                soilM != null || soilT != null || soilN != null ||
+                soilP != null || soilK != null || soilEC != null || soilPH != null
+
+        hasSoil.value = soilM != null || soilT != null || soilN != null ||
+                soilP != null || soilK != null || soilEC != null || soilPH != null
     }
 
-    // Update history lists with new sensor data
-    LaunchedEffect(temperatureData, humidityData, speedData, distanceData, xAxisData, yAxisData, zAxisData,
-        soilMoistureData, soilTemperatureData, soilNitrogenData, soilPhosphorusData, soilPotassiumData, soilEcData, soilPhData) {
-        temperatureData?.let { updateHistory(temperatureHistory, it) }
-        humidityData?.let { updateHistory(humidityHistory, it) }
-        speedData?.let { updateHistory(speedHistory, it) }
-        distanceData?.let { updateHistory(distanceHistory, it) }
-//        xAxisData?.let { updateHistory(xAxisHistory, it) }
-//        yAxisData?.let { updateHistory(yAxisHistory, it) }
-//        zAxisData?.let { updateHistory(zAxisHistory, it) }
-        val shouldAddTimestamp = soilMoistureData != null || soilTemperatureData != null ||
-                soilNitrogenData != null || soilPhosphorusData != null || soilPotassiumData != null ||
-                soilEcData != null || soilPhData != null
-        if (shouldAddTimestamp) {
-            if (soilDataTimestamps.size >= 20) soilDataTimestamps.removeAt(0) // Limit to 20 entries
-            soilDataTimestamps.add(dateFormat.format(Date())) // Add timestamp
-        }
-        soilMoistureData?.let { updateHistory(soilMoistureHistory, it) }
-        soilTemperatureData?.let { updateHistory(soilTemperatureHistory, it) }
-        soilNitrogenData?.let { updateHistory(soilNitrogenHistory, it) }
-        soilPhosphorusData?.let { updateHistory(soilPhosphorusHistory, it) }
-        soilPotassiumData?.let { updateHistory(soilPotassiumHistory, it) }
-        soilEcData?.let { updateHistory(soilEcHistory, it) }
-        soilPhData?.let { updateHistory(soilPhHistory, it) }
-    }
-    LaunchedEffect(xAxisData, yAxisData, zAxisData) {
-        val currentTime = System.currentTimeMillis()
-        dataFlowState.value = "Data received at: ${SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(currentTime))}"
+    // ---- update histories ---------------------------------------------------
+    LaunchedEffect(temp, hum, speed, dist, accX, accY, accZ,
+        soilM, soilT, soilN, soilP, soilK, soilEC, soilPH) {
 
-        // Direct history update without intermediate points
-        xAxisData?.let {
-            if (xAxisHistory.size >= 50) xAxisHistory.removeAt(0)
-            xAxisHistory.add(it)
+        temp?.let   { updateHistory(tempH,   it) }
+        hum?.let    { updateHistory(humH,    it) }
+        speed?.let  { updateHistory(speedH,  it) }
+        dist?.let   { updateHistory(distH,   it) }
+
+        val addTs = soilM != null || soilT != null || soilN != null ||
+                soilP != null || soilK != null || soilEC != null || soilPH != null
+        if (addTs) {
+            if (timestamps.size >= 20) timestamps.removeAt(0)
+            timestamps.add(fmt.format(Date()))
         }
-        yAxisData?.let {
-            if (yAxisHistory.size >= 50) yAxisHistory.removeAt(0)
-            yAxisHistory.add(it)
-        }
-        zAxisData?.let {
-            if (zAxisHistory.size >= 50) zAxisHistory.removeAt(0)
-            zAxisHistory.add(it)
-        }
+
+        soilM?.let  { updateHistory(soilMH,  it) }
+        soilT?.let  { updateHistory(soilTH,  it) }
+        soilN?.let  { updateHistory(soilNH,  it) }
+        soilP?.let  { updateHistory(soilPHist, it) }
+        soilK?.let  { updateHistory(soilKHist, it) }
+        soilEC?.let { updateHistory(soilECHist, it) }
+        soilPH?.let { updateHistory(soilPHHist, it) }
     }
 
+    LaunchedEffect(accX, accY, accZ) {
+        val now = System.currentTimeMillis()
+        flowState.value = "Data received at: ${SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(now))}"
+        accX?.let { if (accXH.size >= 50) accXH.removeAt(0); accXH.add(it) }
+        accY?.let { if (accYH.size >= 50) accYH.removeAt(0); accYH.add(it) }
+        accZ?.let { if (accZH.size >= 50) accZH.removeAt(0); accZH.add(it) }
+    }
 
-    // Main UI structure
+    // -------------------------------------------------------------------------
     Scaffold(
         topBar = {
-            // Top app bar with navigation and actions
             TopAppBar(
                 title = {
                     Text(
-                        translatedText.graphsTitle,
+                        titleGraphs,
                         fontFamily = helveticaFont,
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
-                        color = textColor
+                        color = txt
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = if (isDarkMode) Color.White else Color.Black
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = if (dark) Color.White else Color.Black)
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Handle Export */ }) {
-                        Icon(
-                            Icons.Default.TableChart,
-                            contentDescription = "Export",
-                            tint = if (isDarkMode) Color.White else Color.Black
-                        )
+                    IconButton(onClick = { /* export */ }) {
+                        Icon(Icons.Default.TableChart, "Export", tint = if (dark) Color.White else Color.Black)
                     }
-                    IconButton(onClick = { /* Handle Options */ }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.List,
-                            contentDescription = "Options",
-                            tint = if (isDarkMode) Color.White else Color.Black
-                        )
+                    IconButton(onClick = { /* options */ }) {
+                        Icon(Icons.AutoMirrored.Filled.List, "Options", tint = if (dark) Color.White else Color.Black)
                     }
                 },
-
-                backgroundColor = appBarBackground, // Theme-based app bar color
+                backgroundColor = appBarBg,
                 elevation = 0.dp
             )
         },
-        backgroundColor = Color.Transparent // Transparent scaffold background
-    ) { paddingValues ->
-        // Main content
+        backgroundColor = Color.Transparent
+    ) { pad ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundGradient) // Apply gradient background
-                .padding(paddingValues)
+                .background(bgGrad)
+                .padding(pad)
         ) {
             Column {
-                // Show tabs for soil sensor data if clicked
-                if (isSoilSensorClicked && hasSoilSensorData.value) {
+                // ----- TAB ROW (only when soil card is expanded) -----
+                if (soilClicked && hasSoil.value) {
                     TabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        backgroundColor = tabBackground,
-                        contentColor = accentColor
+                        selectedTabIndex = tabIdx,
+                        backgroundColor = tabBg,
+                        contentColor = accent
                     ) {
-                        tabTitles.forEachIndexed { index, title ->
+                        tabs.forEachIndexed { i, t ->
                             Tab(
-                                text = { Text(title, color = textColor) },
-                                selected = selectedTabIndex == index,
-                                onClick = { selectedTabIndex = index }
+                                text = { Text(t, color = txt) },
+                                selected = tabIdx == i,
+                                onClick = { tabIdx = i }
                             )
                         }
                     }
                 }
 
-                // Show graphs or table based on state
-                if (!isSoilSensorClicked || (isSoilSensorClicked && selectedTabIndex == 0)) {
-                    // Display sensor graphs
+                // ----- MAIN CONTENT -----
+                if (!soilClicked || (soilClicked && tabIdx == 0)) {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // SHT40 sensor data (temperature and humidity)
+                        // ---- SHT40 -------------------------------------------------
                         if (sensorData is BluetoothScanViewModel.SensorData.SHT40Data) {
-                            item { SensorGraphCard(translatedText.temperatureLabel, temperatureData, temperatureHistory, Color(0xFFE53935), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
-                            item { SensorGraphCard(translatedText.humidityLabel, humidityData, humidityHistory, Color(0xFF1976D2), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
+                            item { SensorGraphCard(tempLabel, temp, tempH, Color(0xFFE53935), cardBg, txt, txt2, currentTxt, naTxt, dark) }
+                            item { SensorGraphCard(humLabel, hum, humH, Color(0xFF1976D2), cardBg, txt, txt2, currentTxt, naTxt, dark) }
                         }
-                        // SDT sensor data (speed and distance)
+                        // ---- SDT ---------------------------------------------------
                         if (sensorData is BluetoothScanViewModel.SensorData.SDTData) {
-                            item { SensorGraphCard(translatedText.speedLabel, speedData, speedHistory, Color(0xFF43A047), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
-                            item { SensorGraphCard(translatedText.distanceLabel, distanceData, distanceHistory, Color(0xFFFFB300), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
+                            item { SensorGraphCard(speedLabel, speed, speedH, Color(0xFF43A047), cardBg, txt, txt2, currentTxt, naTxt, dark) }
+                            item { SensorGraphCard(distLabel, dist, distH, Color(0xFFFFB300), cardBg, txt, txt2, currentTxt, naTxt, dark) }
                         }
-                        // LIS2DH sensor data (accelerometer)
+                        // ---- LIS2DH ------------------------------------------------
                         if (sensorData is BluetoothScanViewModel.SensorData.LIS2DHData) {
-                            item { SensorGraphCard(translatedText.xAxisLabel, xAxisData, xAxisHistory, Color(0xFFE91E63), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
-                            item { SensorGraphCard(translatedText.yAxisLabel, yAxisData, yAxisHistory, Color(0xFF9C27B0), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
-                            item { SensorGraphCard(translatedText.zAxisLabel, zAxisData, zAxisHistory, Color(0xFF009688), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode) }
-
-                            // 3D accelerometer visualization
+                            item { SensorGraphCard(xLabel, accX, accXH, Color(0xFFE91E63), cardBg, txt, txt2, currentTxt, naTxt, dark) }
+                            item { SensorGraphCard(yLabel, accY, accYH, Color(0xFF9C27B0), cardBg, txt, txt2, currentTxt, naTxt, dark) }
+                            item { SensorGraphCard(zLabel, accZ, accZH, Color(0xFF009688), cardBg, txt, txt2, currentTxt, naTxt, dark) }
                             item {
-                                Accelerometer3DVisualization(
-                                    xAxis = xAxisData,
-                                    yAxis = yAxisData,
-                                    zAxis = zAxisData,
-                                    cardBackground = cardBackground,
-                                    textColor = textColor,
-                                    isDarkMode = isDarkMode
-                                )
+                                Accelerometer3DVisualization(accX, accY, accZ, cardBg, txt, dark)
                             }
                         }
-                        // Soil sensor data
+                        // ---- SOIL --------------------------------------------------
                         if (sensorData is BluetoothScanViewModel.SensorData.SoilSensorData) {
                             item {
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable { isSoilSensorClicked = true }, // Toggle detailed view
+                                        .clickable { soilClicked = true },
                                     elevation = 2.dp,
-                                    backgroundColor = if (isSoilSensorClicked) accentColor.copy(alpha = 0.1f) else cardBackground
+                                    backgroundColor = if (soilClicked) accent.copy(alpha = 0.1f) else cardBg
                                 ) {
                                     Column(modifier = Modifier.padding(8.dp)) {
-                                        Text(
-                                            translatedText.soilSensorDataTitle,
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = accentColor,
-                                            modifier = Modifier.padding(bottom = 8.dp)
-                                        )
-                                        SensorGraphCard(translatedText.soilMoistureLabel, soilMoistureData, soilMoistureHistory, Color(0xFF6200EA), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        SensorGraphCard(translatedText.soilTemperatureLabel, soilTemperatureData, soilTemperatureHistory, Color(0xFFFF6D00), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
-                                        if (!isSoilSensorClicked) {
+                                        Text(soilTitle, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = accent, modifier = Modifier.padding(bottom = 8.dp))
+                                        SensorGraphCard(soilMoistLabel, soilM, soilMH, Color(0xFF6200EA), cardBg, txt, txt2, currentTxt, naTxt, dark)
+                                        Spacer(Modifier.height(16.dp))
+                                        SensorGraphCard(soilTempLabel, soilT, soilTH, Color(0xFFFF6D00), cardBg, txt, txt2, currentTxt, naTxt, dark)
+
+                                        if (!soilClicked) {
                                             Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(top = 16.dp),
+                                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                                                 horizontalArrangement = Arrangement.Center
-                                            ) {
-                                                Text(translatedText.clickToViewAll, color = accentColor)
-                                            }
+                                            ) { Text(clickAll, color = accent) }
                                         } else {
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilNitrogenLabel, soilNitrogenData, soilNitrogenHistory, Color(0xFF00897B), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilPhosphorusLabel, soilPhosphorusData, soilPhosphorusHistory, Color(0xFFC2185B), cardBackground, textColor, secondaryTextColor, translatedText, isDarkMode)
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilPotassiumLabel, soilPotassiumData, soilPotassiumHistory, Color(0xFF7B1FA2), cardBackground, textColor, secondaryTextColor, translatedText,isDarkMode)
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilEcLabel, soilEcData, soilEcHistory, Color(0xFFF57C00), cardBackground, textColor, secondaryTextColor, translatedText,isDarkMode)
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            SensorGraphCard(translatedText.soilPhLabel, soilPhData, soilPhHistory, Color(0xFFD32F2F), cardBackground, textColor, secondaryTextColor, translatedText,isDarkMode)
+                                            Spacer(Modifier.height(16.dp))
+                                            SensorGraphCard(soilNLabel, soilN, soilNH, Color(0xFF00897B), cardBg, txt, txt2, currentTxt, naTxt, dark)
+                                            Spacer(Modifier.height(16.dp))
+                                            SensorGraphCard(soilPLabel, soilP, soilPHist, Color(0xFFC2185B), cardBg, txt, txt2, currentTxt, naTxt, dark)
+                                            Spacer(Modifier.height(16.dp))
+                                            SensorGraphCard(soilKLabel, soilK, soilKHist, Color(0xFF7B1FA2), cardBg, txt, txt2, currentTxt, naTxt, dark)
+                                            Spacer(Modifier.height(16.dp))
+                                            SensorGraphCard(soilECLabel, soilEC, soilECHist, Color(0xFFF57C00), cardBg, txt, txt2, currentTxt, naTxt, dark)
+                                            Spacer(Modifier.height(16.dp))
+                                            SensorGraphCard(soilPHLabel, soilPH, soilPHHist, Color(0xFFD32F2F), cardBg, txt, txt2, currentTxt, naTxt, dark)
                                         }
                                     }
                                 }
                             }
                         }
 
-                        // Data flow monitor
+                        // ---- data-flow monitor ----------------------------------------
                         item {
                             Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
-                                backgroundColor = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFE3F2FD)
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                backgroundColor = if (dark) Color(0xFF2A2A2A) else Color(0xFFE3F2FD)
                             ) {
                                 Text(
-                                    text = dataFlowState.value,
-                                    color = if (isDarkMode) Color.White else Color.Black,
+                                    text = flowState.value,
+                                    color = if (dark) Color.White else Color.Black,
                                     fontSize = 12.sp,
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
                         }
 
-                        // Show message if no data is received
-                        if (!isReceivingData.value) {
+                        // ---- no data yet ---------------------------------------------
+                        if (!receiving.value) {
                             item {
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text(
-                                        translatedText.waitingForSensorData,
-                                        modifier = Modifier.padding(vertical = 32.dp),
-                                        color = textColor
-                                    )
-                                    Text(
-                                        translatedText.ensureDeviceConnected,
-                                        fontSize = 14.sp,
-                                        color = secondaryTextColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(horizontal = 16.dp)
-                                    )
+                                    Text(waitingSensor, modifier = Modifier.padding(vertical = 32.dp), color = txt)
+                                    Text(ensureConnected, fontSize = 14.sp, color = txt2, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
                                 }
                             }
                         }
                     }
-                } else if (isSoilSensorClicked && selectedTabIndex == 1) {
-                    // Display soil sensor data table
+                } else if (soilClicked && tabIdx == 1) {
                     SoilSensorDataTable(
-                        soilMoistureHistory = soilMoistureHistory,
-                        soilTemperatureHistory = soilTemperatureHistory,
-                        soilNitrogenHistory = soilNitrogenHistory,
-                        soilPhosphorusHistory = soilPhosphorusHistory,
-                        soilPotassiumHistory = soilPotassiumHistory,
-                        soilEcHistory = soilEcHistory,
-                        soilPhHistory = soilPhHistory,
-                        timestamps = soilDataTimestamps,
-                        isReceivingData = isReceivingData.value && (soilMoistureHistory.isNotEmpty() || soilTemperatureHistory.isNotEmpty() ||
-                                soilNitrogenHistory.isNotEmpty() || soilPhosphorusHistory.isNotEmpty() || soilPotassiumHistory.isNotEmpty() ||
-                                soilEcHistory.isNotEmpty() || soilPhHistory.isNotEmpty()),
-                        translatedText = translatedText,
-                        textColor = textColor,
-                        secondaryTextColor = secondaryTextColor,
-                        cardBackground = cardBackground
+                        soilMoistureHistory = soilMH,
+                        soilTemperatureHistory = soilTH,
+                        soilNitrogenHistory = soilNH,
+                        soilPhosphorusHistory = soilPHist,
+                        soilPotassiumHistory = soilKHist,
+                        soilEcHistory = soilECHist,
+                        soilPhHistory = soilPHHist,
+                        timestamps = timestamps,
+                        isReceivingData = receiving.value && (soilMH.isNotEmpty() || soilTH.isNotEmpty() ||
+                                soilNH.isNotEmpty() || soilPHist.isNotEmpty() || soilKHist.isNotEmpty() ||
+                                soilECHist.isNotEmpty() || soilPHHist.isNotEmpty()),
+                        soilMoistureLabel = soilMoistLabel,
+                        soilTemperatureLabel = soilTempLabel,
+                        soilNitrogenLabel = soilNLabel,
+                        soilPhosphorusLabel = soilPLabel,
+                        soilPotassiumLabel = soilKLabel,
+                        soilEcLabel = soilECLabel,
+                        soilPhLabel = soilPHLabel,
+                        waitingForSensorData = waitingSensor,
+                        textColor = txt,
+                        secondaryTextColor = txt2,
+                        cardBackground = cardBg
                     )
                 }
 
-                // Button to return to all sensors
-                if (isSoilSensorClicked) {
+                // ---- back button when soil view is expanded --------------------
+                if (soilClicked) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
-                                .background(
-                                    color = accentColor,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable { isSoilSensorClicked = false } // Reset to main view
+                                .background(accent, RoundedCornerShape(8.dp))
+                                .clickable { soilClicked = false }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Text(
-                                translatedText.backToAllSensors,
-                                color = if (isDarkMode) Color.Black else Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(backToSensors, color = if (dark) Color.Black else Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -650,237 +399,147 @@ fun ChartScreen(
         }
     }
 }
-// Composable for displaying a single sensor graph
+
+/* -------------------------------------------------------------
+   Graph card (touch-enabled)
+   ------------------------------------------------------------- */
 @Composable
 fun SensorGraphCard(
-    title: String, // Graph title
-    currentValue: Float?, // Current sensor value
-    history: List<Float>, // Historical data
-    color: Color, // Graph color
-    cardBackground: Color, // Card background color
-    textColor: Color, // Primary text color
-    secondaryTextColor: Color, // Secondary text color
-    translatedText: TranslatedChartText, // Translated text
-    isDarkMode: Boolean
+    title: String,
+    cur: Float?,
+    hist: List<Float>,
+    lineCol: Color,
+    cardBg: Color,
+    txtCol: Color,
+    txt2Col: Color,
+    curLabel: String,
+    naLabel: String,
+    dark: Boolean
 ) {
-    var touchPosition by remember { mutableStateOf<Offset?>(null) }
-    var touchedValue by remember { mutableStateOf<Float?>(null) }
-    // Auto-hide touched value after 1 second
-    LaunchedEffect(touchPosition) {
-        if (touchPosition != null) {
-            delay(1000) // 1 second delay
-            touchPosition = null
-            touchedValue = null
+    var tapPos by remember { mutableStateOf<Offset?>(null) }
+    var tapVal by remember { mutableStateOf<Float?>(null) }
+
+    LaunchedEffect(tapPos) {
+        if (tapPos != null) {
+            kotlinx.coroutines.delay(1000)
+            tapPos = null
+            tapVal = null
         }
     }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp),
+        modifier = Modifier.fillMaxWidth().height(300.dp),
         elevation = 4.dp,
-        backgroundColor = cardBackground
+        backgroundColor = cardBg
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
-        )  {
-            Text(
-                title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = textColor,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                "${translatedText.currentLabel}: ${currentValue?.toString() ?: translatedText.naLabel}",
-                fontSize = 16.sp,
-                color = secondaryTextColor,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            if (history.isNotEmpty()) {
+        ) {
+            Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = txtCol, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(8.dp))
+            Text("${curLabel}: ${cur?.toString() ?: naLabel}", fontSize = 16.sp, color = txt2Col, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(16.dp))
+
+            if (hist.isNotEmpty()) {
                 var canvasSize by remember { mutableStateOf(Size.Zero) }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                ) {
+                Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                     Canvas(
                         modifier = Modifier
                             .fillMaxSize()
-                            .pointerInput(Unit) {
-                                detectTapGestures { offset ->
-                                    touchPosition = offset
-                                }
-                            }
+                            .pointerInput(Unit) { detectTapGestures { tapPos = it } }
                     ) {
-                        canvasSize = size // Store the size for calculations
-                        val points = history.toList()
-                        if (points.isNotEmpty()) {
-                            // Define graph area with margins for axis labels
-                            val leftMargin = 50f
-                            val rightMargin = 20f
-                            val topMargin = 20f
-                            val bottomMargin = 30f
+                        canvasSize = size
+                        val pts = hist
+                        if (pts.isNotEmpty()) {
+                            val lm = 50f; val rm = 20f; val tm = 20f; val bm = 30f
+                            val w = size.width - lm - rm
+                            val h = size.height - tm - bm
+                            val sx = lm
+                            val sy = tm
+                            val ex = sx + w
+                            val ey = sy + h
 
-                            val graphWidth = size.width - leftMargin - rightMargin
-                            val graphHeight = size.height - topMargin - bottomMargin
-                            val graphStartX = leftMargin
-                            val graphStartY = topMargin
-                            val graphEndX = graphStartX + graphWidth
-                            val graphEndY = graphStartY + graphHeight
+                            val yMin = -10f; val yMax = 50f; val yRng = yMax - yMin
+                            val stepX = w / (pts.size.coerceAtLeast(2) - 1).toFloat()
 
-                            // Fixed Y-range from -10 to 50 as requested
-                            val yMin = -10f
-                            val yMax = 50f
-                            val yRange = yMax - yMin
+                            // ---- grid -------------------------------------------------
+                            drawRect(if (dark) Color(0x0AFFFFFF) else Color(0x0A000000), Offset(sx, sy), Size(w, h))
 
-                            val stepX = graphWidth / (points.size.coerceAtLeast(2) - 1).toFloat()
-
-                            // ==== ADD BACK GRID LINES LIKE CUBES ====
-                            // Draw light background for graph area
-                            drawRect(
-                                color = if (isDarkMode) Color(0x0AFFFFFF) else Color(0x0A000000),
-                                topLeft = Offset(graphStartX, graphStartY),
-                                size = Size(graphWidth, graphHeight)
-                            )
-
-                            // ==== GRAPH PAPER BACKGROUND ====
-                            // Draw graph paper background (dense grid)
-                            val gridColor = secondaryTextColor.copy(alpha = 0.15f)
-
-                            // Draw fine horizontal grid lines (every 2 units)
-                            for (yValue in yMin.toInt()..yMax.toInt() step 2) {
-                                val yPos = graphStartY + graphHeight * (1 - (yValue - yMin) / yRange)
-                                drawLine(
-                                    color = gridColor,
-                                    start = Offset(graphStartX, yPos),
-                                    end = Offset(graphEndX, yPos),
-                                    strokeWidth = 0.5f
-                                )
+                            val grid = txt2Col.copy(alpha = 0.15f)
+                            for (v in yMin.toInt()..yMax.toInt() step 2) {
+                                val y = sy + h * (1 - (v - yMin) / yRng)
+                                drawLine(color = grid, start = Offset(sx, y), end = Offset(ex, y), strokeWidth = 0.5f)   // <-- FIXED
                             }
-
-                            // Draw fine vertical grid lines (every 2 samples)
-                            for (i in 0..points.size step 2) {
-                                if (i < points.size) {
-                                    val xPos = graphStartX + i * stepX
-                                    drawLine(
-                                        color = gridColor,
-                                        start = Offset(xPos, graphStartY),
-                                        end = Offset(xPos, graphEndY),
-                                        strokeWidth = 0.5f
-                                    )
+                            for (i in 0..pts.size step 2) {
+                                if (i < pts.size) {
+                                    val x = sx + i * stepX
+                                    drawLine(color = grid, start = Offset(x, sy), end = Offset(x, ey), strokeWidth = 0.5f)   // <-- FIXED
                                 }
                             }
 
-                            // Draw main horizontal grid lines (every 10 units - bolder)
-                            val mainHorizontalGridValues = listOf(-10f, 0f, 10f, 20f, 30f, 40f, 50f)
-                            mainHorizontalGridValues.forEach { yValue ->
-                                val yPos = graphStartY + graphHeight * (1 - (yValue - yMin) / yRange)
-                                drawLine(
-                                    color = secondaryTextColor.copy(alpha = 0.3f),
-                                    start = Offset(graphStartX, yPos),
-                                    end = Offset(graphEndX, yPos),
-                                    strokeWidth = 1f
-                                )
+                            val bold = txt2Col.copy(alpha = 0.3f)
+                            listOf(-10f, 0f, 10f, 20f, 30f, 40f, 50f).forEach {
+                                val y = sy + h * (1 - (it - yMin) / yRng)
+                                drawLine(color = bold, start = Offset(sx, y), end = Offset(ex, y), strokeWidth = 1f)       // <-- FIXED
                             }
-
-                            // Draw main vertical grid lines (every 10 samples - bolder)
-                            for (i in 0..points.size step 10) {
-                                if (i < points.size) {
-                                    val xPos = graphStartX + i * stepX
-                                    drawLine(
-                                        color = secondaryTextColor.copy(alpha = 0.3f),
-                                        start = Offset(xPos, graphStartY),
-                                        end = Offset(xPos, graphEndY),
-                                        strokeWidth = 1f
-                                    )
+                            for (i in 0..pts.size step 10) {
+                                if (i < pts.size) {
+                                    val x = sx + i * stepX
+                                    drawLine(color = bold, start = Offset(x, sy), end = Offset(x, ey), strokeWidth = 1f)       // <-- FIXED
                                 }
                             }
 
-                            // Draw border around the graph area
-                            drawRect(
-                                color = secondaryTextColor.copy(alpha = 0.4f),
-                                topLeft = Offset(graphStartX, graphStartY),
-                                size = Size(graphWidth, graphHeight),
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f)
-                            )
-                            // ==== END OF GRID LINES ====
+                            drawRect(txt2Col.copy(alpha = 0.4f), Offset(sx, sy), Size(w, h), style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f))
 
-                            // Draw Y-axis labels with 10-10 gap: -10, 0, 10, 20, 30, 40, 50
-                            val yAxisLabels = listOf(-10f, 0f, 10f, 20f, 30f, 40f, 50f)
-                            yAxisLabels.forEach { yValue ->
-                                val yPos = graphStartY + graphHeight * (1 - (yValue - yMin) / yRange)
-                                // Create paint for text
-                                val textPaint = android.graphics.Paint().apply {
-                                    this.color = android.graphics.Color.argb(
-                                        (secondaryTextColor.alpha * 255).toInt(),
-                                        (secondaryTextColor.red * 255).toInt(),
-                                        (secondaryTextColor.green * 255).toInt(),
-                                        (secondaryTextColor.blue * 255).toInt()
+                            // ---- Y labels -------------------------------------------------
+                            listOf(-10f, 0f, 10f, 20f, 30f, 40f, 50f).forEach {
+                                val y = sy + h * (1 - (it - yMin) / yRng)
+                                val p = android.graphics.Paint().apply {
+                                    color = android.graphics.Color.argb(
+                                        (txt2Col.alpha * 255).toInt(),
+                                        (txt2Col.red * 255).toInt(),
+                                        (txt2Col.green * 255).toInt(),
+                                        (txt2Col.blue * 255).toInt()
                                     )
                                     textSize = 20f
                                     textAlign = android.graphics.Paint.Align.RIGHT
                                 }
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    "%.0f".format(yValue),
-                                    graphStartX - 35f,
-                                    yPos + 5f,
-                                    textPaint
-                                )
+                                drawContext.canvas.nativeCanvas.drawText("%.0f".format(it), sx - 35f, y + 5f, p)
                             }
 
-                            // Draw X-axis labels at sample indices: 0, 10, 20, 30, 40
-                            val verticalGridValues = listOf(0, 10, 20, 30, 40)
-                            verticalGridValues.forEach { sampleIndex ->
-                                if (sampleIndex < points.size) {
-                                    val xPos = graphStartX + sampleIndex * stepX
-
-                                    // Create paint for X-axis labels
-                                    val xTextPaint = android.graphics.Paint().apply {
-                                        this.color = android.graphics.Color.argb(
-                                            (secondaryTextColor.alpha * 255).toInt(),
-                                            (secondaryTextColor.red * 255).toInt(),
-                                            (secondaryTextColor.green * 255).toInt(),
-                                            (secondaryTextColor.blue * 255).toInt()
+                            // ---- X labels -------------------------------------------------
+                            listOf(0, 10, 20, 30, 40).forEach { idx ->
+                                if (idx < pts.size) {
+                                    val x = sx + idx * stepX
+                                    val p = android.graphics.Paint().apply {
+                                        color = android.graphics.Color.argb(
+                                            (txt2Col.alpha * 255).toInt(),
+                                            (txt2Col.red * 255).toInt(),
+                                            (txt2Col.green * 255).toInt(),
+                                            (txt2Col.blue * 255).toInt()
                                         )
                                         textSize = 18f
                                         textAlign = android.graphics.Paint.Align.CENTER
                                     }
-
-                                    // Draw X-axis labels (sample numbers)
-                                    drawContext.canvas.nativeCanvas.drawText(
-                                        "%.0f".format(sampleIndex.toFloat()),
-                                        xPos,
-                                        graphEndY + 15f,
-                                        xTextPaint
-                                    )
+                                    drawContext.canvas.nativeCanvas.drawText("%.0f".format(idx.toFloat()), x, ey + 15f, p)
                                 }
                             }
 
-                            // Draw continuous data line
+                            // ---- line ----------------------------------------------------
                             val path = androidx.compose.ui.graphics.Path().apply {
-                                if (points.isNotEmpty()) {
-                                    val firstY = graphStartY + graphHeight * (1 - (points[0] - yMin) / yRange)
-                                    moveTo(graphStartX, firstY)
-
-                                    // Simple continuous line connecting all points
-                                    for (i in 1 until points.size) {
-                                        val x = graphStartX + i * stepX
-                                        val y = graphStartY + graphHeight * (1 - (points[i] - yMin) / yRange)
-                                        lineTo(x, y)
-                                    }
+                                val firstY = sy + h * (1 - (pts[0] - yMin) / yRng)
+                                moveTo(sx, firstY)
+                                for (i in 1 until pts.size) {
+                                    val x = sx + i * stepX
+                                    val y = sy + h * (1 - (pts[i] - yMin) / yRng)
+                                    lineTo(x, y)
                                 }
                             }
-
-                            // Draw the path
                             drawPath(
-                                path = path,
-                                color = color,
+                                path,
+                                lineCol,
                                 style = androidx.compose.ui.graphics.drawscope.Stroke(
                                     width = 2.5f,
                                     cap = androidx.compose.ui.graphics.StrokeCap.Round,
@@ -888,101 +547,78 @@ fun SensorGraphCard(
                                 )
                             )
 
-                            // Draw circle at the current/last point to show latest value
-                            if (points.isNotEmpty()) {
-                                val lastIndex = points.size - 1
-                                val x = graphStartX + lastIndex * stepX
-                                val y = graphStartY + graphHeight * (1 - (points.last() - yMin) / yRange)
-                                drawCircle(
-                                    color = color,
-                                    radius = 4f,
-                                    center = Offset(x, y)
-                                )
+                            // ---- latest point --------------------------------------------
+                            if (pts.isNotEmpty()) {
+                                val li = pts.size - 1
+                                val lx = sx + li * stepX
+                                val ly = sy + h * (1 - (pts.last() - yMin) / yRng)
+                                drawCircle(lineCol, 4f, Offset(lx, ly))
                             }
 
-                            // Draw touch indicator if user tapped on the graph
-                            touchPosition?.let { touchOffset ->
-                                // Calculate touched data point using stored canvasSize
-                                val graphWidth = canvasSize.width - leftMargin - rightMargin
-                                val stepX = graphWidth / (points.size.coerceAtLeast(2) - 1).toFloat()
-                                val touchedIndex = ((touchOffset.x - leftMargin) / stepX).toInt().coerceIn(0, points.size - 1)
-                                val touchedX = graphStartX + touchedIndex * stepX
-                                val touchedY = graphStartY + graphHeight * (1 - (points[touchedIndex] - yMin) / yRange)
+                            // ---- tap indicator -------------------------------------------
+                            tapPos?.let { tp ->
+                                val step = w / (pts.size.coerceAtLeast(2) - 1).toFloat()
+                                val idx = ((tp.x - lm) / step).toInt().coerceIn(0, pts.size - 1)
+                                val tx = sx + idx * stepX
+                                val ty = sy + h * (1 - (pts[idx] - yMin) / yRng)
+                                tapVal = pts[idx]
 
-                                // Update touchedValue
-                                touchedValue = points[touchedIndex]
-
-                                // Draw vertical line at touched position
                                 drawLine(
-                                    color = color.copy(alpha = 0.5f),
-                                    start = Offset(touchedX, graphStartY),
-                                    end = Offset(touchedX, graphEndY),
+                                    color = lineCol.copy(alpha = 0.5f),
+                                    start = Offset(tx, sy),
+                                    end = Offset(tx, ey),
                                     strokeWidth = 1f,
                                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
-                                )
+                                )   // <-- FIXED
+                                drawCircle(lineCol, 6f, Offset(tx, ty))
 
-                                // Draw circle at touched data point
-                                drawCircle(
-                                    color = color,
-                                    radius = 6f,
-                                    center = Offset(touchedX, touchedY)
-                                )
-
-                                // Draw value text near the touched point
-                                val touchValuePaint = android.graphics.Paint().apply {
-                                    this.color = android.graphics.Color.argb(
-                                        (color.alpha * 255).toInt(),
-                                        (color.red * 255).toInt(),
-                                        (color.green * 255).toInt(),
-                                        (color.blue * 255).toInt()
+                                val p = android.graphics.Paint().apply {
+                                    color = android.graphics.Color.argb(
+                                        (lineCol.alpha * 255).toInt(),
+                                        (lineCol.red * 255).toInt(),
+                                        (lineCol.green * 255).toInt(),
+                                        (lineCol.blue * 255).toInt()
                                     )
                                     textSize = 24f
                                     textAlign = android.graphics.Paint.Align.CENTER
                                 }
-
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    "%.2f".format(points[touchedIndex]),
-                                    touchedX,
-                                    touchedY - 15f,
-                                    touchValuePaint
-                                )
+                                drawContext.canvas.nativeCanvas.drawText("%.2f".format(pts[idx]), tx, ty - 15f, p)
                             }
                         }
                     }
                 }
 
-                // Show touched value below the graph
-                if (touchedValue != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                // ---- tapped value -------------------------------------------------
+                tapVal?.let {
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        "Touched value: ${"%.2f".format(touchedValue)}",
+                        "Touched value: %.2f".format(it),
                         fontSize = 14.sp,
-                        color = color,
+                        color = lineCol,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-            } else {
-                // Show waiting message if no data
-                Text(
-                    translatedText.waitingForData,
-                    modifier = Modifier.padding(vertical = 32.dp),
-                    color = textColor
-                )
             }
+            //else
+//            {
+//                Text(waitingData, modifier = Modifier.padding(vertical = 32.dp), color = txtCol)   // <-- FIXED
+//            }
         }
     }
 }
 
-// Helper function to update history lists
-private fun updateHistory(history: MutableList<Float>, value: Float) {
-    // Simply add the new value and maintain buffer size
-    if (history.size >= 50) history.removeAt(0)
-    history.add(value)
+/* -------------------------------------------------------------
+   Helper – keep history at max 50 points
+   ------------------------------------------------------------- */
+private fun updateHistory(list: MutableList<Float>, v: Float) {
+    if (list.size >= 50) list.removeAt(0)
+    list.add(v)
 }
 
-
-// Composable for displaying soil sensor data in a table
+/* -------------------------------------------------------------
+   Soil table (tab 1)
+   ------------------------------------------------------------- */
 @Composable
 fun SoilSensorDataTable(
     soilMoistureHistory: List<Float>,
@@ -994,78 +630,70 @@ fun SoilSensorDataTable(
     soilPhHistory: List<Float>,
     timestamps: List<String>,
     isReceivingData: Boolean,
-    translatedText: TranslatedChartText,
+    soilMoistureLabel: String,
+    soilTemperatureLabel: String,
+    soilNitrogenLabel: String,
+    soilPhosphorusLabel: String,
+    soilPotassiumLabel: String,
+    soilEcLabel: String,
+    soilPhLabel: String,
+    waitingForSensorData: String,
     textColor: Color,
     secondaryTextColor: Color,
     cardBackground: Color
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
         elevation = 4.dp,
         backgroundColor = cardBackground
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(Modifier.padding(16.dp)) {
             if (isReceivingData) {
-                // Display table of soil sensor data
                 LazyColumn {
-                    items(timestamps.size) { index ->
+                    items(timestamps.size) { i ->
                         Column {
-                            Text(
-                                "Timestamp: ${timestamps.getOrNull(index) ?: "-"}",
-                                color = textColor,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text("${translatedText.soilMoistureLabel}: ${soilMoistureHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
-                            Text("${translatedText.soilTemperatureLabel}: ${soilTemperatureHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
-                            Text("${translatedText.soilNitrogenLabel}: ${soilNitrogenHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
-                            Text("${translatedText.soilPhosphorusLabel}: ${soilPhosphorusHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
-                            Text("${translatedText.soilPotassiumLabel}: ${soilPotassiumHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
-                            Text("${translatedText.soilEcLabel}: ${soilEcHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
-                            Text("${translatedText.soilPhLabel}: ${soilPhHistory.getOrNull(index) ?: "-"}", color = secondaryTextColor)
+                            Text("Timestamp: ${timestamps.getOrNull(i) ?: "-"}", color = textColor, fontWeight = FontWeight.Bold)
+                            Text("$soilMoistureLabel: ${soilMoistureHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
+                            Text("$soilTemperatureLabel: ${soilTemperatureHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
+                            Text("$soilNitrogenLabel: ${soilNitrogenHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
+                            Text("$soilPhosphorusLabel: ${soilPhosphorusHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
+                            Text("$soilPotassiumLabel: ${soilPotassiumHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
+                            Text("$soilEcLabel: ${soilEcHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
+                            Text("$soilPhLabel: ${soilPhHistory.getOrNull(i) ?: "-"}", color = secondaryTextColor)
                             Divider(color = secondaryTextColor.copy(alpha = 0.2f), thickness = 1.dp)
                         }
                     }
                 }
             } else {
-                // Show waiting message if no data
-                Text(
-                    translatedText.waitingForSensorData,
-                    modifier = Modifier.padding(vertical = 32.dp),
-                    color = textColor
-                )
+                Text(waitingForSensorData, modifier = Modifier.padding(vertical = 32.dp), color = textColor)
             }
         }
     }
 }
 
-// Composable for 3D accelerometer visualization
+/* -------------------------------------------------------------
+   3-D accelerometer cube
+   ------------------------------------------------------------- */
 @Composable
 fun Accelerometer3DVisualization(
-    xAxis: Float?, // X-axis accelerometer data
-    yAxis: Float?, // Y-axis accelerometer data
-    zAxis: Float?, // Z-axis accelerometer data
-    cardBackground: Color, // Card background color
-    textColor: Color, // Text color
-    isDarkMode: Boolean // Dark mode state
+    xAxis: Float?,
+    yAxis: Float?,
+    zAxis: Float?,
+    cardBackground: Color,
+    textColor: Color,
+    isDarkMode: Boolean
 ) {
-    // Default to 0 if null
     val x = xAxis ?: 0f
     val y = yAxis ?: 0f
     val z = zAxis ?: 0f
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(380.dp),
+        modifier = Modifier.fillMaxWidth().height(380.dp),
         elevation = 4.dp,
         backgroundColor = cardBackground
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -1076,132 +704,87 @@ fun Accelerometer3DVisualization(
                 textAlign = TextAlign.Center
             )
 
-            // Canvas for 3D visualization
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
-                    .padding(8.dp)
-            ) {
-                val centerX = size.width / 2f // Canvas center X
-                val centerY = size.height / 2f // Canvas center Y
-                val scale = minOf(size.width, size.height) * 0.25f // Scale factor
-                val axisLength = 300f // Axis length
-                val diagonalLength = axisLength / sqrt(2f) // Diagonal for Z-axis
+            Canvas(modifier = Modifier.fillMaxWidth().height(280.dp).padding(8.dp)) {
+                val cx = size.width / 2f
+                val cy = size.height / 2f
+                val scale = minOf(size.width, size.height) * 0.25f
+                val axisLen = 300f
+                val diag = axisLen / sqrt(2f)
+                val edge = if (isDarkMode) Color.White else Color.Black
 
-                val edgeColor = if (isDarkMode) Color.White else Color.Black // Edge color based on theme
-
-                // Define cube vertices
-                val cubeVertices = arrayOf(
+                // ----- cube vertices & edges (same as helper) -----
+                val verts = arrayOf(
                     floatArrayOf(-1f, -1f, -1f), floatArrayOf(1f, -1f, -1f),
-                    floatArrayOf(1f, 1f, -1f), floatArrayOf(-1f, 1f, -1f),
-                    floatArrayOf(-1f, -1f, 1f), floatArrayOf(1f, -1f, 1f),
-                    floatArrayOf(1f, 1f, 1f), floatArrayOf(-1f, 1f, 1f)
+                    floatArrayOf(1f, 1f, -1f),   floatArrayOf(-1f, 1f, -1f),
+                    floatArrayOf(-1f, -1f, 1f),  floatArrayOf(1f, -1f, 1f),
+                    floatArrayOf(1f, 1f, 1f),   floatArrayOf(-1f, 1f, 1f)
+                )
+                val edges = arrayOf(
+                    intArrayOf(0,1), intArrayOf(1,2), intArrayOf(2,3), intArrayOf(3,0),
+                    intArrayOf(4,5), intArrayOf(5,6), intArrayOf(6,7), intArrayOf(7,4),
+                    intArrayOf(0,4), intArrayOf(1,5), intArrayOf(2,6), intArrayOf(3,7)
                 )
 
-                // Define cube edges
-                val cubeEdges = arrayOf(
-                    intArrayOf(0, 1), intArrayOf(1, 2), intArrayOf(2, 3), intArrayOf(3, 0),
-                    intArrayOf(4, 5), intArrayOf(5, 6), intArrayOf(6, 7), intArrayOf(7, 4),
-                    intArrayOf(0, 4), intArrayOf(1, 5), intArrayOf(2, 6), intArrayOf(3, 7)
-                )
+                fun rot(x: Float, y: Float, z: Float): FloatArray {
+                    val rx = Math.toRadians(20.0).toFloat()
+                    val ry = Math.toRadians(25.0).toFloat()
+                    val rz = Math.toRadians(5.0).toFloat()
 
-                // Static rotation for better 3D appearance
-                val rotationX = 20f
-                val rotationY = 25f
-                val rotationZ = 5f
+                    var yy = y * cos(rx) - z * sin(rx)
+                    var zz = y * sin(rx) + z * cos(rx)
+                    var xx = x
 
-                // Rotate 3D point
-                fun rotate3D(x: Float, y: Float, z: Float): FloatArray {
-                    val radX = Math.toRadians(rotationX.toDouble()).toFloat()
-                    val radY = Math.toRadians(rotationY.toDouble()).toFloat()
-                    val radZ = Math.toRadians(rotationZ.toDouble()).toFloat()
+                    val zz2 = zz * cos(ry) - xx * sin(ry)
+                    val xx2 = zz * sin(ry) + xx * cos(ry)
 
-                    var ry = y * cos(radX) - z * sin(radX)
-                    var rz = y * sin(radX) + z * cos(radX)
-                    var rx = x
-
-                    val rz2 = rz * cos(radY) - rx * sin(radY)
-                    val rx2 = rz * sin(radY) + rx * cos(radY)
-
-                    val rx3 = rx2 * cos(radZ) - ry * sin(radZ)
-                    val ry3 = rx2 * sin(radZ) + ry * cos(radZ)
-
-                    return floatArrayOf(rx3, ry3, rz2)
+                    val xx3 = xx2 * cos(rz) - yy * sin(rz)
+                    val yy3 = xx2 * sin(rz) + yy * cos(rz)
+                    return floatArrayOf(xx3, yy3, zz2)
                 }
 
-                // Project 3D point to 2D
-                fun project3D(x: Float, y: Float, z: Float): Offset {
-                    val distance = 5f
-                    val perspective = distance / (distance - z)
-                    return Offset(
-                        centerX + x * scale * perspective,
-                        centerY - y * scale * perspective
-                    )
+                fun proj(x: Float, y: Float, z: Float): Offset {
+                    val d = 5f
+                    val p = d / (d - z)
+                    return Offset(cx + x * scale * p, cy - y * scale * p)
                 }
 
-                // Project cube vertices
-                val projected = cubeVertices.map {
-                    val rotated = rotate3D(it[0], it[1], it[2])
-                    project3D(rotated[0], rotated[1], rotated[2])
+                val projected = verts.map {
+                    val r = rot(it[0], it[1], it[2])
+                    proj(r[0], r[1], r[2])
                 }
 
-                // Draw cube edges
-                cubeEdges.forEach { (startIdx, endIdx) ->
-                    drawLine(
-                        color = edgeColor,
-                        start = projected[startIdx],
-                        end = projected[endIdx],
-                        strokeWidth = 3f
-                    )
-                }
+                edges.forEach { (a, b) -> drawLine(color = edge, start = projected[a], end = projected[b], strokeWidth = 3f) }   // <-- FIXED
+                projected.forEach { drawCircle(edge, 4f, it) }
 
-                // Draw vertices
-                projected.forEach {
-                    drawCircle(edgeColor, 4f, it)
-                }
+                // ----- axes -------------------------------------------------
+                val xEnd = Offset(cx + axisLen, cy)
+                val yEnd = Offset(cx, cy - axisLen)
+                val zEnd = Offset(cx - diag, cy + diag)
 
-                // Define axis endpoints
-                val xEnd = Offset(centerX + axisLength, centerY)
-                val yEnd = Offset(centerX, centerY - axisLength)
-                val zEnd = Offset(centerX - diagonalLength, centerY + diagonalLength)
+                drawLine(color = Color.Red,   start = Offset(cx, cy), end = xEnd, strokeWidth = 3f)   // <-- FIXED
+                drawLine(color = Color.Green, start = Offset(cx, cy), end = yEnd, strokeWidth = 3f)   // <-- FIXED
+                drawLine(color = Color.Cyan,  start = Offset(cx, cy), end = zEnd, strokeWidth = 3f)   // <-- FIXED
 
-                // Draw X, Y, Z axes
-                drawLine(Color.Red, Offset(centerX, centerY), xEnd, 3f) // X
-                drawLine(Color.Green, Offset(centerX, centerY), yEnd, 3f) // Y
-                drawLine(Color.Cyan, Offset(centerX, centerY), zEnd, 3f) // Z
-
-                // Draw axis labels using native canvas
                 drawContext.canvas.nativeCanvas.apply {
-                    val labelPaint = android.graphics.Paint().apply {
-                        textSize = 36f
-                        isAntiAlias = true
-                    }
-
-                    labelPaint.color = android.graphics.Color.RED
-                    drawText("X", xEnd.x + 10f, xEnd.y, labelPaint)
-
-                    labelPaint.color = android.graphics.Color.GREEN
-                    drawText("Y", yEnd.x + 10f, yEnd.y, labelPaint)
-
-                    labelPaint.color = android.graphics.Color.CYAN
-                    drawText("Z", zEnd.x + 20f, zEnd.y + 30f, labelPaint)
+                    val p = android.graphics.Paint().apply { textSize = 36f; isAntiAlias = true }
+                    p.color = android.graphics.Color.RED;   drawText("X", xEnd.x + 10f, xEnd.y, p)
+                    p.color = android.graphics.Color.GREEN; drawText("Y", yEnd.x + 10f, yEnd.y, p)
+                    p.color = android.graphics.Color.CYAN;  drawText("Z", zEnd.x + 20f, zEnd.y + 30f, p)
                 }
 
-                // Draw sensor point
-                val maxInputRange = 10f
-                val sensorX = (x / maxInputRange).coerceIn(-1f, 1f)
-                val sensorY = (y / maxInputRange).coerceIn(-1f, 1f)
-                val sensorZ = (z / maxInputRange).coerceIn(-1f, 1f)
+                // ----- sensor dot --------------------------------------------
+                val range = 10f
+                val sx = (x / range).coerceIn(-1f, 1f)
+                val sy = (y / range).coerceIn(-1f, 1f)
+                val sz = (z / range).coerceIn(-1f, 1f)
 
-                val rotatedSensor = rotate3D(sensorX, sensorY, sensorZ)
-                val sensorDot = project3D(rotatedSensor[0], rotatedSensor[1], rotatedSensor[2])
-                drawCircle(Color.Magenta, radius = 10f, center = sensorDot)
+                val r = rot(sx, sy, sz)
+                val dot = proj(r[0], r[1], r[2])
+                drawCircle(Color.Magenta, 10f, dot)
             }
 
-            // Display accelerometer values
             Text(
-                text = "X: %.2f, Y: %.2f, Z: %.2f".format(x, y, z),
+                "X: %.2f, Y: %.2f, Z: %.2f".format(x, y, z),
                 color = textColor,
                 fontSize = 16.sp,
                 modifier = Modifier.padding(top = 8.dp),

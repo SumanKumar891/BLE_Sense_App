@@ -1,6 +1,5 @@
 package com.blesense.app
 
-// Import necessary Compose libraries for animations, UI components, and icons
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -27,79 +26,49 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-// Data class for translatable text in LoadingDialog
-data class TranslatedLoadingDialogText(
-    val waitMessage: String = "Wait.It's Sensing..." // Default loading message
-)
-
 // Composable for displaying a loading dialog with animated arcs
 @Composable
 fun LoadingDialog(onDismissRequest: () -> Unit) {
-    // Observe theme and language state
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState()
 
-    // Initialize translated text with cached value or default
-    var translatedText by remember {
-        mutableStateOf(
-            TranslatedLoadingDialogText(
-                waitMessage = TranslationCache.get("Wait.It's Sensing...-$currentLanguage") ?: "Wait.It's Sensing..."
-            )
-        )
-    }
+    // Theme-based colors
+    val dialogBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    val textColor = if (isDarkMode) Color.White else Color.Black
+    val primaryColor = if (isDarkMode) Color(0xFFBB86FC) else MaterialTheme.colorScheme.primary
 
-    // Preload translations when language changes
-    LaunchedEffect(currentLanguage) {
-        val translator = GoogleTranslationService()
-        val textsToTranslate = listOf("Wait.It's Sensing...")
-        val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        // Update translated text state
-        translatedText = TranslatedLoadingDialogText(
-            waitMessage = translatedList[0]
-        )
-    }
-
-    // Define theme-based colors
-    val dialogBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White // Dialog background
-    val textColor = if (isDarkMode) Color.White else Color.Black // Text color
-    val primaryColor = if (isDarkMode) Color(0xFFBB86FC) else MaterialTheme.colorScheme.primary // Primary color for icon and arcs
-
-    // Display dialog with custom properties
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(
-            dismissOnBackPress = true, // Allow dismissal on back press
-            dismissOnClickOutside = false, // Prevent dismissal on outside click
-            usePlatformDefaultWidth = false // Use custom width
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false
         )
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.medium) // Add shadow
+                .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.medium)
                 .background(
                     color = dialogBackgroundColor,
                     shape = MaterialTheme.shapes.medium
                 )
-                .padding(24.dp) // Internal padding
+                .padding(24.dp)
         ) {
             // Container for animated arcs and Bluetooth icon
             Box(
                 modifier = Modifier.size(160.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Animated arcs component
                 OptimizedAnimatedArcs(
                     primaryColor = primaryColor,
                     modifier = Modifier.matchParentSize()
                 )
-                // Bluetooth icon component
                 BluetoothIcon(primaryColor = primaryColor)
             }
             Spacer(modifier = Modifier.height(16.dp))
-            // Display loading message
+            // Loading message
             Text(
-                text = translatedText.waitMessage,
+                text = "Wait. It's Sensing...",
                 style = MaterialTheme.typography.bodyMedium,
                 color = textColor
             )
@@ -114,20 +83,18 @@ fun BluetoothIcon(primaryColor: Color) {
         imageVector = Icons.Default.Bluetooth,
         contentDescription = "Bluetooth Icon",
         modifier = Modifier.size(60.dp),
-        tint = primaryColor // Apply theme-based color
+        tint = primaryColor
     )
 }
 
 // Composable for drawing animated arcs
 @Composable
 fun OptimizedAnimatedArcs(
-    primaryColor: Color, // Color for the arcs
+    primaryColor: Color,
     modifier: Modifier = Modifier
 ) {
-    // Create infinite transition for animation
     val transition = rememberInfiniteTransition(label = "Arc Animation")
 
-    // Animate a single value for all arcs to optimize performance
     val animationValue by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -141,31 +108,29 @@ fun OptimizedAnimatedArcs(
         label = "Combined Animation"
     )
 
-    // Draw arcs on canvas
     Canvas(modifier = modifier) {
-        val baseRadius = size.minDimension / 4 // Base radius for arcs
-        val strokeWidth = 4.dp.toPx() // Stroke width for arcs
+        val baseRadius = size.minDimension / 4
+        val strokeWidth = 4.dp.toPx()
 
-        // Calculate scale based on animation value
         val scale = 1f + (animationValue * 0.3f)
 
-        // Draw three concentric arcs with varying alpha and radius
+        // Draw three concentric arcs
         for (i in 0..2) {
-            val alphaMultiplier = (3 - i) / 3f // Decrease alpha for outer arcs
-            val alpha = (animationValue * alphaMultiplier).coerceIn(0f, 0.7f) // Animate alpha
-            val scaledRadius = baseRadius * scale + (i * 20) // Scale radius for each arc
+            val alphaMultiplier = (3 - i) / 3f
+            val alpha = (animationValue * alphaMultiplier).coerceIn(0f, 0.7f)
+            val scaledRadius = baseRadius * scale + (i * 20)
 
             drawArc(
                 color = primaryColor.copy(alpha = alpha),
-                startAngle = -45f, // Start angle for arc
-                sweepAngle = 90f, // Sweep angle for arc
+                startAngle = -45f,
+                sweepAngle = 90f,
                 useCenter = false,
                 style = Stroke(width = strokeWidth),
-                size = Size(scaledRadius * 1.6f, scaledRadius * 2.0f), // Arc size
+                size = Size(scaledRadius * 1.6f, scaledRadius * 2.0f),
                 topLeft = Offset(
                     center.x - (scaledRadius * 0.8f),
                     center.y - scaledRadius
-                ) // Position arc
+                )
             )
         }
     }

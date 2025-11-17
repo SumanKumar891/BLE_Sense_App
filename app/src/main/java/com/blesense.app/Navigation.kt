@@ -138,22 +138,22 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // Game loading screen
-        composable("game_loading") {
-            BLEGamesScreen(navController = navController)
-        }
+//        // Game loading screen
+//        composable("game_loading") {
+//            BLEGamesScreen(navController = navController)
+//        }
 
         // Game screen (fixed safe back handling)
-        composable("game_screen") {
-            val act = LocalContext.current as? Activity
-            GameActivityScreen(
-                activity = act,
-                onBackToHome = {
-                    // ✅ Simple and safe navigation back
-                    navController.popBackStack()
-                }
-            )
-        }
+//        composable("game_screen") {
+//            val act = LocalContext.current as? Activity
+//            GameActivityScreen(
+//                activity = act,
+//                onBackToHome = {
+//                    // ✅ Simple and safe navigation back
+//                    navController.popBackStack()
+//                }
+//            )
+//        }
         // Robot control screen (safe back handling)
         composable("robot_screen") {
             val act = LocalContext.current as? Activity

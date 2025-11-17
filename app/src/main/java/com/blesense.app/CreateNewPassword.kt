@@ -140,9 +140,9 @@ fun CreateNewPasswordScreen() {
                                 androidx.compose.material3.Icon(
                                     painter = painterResource(
                                         id = if (isNewPasswordVisible) {
-                                            R.drawable.monkey // Icon for visible password (placeholder)
+                                            R.drawable.visibility_on // Icon for visible password (placeholder)
                                         } else {
-                                            R.drawable.eyes // Icon for hidden password (placeholder)
+                                            R.drawable.visibility_off // Icon for hidden password (placeholder)
                                         }
                                     ),
                                     contentDescription = if (isNewPasswordVisible) "Hide password" else "Show password",
@@ -179,9 +179,9 @@ fun CreateNewPasswordScreen() {
                                 androidx.compose.material3.Icon(
                                     painter = painterResource(
                                         id = if (isConfirmPasswordVisible) {
-                                            R.drawable.monkey // Icon for visible password (placeholder)
+                                            R.drawable.visibility_on // Icon for visible password (placeholder)
                                         } else {
-                                            R.drawable.eyes // Icon for hidden password (placeholder)
+                                            R.drawable.visibility_off // Icon for hidden password (placeholder)
                                         }
                                     ),
                                     contentDescription = if (isConfirmPasswordVisible) "Hide password" else "Show password",

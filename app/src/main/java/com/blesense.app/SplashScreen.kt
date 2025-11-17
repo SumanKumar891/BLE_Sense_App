@@ -22,9 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,41 +37,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
-// Data class to hold translatable text for the splash screen
-data class TranslatedSplashScreenText(
-    val appName: String = "BLE Sense", // Default app name
-  //  val developedBy: String = "Developed by AWaDH, IIT Ropar" // Default developer credit
+// Data class to hold text for the splash screen
+data class SplashScreenText(
+    val appName: String = "BLE Sense" // Default app name
 )
 
 // Composable for the splash screen
 @Composable
 fun SplashScreen(onNavigateToLogin: () -> Unit) {
-    LocalContext.current // Access the current context (not used but retained for compatibility)
+    LocalContext.current // Access the current context
 
-    // Observe theme and language state
+    // Observe theme state only
     val isDarkMode by ThemeManager.isDarkMode.collectAsState() // Dark mode state
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState() // Current language state
 
-    // State for translated text with fallback values
-    var translatedText by remember {
-        mutableStateOf(
-            TranslatedSplashScreenText(
-                appName = TranslationCache.get("BLE Sense-$currentLanguage") ?: "BLE Sense",
-             //   developedBy = TranslationCache.get("Developed by AWaDH, IIT Ropar-$currentLanguage") ?: "Developed by AWaDH, IIT Ropar"
-            )
-        )
-    }
-
-   // Preload translations when the language changes
-    LaunchedEffect(currentLanguage) {
-        val translator = GoogleTranslationService() // Initialize translation service
-        val textsToTranslate = listOf("BLE Sense", "Developed by AWaDH, IIT Ropar") // Texts to translate
-        val translatedList = translator.translateBatch(textsToTranslate, currentLanguage) // Perform batch translation
-        translatedText = TranslatedSplashScreenText(
-            appName = translatedList[0], // Update app name
-          //  developedBy = translatedList[1] // Update developer credit
-        )
-    }
+    // Use fixed English text
+    val splashText = SplashScreenText()
 
     // Define theme-based colors
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White // Background color
@@ -149,7 +126,7 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
 
             // App name text with zoom animation
             BasicText(
-                text = translatedText.appName, // Translated app name
+                text = splashText.appName, // Static app name
                 style = TextStyle(
                     fontSize = 40.sp, // Large font size
                     color = textColor, // Theme-based text color

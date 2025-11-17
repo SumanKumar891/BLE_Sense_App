@@ -38,52 +38,8 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToHome: () -> Unit
 ) {
-    // Theme and Language state
+    // Theme state only
     val isDarkMode by ThemeManager.isDarkMode.collectAsState()
-    val currentLanguage by LanguageManager.currentLanguage.collectAsState()
-
-    // Translated text state
-    var translatedText by remember {
-        mutableStateOf(
-            TranslatedRegisterScreenText(
-                createAccount = TranslationCache.get("Create Account-$currentLanguage") ?: "Create Account",
-                signUpToGetStarted = TranslationCache.get("Sign up to get started-$currentLanguage") ?: "Sign up to get started",
-                usernamePlaceholder = TranslationCache.get("Username-$currentLanguage") ?: "Username",
-                emailPlaceholder = TranslationCache.get("Email-$currentLanguage") ?: "Email",
-                passwordPlaceholder = TranslationCache.get("Password-$currentLanguage") ?: "Password",
-                confirmPasswordPlaceholder = TranslationCache.get("Confirm Password-$currentLanguage") ?: "Confirm Password",
-                createAccountButton = TranslationCache.get("Create Account-$currentLanguage") ?: "Create Account",
-                orContinueWith = TranslationCache.get("Or continue with-$currentLanguage") ?: "Or continue with",
-                alreadyHaveAccount = TranslationCache.get("Already have an account?-$currentLanguage") ?: "Already have an account?",
-                loginNow = TranslationCache.get("Login Now-$currentLanguage") ?: "Login Now",
-                creatingAccount = TranslationCache.get("Creating Account-$currentLanguage") ?: "Creating Account"
-            )
-        )
-    }
-
-    // Preload translations on language change
-    LaunchedEffect(currentLanguage) {
-        val translator = GoogleTranslationService()
-        val textsToTranslate = listOf(
-            "Create Account", "Sign up to get started", "Username", "Email", "Password",
-            "Confirm Password", "Create Account", "Or continue with", "Already have an account?",
-            "Login Now", "Creating Account"
-        )
-        val translatedList = translator.translateBatch(textsToTranslate, currentLanguage)
-        translatedText = TranslatedRegisterScreenText(
-            createAccount = translatedList[0],
-            signUpToGetStarted = translatedList[1],
-            usernamePlaceholder = translatedList[2],
-            emailPlaceholder = translatedList[3],
-            passwordPlaceholder = translatedList[4],
-            confirmPasswordPlaceholder = translatedList[5],
-            createAccountButton = translatedList[6],
-            orContinueWith = translatedList[7],
-            alreadyHaveAccount = translatedList[8],
-            loginNow = translatedList[9],
-            creatingAccount = translatedList[10]
-        )
-    }
 
     // Theme-based colors
     val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color.White
@@ -140,14 +96,13 @@ fun RegisterScreen(
 
     fun validatePassword(value: String): Boolean {
         return value.length >= 8 &&
-                Regex("[A-Z]").containsMatchIn(value) && // At least one uppercase
-                Regex("[a-z]").containsMatchIn(value) && // At least one lowercase
-                Regex("\\d").containsMatchIn(value) &&   // At least one digit
-                Regex("[!@#\$%^&()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]").containsMatchIn(value) // At least one special char
+                Regex("[A-Z]").containsMatchIn(value) &&
+                Regex("[a-z]").containsMatchIn(value) &&
+                Regex("\\d").containsMatchIn(value) &&
+                Regex("[!@#\$%^&()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]").containsMatchIn(value)
     }
 
-
-    // Show a toast if the username exceeds 3 characters
+    // Toast for username length
     LaunchedEffect(username) {
         if (username.length > 4) {
             Toast.makeText(context, "Username must be less than 8 chars, digits, and _ allowed", Toast.LENGTH_SHORT).show()
@@ -156,19 +111,14 @@ fun RegisterScreen(
 
     LaunchedEffect(password) {
         if (password.length > 8) {
-            Toast.makeText(
-                context,
-                "Password must be more than 8 chars , digits  & special char",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, "Password must be more than 8 chars, digits & special char", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     if (authState is AuthState.Loading) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text(translatedText.creatingAccount, color = textColor) },
+            title = { Text("Creating Account", color = textColor) },
             text = {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
                     CircularProgressIndicator(color = buttonBackgroundColor)
@@ -182,11 +132,10 @@ fun RegisterScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                println("User registered: ${(authState as AuthState.Success).user.email}")
                 onNavigateToHome()
             }
             is AuthState.Error -> {
-                println("Error: ${(authState as AuthState.Error).message}")
+                // Error handled in ViewModel or show toast if needed
             }
             else -> Unit
         }
@@ -202,8 +151,9 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(60.dp))
+
         Text(
-            text = translatedText.createAccount,
+            text = "Create Account",
             style = TextStyle(
                 fontSize = 34.sp,
                 fontFamily = helveticaFont,
@@ -212,8 +162,9 @@ fun RegisterScreen(
             ),
             textAlign = TextAlign.Center
         )
+
         Text(
-            text = translatedText.signUpToGetStarted,
+            text = "Sign up to get started",
             style = TextStyle(
                 fontSize = 17.sp,
                 color = secondaryTextColor,
@@ -222,6 +173,7 @@ fun RegisterScreen(
             ),
             modifier = Modifier.padding(top = 8.dp)
         )
+
         Spacer(modifier = Modifier.height(60.dp))
 
         TextField(
@@ -233,7 +185,7 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            placeholder = { Text(translatedText.usernamePlaceholder, color = secondaryTextColor) },
+            placeholder = { Text("Username", color = secondaryTextColor) },
             isError = username.isNotEmpty() && !isUsernameValid,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -247,11 +199,7 @@ fun RegisterScreen(
                 unfocusedTextColor = textColor
             ),
             shape = RoundedCornerShape(12.dp),
-            textStyle = TextStyle(
-                fontSize = 17.sp,
-                fontFamily = helveticaFont,
-                color = textColor
-            )
+            textStyle = TextStyle(fontSize = 17.sp, fontFamily = helveticaFont, color = textColor)
         )
 
         TextField(
@@ -263,7 +211,7 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            placeholder = { Text(translatedText.emailPlaceholder, color = secondaryTextColor) },
+            placeholder = { Text("Email", color = secondaryTextColor) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -277,12 +225,9 @@ fun RegisterScreen(
                 unfocusedTextColor = textColor
             ),
             shape = RoundedCornerShape(12.dp),
-            textStyle = TextStyle(
-                fontSize = 17.sp,
-                fontFamily = helveticaFont,
-                color = textColor
-            )
+            textStyle = TextStyle(fontSize = 17.sp, fontFamily = helveticaFont, color = textColor)
         )
+
         val interactionSource = remember { MutableInteractionSource() }
         val isFocused by interactionSource.collectIsFocusedAsState()
 
@@ -295,12 +240,7 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            placeholder = {
-                Text(
-                    translatedText.passwordPlaceholder,
-                    color = secondaryTextColor
-                )
-            },
+            placeholder = { Text("Password", color = secondaryTextColor) },
             isError = password.isNotEmpty() && !isPasswordValid,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -313,9 +253,7 @@ fun RegisterScreen(
                     modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
-                        painter = painterResource(
-                            id = if (passwordVisible) R.drawable.invisible else R.drawable.show
-                        ),
+                        painter = painterResource(id = if (passwordVisible) R.drawable.invisible else R.drawable.show),
                         contentDescription = if (passwordVisible) "Hide password" else "Show password",
                         tint = Color.Unspecified
                     )
@@ -332,15 +270,8 @@ fun RegisterScreen(
                 cursorColor = if (isPasswordValid) Color.Blue else buttonBackgroundColor
             ),
             shape = RoundedCornerShape(12.dp),
-            textStyle = TextStyle(
-                fontSize = 17.sp,
-                fontFamily = helveticaFont,
-                color = textColor
-            )
+            textStyle = TextStyle(fontSize = 17.sp, fontFamily = helveticaFont, color = textColor)
         )
-
-
-
 
         TextField(
             value = confirmPassword,
@@ -349,7 +280,7 @@ fun RegisterScreen(
                 isConfirmPasswordValid = password == it
             },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(translatedText.confirmPasswordPlaceholder, color = secondaryTextColor) },
+            placeholder = { Text("Confirm Password", color = secondaryTextColor) },
             isError = confirmPassword.isNotEmpty() && !isConfirmPasswordValid,
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -362,9 +293,7 @@ fun RegisterScreen(
                     modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
-                        painter = painterResource(
-                            id = if (confirmPasswordVisible) R.drawable.invisible else R.drawable.show
-                        ),
+                        painter = painterResource(id = if (confirmPasswordVisible) R.drawable.invisible else R.drawable.show),
                         contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
                         tint = Color.Unspecified
                     )
@@ -378,11 +307,7 @@ fun RegisterScreen(
                 unfocusedTextColor = textColor
             ),
             shape = RoundedCornerShape(12.dp),
-            textStyle = TextStyle(
-                fontSize = 17.sp,
-                fontFamily = helveticaFont,
-                color = textColor
-            )
+            textStyle = TextStyle(fontSize = 17.sp, fontFamily = helveticaFont, color = textColor)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -404,7 +329,7 @@ fun RegisterScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = translatedText.createAccountButton,
+                text = "Create Account",
                 style = TextStyle(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -421,12 +346,9 @@ fun RegisterScreen(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                color = dividerColor
-            )
+            HorizontalDivider(modifier = Modifier.weight(1f), color = dividerColor)
             Text(
-                text = translatedText.orContinueWith,
+                text = "Or continue with",
                 modifier = Modifier.padding(horizontal = 16.dp),
                 style = TextStyle(
                     fontSize = 15.sp,
@@ -435,10 +357,7 @@ fun RegisterScreen(
                     fontWeight = FontWeight.Bold
                 )
             )
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                color = dividerColor
-            )
+            HorizontalDivider(modifier = Modifier.weight(1f), color = dividerColor)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -463,7 +382,7 @@ fun RegisterScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = translatedText.alreadyHaveAccount,
+                text = "Already have an account?",
                 style = TextStyle(
                     fontSize = 15.sp,
                     color = textColor,
@@ -473,7 +392,7 @@ fun RegisterScreen(
             )
             TextButton(onClick = onNavigateToLogin) {
                 Text(
-                    text = translatedText.loginNow,
+                    text = "Login Now",
                     style = TextStyle(
                         fontSize = 15.sp,
                         color = buttonBackgroundColor,
@@ -485,18 +404,3 @@ fun RegisterScreen(
         }
     }
 }
-
-// Data class for translatable text
-data class TranslatedRegisterScreenText(
-    val createAccount: String,
-    val signUpToGetStarted: String,
-    val usernamePlaceholder: String,
-    val emailPlaceholder: String,
-    val passwordPlaceholder: String,
-    val confirmPasswordPlaceholder: String,
-    val createAccountButton: String,
-    val orContinueWith: String,
-    val alreadyHaveAccount: String,
-    val loginNow: String,
-    val creatingAccount:String
-)

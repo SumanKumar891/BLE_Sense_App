@@ -1,5 +1,6 @@
 package com.blesense.app
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // Composable function for the DataLoggerScreen, responsible for displaying data from a Bluetooth Data Logger device
+@SuppressLint("MissingPermission")
 @Composable
 fun DataLoggerScreen(
     deviceAddress: String, // MAC address of the target Bluetooth device
@@ -232,6 +234,21 @@ fun DataLoggerScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+
+            //Fetch Stored Data button
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    coroutineScope.launch @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_ADVERTISE) {
+                   //     viewModel.sendAdvertiseCommandToSensor(deviceAddress)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF237C85))
+            ) {
+                Text("Get Data", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
 
             // Add spacing before data display section
             Spacer(modifier = Modifier.height(24.dp))
